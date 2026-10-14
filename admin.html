@@ -83,6 +83,27 @@
       <section class="card admin-card">
         <h2 class="card-title">👤 プロフィール基本情報</h2>
         
+        <!-- Avatar Image Editor -->
+        <div class="avatar-editor-box">
+          <label class="form-label">アイコン画像（アバター）</label>
+          <div class="avatar-editor-content">
+            <div class="avatar-preview-wrapper">
+              <img id="admin-avatar-preview" src="" alt="Avatar Preview" class="admin-avatar-img" style="display: none;">
+              <div id="admin-avatar-fallback" class="admin-avatar-fallback">✨</div>
+            </div>
+            <div class="avatar-editor-actions">
+              <label for="avatar-file-input" class="btn btn-secondary btn-sm file-upload-label">
+                📷 写真を選ぶ（スマホから選択）
+              </label>
+              <input type="file" id="avatar-file-input" accept="image/*" style="display: none;">
+              <button type="button" id="remove-avatar-btn" class="btn-subtle" style="font-size: 0.78rem;">画像を削除</button>
+            </div>
+          </div>
+          <div class="form-group" style="margin-top: 8px;">
+            <input type="text" id="avatar-url-input" class="form-input" placeholder="または画像URLを直接入力（任意）" style="font-size: 0.82rem;">
+          </div>
+        </div>
+
         <div class="form-group">
           <label for="profile-name" class="form-label">表示名（名前）</label>
           <input type="text" id="profile-name" class="form-input" placeholder="jk_na_ri_ta_i" required>

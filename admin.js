@@ -2,9 +2,11 @@
 const GITHUB_OWNER = 'issei-desu';
 const GITHUB_REPO = 'ichiHP';
 const DATA_FILE_PATH = 'data.json';
+const AVATAR_IMAGE_PATH = 'images/avatar.png';
 
 let linksState = [];
-let currentFileSha = null;
+let currentAvatarUrl = '';
+let newAvatarBase64 = null; // Holds base64 if a new file was picked
 
 document.addEventListener('DOMContentLoaded', () => {
   initAuth();
@@ -13,8 +15,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function getAuthHeader(token) {
-  // If classic token (starts with ghp_), both token and Bearer work, Bearer is standard
-  // If fine-grained (starts with github_pat_), Bearer is required
   return `Bearer ${token.trim()}`;
 }
 
@@ -77,6 +77,51 @@ function setupEventListeners() {
     }
   });
 
+  // Avatar File Upload Selection
+  const fileInput = document.getElementById('avatar-file-input');
+  fileInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      showToast('画像を最適化中...', 'info');
+      // Resize and convert to Base64
+      newAvatarBase64 = await processAndResizeImage(file, 600);
+      setAvatarPreview(newAvatarBase64);
+      document.getElementById('avatar-url-input').value = '';
+      showToast('画像を選択しました。「保存」を押すと反映されます', 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('画像の読み込みに失敗しました', 'error');
+    }
+  });
+
+  // Avatar URL manual input
+  const urlInput = document.getElementById('avatar-url-input');
+  urlInput.addEventListener('input', (e) => {
+    const url = e.target.value.trim();
+    if (url) {
+      newAvatarBase64 = null;
+      currentAvatarUrl = url;
+      setAvatarPreview(url);
+    } else {
+      if (!newAvatarBase64) {
+        currentAvatarUrl = '';
+        setAvatarPreview('');
+      }
+    }
+  });
+
+  // Remove Avatar
+  document.getElementById('remove-avatar-btn').addEventListener('click', () => {
+    newAvatarBase64 = null;
+    currentAvatarUrl = '';
+    document.getElementById('avatar-url-input').value = '';
+    fileInput.value = '';
+    setAvatarPreview('');
+    showToast('アイコンを初期絵文字に戻しました', 'info');
+  });
+
   // Add Link
   document.getElementById('add-link-btn').addEventListener('click', () => {
     linksState.push({
@@ -114,6 +159,60 @@ function setupEventListeners() {
   });
 }
 
+function setAvatarPreview(src) {
+  const img = document.getElementById('admin-avatar-preview');
+  const fallback = document.getElementById('admin-avatar-fallback');
+  if (src) {
+    img.src = src;
+    img.style.display = 'block';
+    fallback.style.display = 'none';
+  } else {
+    img.src = '';
+    img.style.display = 'none';
+    fallback.style.display = 'flex';
+  }
+}
+
+// Compress & Resize image to max 600px width/height and return base64 data url
+function processAndResizeImage(file, maxSize = 600) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxSize) {
+            height = Math.round((height * maxSize) / width);
+            width = maxSize;
+          }
+        } else {
+          if (height > maxSize) {
+            width = Math.round((width * maxSize) / height);
+            height = maxSize;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Export as WebP or PNG data URL
+        const dataUrl = canvas.toDataURL('image/png', 0.9);
+        resolve(dataUrl);
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 // Verify token permissions against repository
 async function verifyToken(token) {
   try {
@@ -130,7 +229,7 @@ async function verifyToken(token) {
     if (res.status === 404) {
       return { 
         valid: false, 
-        message: 'リポジトリが見つからないか、トークンに「repo」権限が付いていません。下の「トークン作成画面を開く」リンクから作成し直してください。' 
+        message: 'リポジトリが見つからないか、トークンに「repo」権限が付いていません。下のリンクから作成し直してください。' 
       };
     }
     if (!res.ok) {
@@ -173,6 +272,18 @@ function populateForm(data) {
     document.getElementById('profile-name').value = profile.name || '';
     document.getElementById('profile-bio').value = profile.bio || '';
     document.getElementById('card-bio').value = profile.cardBio || '';
+    
+    // Avatar
+    currentAvatarUrl = profile.avatar || '';
+    if (currentAvatarUrl) {
+      setAvatarPreview(currentAvatarUrl);
+      if (!currentAvatarUrl.startsWith('images/')) {
+        document.getElementById('avatar-url-input').value = currentAvatarUrl;
+      }
+    } else {
+      setAvatarPreview('');
+    }
+
     if (profile.about) {
       document.getElementById('about-name').value = profile.about.name || '';
       document.getElementById('about-hobby').value = profile.about.hobby || '';
@@ -245,7 +356,7 @@ window.updateLink = function(index, field, value) {
 };
 
 // Build current JSON object from form
-function buildDataJson() {
+function buildDataJson(avatarUrl) {
   const username = document.getElementById('twitter-username').value.trim();
   const name = document.getElementById('profile-name').value.trim();
 
@@ -253,6 +364,7 @@ function buildDataJson() {
     profile: {
       name: name,
       handle: username ? `@${username}` : '',
+      avatar: avatarUrl,
       bio: document.getElementById('profile-bio').value,
       cardBio: document.getElementById('card-bio').value,
       about: {
@@ -269,7 +381,51 @@ function buildDataJson() {
   };
 }
 
-// Save to GitHub via API
+// Upload image file to GitHub repository if a new file is selected
+async function uploadAvatarImageToGitHub(token, dataUrl) {
+  // Strip "data:image/png;base64," header
+  const base64Content = dataUrl.split(',')[1];
+  const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${AVATAR_IMAGE_PATH}`;
+
+  // Check if avatar.png exists to get sha
+  let sha = null;
+  const getRes = await fetch(url, {
+    headers: {
+      'Authorization': getAuthHeader(token),
+      'Accept': 'application/vnd.github.v3+json'
+    }
+  });
+  if (getRes.ok) {
+    const data = await getRes.json();
+    sha = data.sha;
+  }
+
+  // Put image file
+  const putPayload = {
+    message: 'Upload avatar image via Admin Dashboard',
+    content: base64Content
+  };
+  if (sha) putPayload.sha = sha;
+
+  const putRes = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      'Authorization': getAuthHeader(token),
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(putPayload)
+  });
+
+  if (!putRes.ok) {
+    const err = await putRes.json().catch(() => ({}));
+    throw new Error(`画像アップロード失敗: ${err.message || putRes.status}`);
+  }
+
+  return `${AVATAR_IMAGE_PATH}?v=${Date.now()}`;
+}
+
+// Save all to GitHub via API
 async function saveToGitHub() {
   const token = localStorage.getItem('gh_token');
   if (!token) {
@@ -287,10 +443,26 @@ async function saveToGitHub() {
   spinner.style.display = 'inline-block';
 
   try {
-    const updatedData = buildDataJson();
+    let finalAvatarUrl = currentAvatarUrl;
+
+    // 1. If a new image was selected, upload it first
+    if (newAvatarBase64) {
+      btnText.textContent = '画像を保存中...';
+      finalAvatarUrl = await uploadAvatarImageToGitHub(token, newAvatarBase64);
+      newAvatarBase64 = null;
+      currentAvatarUrl = finalAvatarUrl;
+    } else {
+      const manualUrl = document.getElementById('avatar-url-input').value.trim();
+      if (manualUrl) {
+        finalAvatarUrl = manualUrl;
+      }
+    }
+
+    btnText.textContent = 'データを保存中...';
+    const updatedData = buildDataJson(finalAvatarUrl);
     const jsonString = JSON.stringify(updatedData, null, 2);
 
-    // 1. Get current file sha
+    // 2. Get current file sha of data.json
     const getUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${DATA_FILE_PATH}`;
     const getRes = await fetch(getUrl, {
       headers: {
@@ -305,21 +477,9 @@ async function saveToGitHub() {
       sha = fileData.sha;
     } else if (getRes.status === 401) {
       throw new Error('トークンが無効または期限切れです。「連携解除」して再設定してください。');
-    } else if (getRes.status === 404) {
-      // 404 can mean file not found OR token lacks repo permissions
-      // Let's verify repository access
-      const repoCheck = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}`, {
-        headers: {
-          'Authorization': getAuthHeader(token),
-          'Accept': 'application/vnd.github.v3+json'
-        }
-      });
-      if (repoCheck.status === 404 || repoCheck.status === 403) {
-        throw new Error('トークンにリポジトリの編集権限（repo）がありません。トークンを作り直してください。');
-      }
     }
 
-    // 2. Put file to GitHub
+    // 3. Put data.json to GitHub
     const putUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${DATA_FILE_PATH}`;
     const contentBase64 = utf8ToBase64(jsonString);
 
@@ -342,9 +502,6 @@ async function saveToGitHub() {
     });
 
     if (!putRes.ok) {
-      if (putRes.status === 404) {
-        throw new Error('トークンに「repo」書き込み権限がありません。トークン作成時に「repo」にチェックが入っているかご確認ください。');
-      }
       const errData = await putRes.json().catch(() => ({}));
       throw new Error(errData.message || `GitHub保存失敗 (${putRes.status})`);
     }

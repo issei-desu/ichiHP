@@ -39,6 +39,31 @@ function applyData(data) {
   const { profile, twitter, links } = data;
 
   if (profile) {
+    // Avatar image handling
+    const heroAvatarImg = document.getElementById('hero-avatar-img');
+    const heroAvatarPlaceholder = document.getElementById('hero-avatar-placeholder');
+    const cardAvatarImg = document.getElementById('card-avatar-img');
+    const cardAvatarPlaceholder = document.getElementById('card-avatar-placeholder');
+
+    if (profile.avatar) {
+      if (heroAvatarImg) {
+        heroAvatarImg.src = profile.avatar;
+        heroAvatarImg.style.display = 'block';
+      }
+      if (heroAvatarPlaceholder) heroAvatarPlaceholder.style.display = 'none';
+
+      if (cardAvatarImg) {
+        cardAvatarImg.src = profile.avatar;
+        cardAvatarImg.style.display = 'block';
+      }
+      if (cardAvatarPlaceholder) cardAvatarPlaceholder.style.display = 'none';
+    } else {
+      if (heroAvatarImg) heroAvatarImg.style.display = 'none';
+      if (heroAvatarPlaceholder) heroAvatarPlaceholder.style.display = 'flex';
+      if (cardAvatarImg) cardAvatarImg.style.display = 'none';
+      if (cardAvatarPlaceholder) cardAvatarPlaceholder.style.display = 'inline';
+    }
+
     if (profile.name) {
       const navName = document.getElementById('nav-name');
       const heroTitle = document.getElementById('hero-title');
