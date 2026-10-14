@@ -19,7 +19,7 @@
     <div class="container nav-container">
       <a href="#" class="logo">
         <span class="logo-badge">HP</span>
-        <span class="logo-text">jk_na_ri_ta_i</span>
+        <span class="logo-text" id="nav-name">jk_na_ri_ta_i</span>
       </a>
       <nav class="nav-links">
         <a href="#about">About</a>
@@ -39,18 +39,18 @@
             <span>✨</span>
           </div>
         </div>
-        <h1 class="hero-title">jk_na_ri_ta_i</h1>
-        <span class="hero-handle">@jk_na_ri_ta_i</span>
-        <p class="hero-desc">
+        <h1 class="hero-title" id="hero-title">jk_na_ri_ta_i</h1>
+        <span class="hero-handle" id="hero-handle">@jk_na_ri_ta_i</span>
+        <p class="hero-desc" id="hero-desc">
           ようこそ！ここは私のホームページです。<br>
           日々のつぶやきや活動を気ままに発信しています。
         </p>
         <div class="hero-actions">
-          <a href="https://x.com/jk_na_ri_ta_i" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+          <a href="https://x.com/jk_na_ri_ta_i" target="_blank" rel="noopener noreferrer" class="btn btn-primary" id="hero-x-btn">
             <svg class="x-icon" viewBox="0 0 24 24" fill="currentColor">
               <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
             </svg>
-            X (@jk_na_ri_ta_i) を見に行く
+            <span id="hero-x-btn-text">X (@jk_na_ri_ta_i) を見に行く</span>
           </a>
           <a href="#about" class="btn btn-secondary">自己紹介を見る</a>
         </div>
@@ -74,15 +74,15 @@
                 <span>🎀</span>
               </div>
               <div class="profile-info">
-                <h3 class="profile-name">jk_na_ri_ta_i</h3>
-                <span class="profile-id">@jk_na_ri_ta_i</span>
+                <h3 class="profile-name" id="card-name">jk_na_ri_ta_i</h3>
+                <span class="profile-id" id="card-handle">@jk_na_ri_ta_i</span>
               </div>
             </div>
-            <p class="profile-bio">
+            <p class="profile-bio" id="card-bio">
               Xで気ままにポスト中！最新情報はリンク先からチェックしてみてね。
             </p>
             <div class="profile-footer">
-              <a href="https://x.com/jk_na_ri_ta_i" target="_blank" rel="noopener noreferrer" class="btn-x-follow">
+              <a href="https://x.com/jk_na_ri_ta_i" target="_blank" rel="noopener noreferrer" class="btn-x-follow" id="card-x-link">
                 <svg class="x-icon" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                 </svg>
@@ -92,13 +92,14 @@
           </div>
 
           <!-- Official Timeline Embed -->
-          <div class="card twitter-timeline-card">
+          <div class="card twitter-timeline-card" id="timeline-card-wrapper">
             <div class="timeline-header">
               <span class="pulse-dot"></span>
               <span>タイムライン（最新投稿）</span>
             </div>
-            <div class="timeline-container">
+            <div class="timeline-container" id="timeline-container">
               <a class="twitter-timeline" 
+                 id="twitter-timeline-link"
                  data-height="420" 
                  data-theme="light" 
                  data-chrome="noheader,nofooter,noborders,transparent"
@@ -124,15 +125,15 @@
           <div class="about-grid">
             <div class="about-item">
               <span class="about-label">名前 / ハンドルネーム</span>
-              <p class="about-value">jk_na_ri_ta_i</p>
+              <p class="about-value" id="about-name">jk_na_ri_ta_i</p>
             </div>
             <div class="about-item">
               <span class="about-label">好きなこと / 趣味</span>
-              <p class="about-value">（ここに入れたい内容があれば教えてください！）</p>
+              <p class="about-value" id="about-hobby">（ここに入れたい内容があれば教えてください！）</p>
             </div>
             <div class="about-item">
               <span class="about-label">ひとこと</span>
-              <p class="about-value">気ままにのんびりやってます。仲良くしてください✨</p>
+              <p class="about-value" id="about-message">気ままにのんびりやってます。仲良くしてください✨</p>
             </div>
           </div>
         </div>
@@ -148,7 +149,8 @@
           <p class="section-subtitle">関連リンク</p>
         </div>
 
-        <div class="links-list">
+        <div class="links-list" id="links-container">
+          <!-- Dynamically populated or fallback -->
           <a href="https://x.com/jk_na_ri_ta_i" target="_blank" rel="noopener noreferrer" class="link-item">
             <div class="link-icon">
               <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
@@ -159,11 +161,6 @@
             </div>
             <span class="link-arrow">→</span>
           </a>
-
-          <!-- 追加可能なリンク枠 -->
-          <div class="link-placeholder">
-            <span>＋ 他のリンク（Instagram, TikTok, YouTubeなど）も追加できます</span>
-          </div>
         </div>
       </div>
     </section>
@@ -171,8 +168,8 @@
 
   <footer class="footer">
     <div class="container footer-container">
-      <p>&copy; 2026 jk_na_ri_ta_i. All rights reserved.</p>
-      <p class="footer-sub">Designed for Mobile</p>
+      <p>&copy; 2026 <span id="footer-name">jk_na_ri_ta_i</span>. All rights reserved.</p>
+      <p class="footer-sub">Designed for Mobile · <a href="admin.html" style="color: var(--text-light); text-decoration: none; font-size: 0.7rem;">Admin</a></p>
     </div>
   </footer>
 

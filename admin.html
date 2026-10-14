@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>HP管理画面 - Admin Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="admin.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="admin-body">
+  <!-- Header -->
+  <header class="header">
+    <div class="container nav-container">
+      <div class="logo">
+        <span class="logo-badge">Admin</span>
+        <span class="logo-text">HP管理画面</span>
+      </div>
+      <div class="nav-links">
+        <a href="index.html" class="btn-subtle">← HPを見る</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container admin-container">
+    <!-- Notice Banner -->
+    <div class="admin-banner">
+      <div class="banner-icon">📱</div>
+      <div class="banner-text">
+        <strong>スマホからHPを自由に編集！</strong>
+        <span>変更した内容は「保存する」を押すと自動でGitHubに反映されます。</span>
+      </div>
+    </div>
+
+    <!-- Auth / Token Section -->
+    <section class="card admin-card" id="auth-section">
+      <div class="card-header-row">
+        <h2 class="card-title">🔑 GitHub連携設定</h2>
+        <span class="badge" id="auth-status-badge">未設定</span>
+      </div>
+      <p class="card-desc">
+        HPのデータを書き換えるための自分専用のGitHubトークンを設定します（ブラウザにのみ安全に保存されます）。
+      </p>
+
+      <div class="form-group" id="token-input-group">
+        <label for="github-token" class="form-label">GitHub 個人アクセストークン (PAT)</label>
+        <div class="input-with-btn">
+          <input type="password" id="github-token" class="form-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+          <button type="button" id="save-token-btn" class="btn btn-primary btn-sm">連携する</button>
+        </div>
+        <details class="token-guide">
+          <summary>💡 トークンの作り方（1分でできます）</summary>
+          <div class="guide-content">
+            <ol>
+              <li>GitHubの <a href="https://github.com/settings/tokens/new" target="_blank" rel="noopener">Token作成ページ</a> を開きます。</li>
+              <li>「Note」に <code>my-hp-admin</code> などわかりやすい名前を入力します。</li>
+              <li>「Expiration」をお好みの期間（例: 90 days や No expiration）にします。</li>
+              <li>「Select scopes」で <strong>「repo」</strong> にチェックを入れます。</li>
+              <li>一番下の緑の「Generate token」を押し、表示された <code>ghp_...</code> をコピーしてここに入力します。</li>
+            </ol>
+          </div>
+        </details>
+      </div>
+
+      <div id="token-active-group" class="token-active-box" style="display: none;">
+        <div class="active-info">
+          <span class="check-icon">✓</span>
+          <span>GitHubと正常に連携されています</span>
+        </div>
+        <button type="button" id="clear-token-btn" class="btn btn-secondary btn-sm">連携解除 / 変更</button>
+      </div>
+    </section>
+
+    <!-- Main Edit Form -->
+    <form id="admin-form">
+      <!-- Profile Section -->
+      <section class="card admin-card">
+        <h2 class="card-title">👤 プロフィール基本情報</h2>
+        
+        <div class="form-group">
+          <label for="profile-name" class="form-label">表示名（名前）</label>
+          <input type="text" id="profile-name" class="form-input" placeholder="jk_na_ri_ta_i" required>
+        </div>
+
+        <div class="form-group">
+          <label for="twitter-username" class="form-label">X（Twitter）ユーザー名（@なし）</label>
+          <div class="input-prefix-wrapper">
+            <span class="input-prefix">@</span>
+            <input type="text" id="twitter-username" class="form-input with-prefix" placeholder="jk_na_ri_ta_i" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="profile-bio" class="form-label">トップの紹介文（Bio）</label>
+          <textarea id="profile-bio" class="form-textarea" rows="3" placeholder="ようこそ！ここは私のホームページです。"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="card-bio" class="form-label">Xカード内の紹介文</label>
+          <textarea id="card-bio" class="form-textarea" rows="2" placeholder="Xで気ままにポスト中！"></textarea>
+        </div>
+      </section>
+
+      <!-- About Details Section -->
+      <section class="card admin-card">
+        <h2 class="card-title">📝 自己紹介（About Me）</h2>
+        
+        <div class="form-group">
+          <label for="about-name" class="form-label">お名前 / 呼び名</label>
+          <input type="text" id="about-name" class="form-input" placeholder="jk_na_ri_ta_i">
+        </div>
+
+        <div class="form-group">
+          <label for="about-hobby" class="form-label">好きなこと / 趣味</label>
+          <input type="text" id="about-hobby" class="form-input" placeholder="音楽を聴くこと、カフェ巡り、ゲーム">
+        </div>
+
+        <div class="form-group">
+          <label for="about-message" class="form-label">ひとことメッセージ</label>
+          <textarea id="about-message" class="form-textarea" rows="2" placeholder="気ままにのんびりやってます。仲良くしてください✨"></textarea>
+        </div>
+      </section>
+
+      <!-- Twitter Settings -->
+      <section class="card admin-card">
+        <h2 class="card-title">🐦 X（Twitter）設定</h2>
+        
+        <div class="form-toggle-row">
+          <div>
+            <strong>タイムライン（最新ポスト）を表示する</strong>
+            <p class="form-subtext">OFFにするとプロフィールカードのみのすっきりした表示になります。</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="show-timeline-checkbox" checked>
+            <span class="slider round"></span>
+          </label>
+        </div>
+      </section>
+
+      <!-- Links Manager -->
+      <section class="card admin-card">
+        <div class="card-header-row">
+          <h2 class="card-title">🔗 関連リンク一覧</h2>
+          <button type="button" id="add-link-btn" class="btn btn-subtle-primary btn-sm">＋ リンク追加</button>
+        </div>
+        <p class="card-desc">Instagram、YouTube、TikTok、ブログなどのリンクを自由に追加できます。</p>
+
+        <div id="links-list-editor" class="links-editor-list">
+          <!-- Dynamic Link Items will be rendered here -->
+        </div>
+      </section>
+
+      <!-- Bottom Floating Save Bar -->
+      <div class="save-bar">
+        <div class="save-bar-content">
+          <button type="button" id="preview-btn" class="btn btn-secondary">プレビュー</button>
+          <button type="submit" id="save-all-btn" class="btn btn-primary">
+            <span id="save-btn-text">🚀 保存してHPに反映</span>
+            <span id="save-btn-spinner" class="spinner" style="display: none;"></span>
+          </button>
+        </div>
+      </div>
+    </form>
+  </main>
+
+  <!-- Status Toast / Modal -->
+  <div id="toast" class="toast"></div>
+
+  <!-- Preview Modal -->
+  <div id="preview-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>サイトプレビュー</h3>
+        <button type="button" id="close-modal-btn" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <iframe id="preview-iframe" src="index.html" class="preview-frame"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+</html>

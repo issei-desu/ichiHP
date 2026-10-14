@@ -1,0 +1,26 @@
+{
+  "profile": {
+    "name": "jk_na_ri_ta_i",
+    "handle": "@jk_na_ri_ta_i",
+    "bio": "ようこそ！ここは私のホームページです。\n日々のつぶやきや活動を気ままに発信しています。",
+    "cardBio": "Xで気ままにポスト中！最新情報はリンク先からチェックしてみてね。",
+    "about": {
+      "name": "jk_na_ri_ta_i",
+      "hobby": "（ここに入れたい内容があれば教えてください！）",
+      "message": "気ままにのんびりやってます。仲良くしてください✨"
+    }
+  },
+  "twitter": {
+    "username": "jk_na_ri_ta_i",
+    "showTimeline": true
+  },
+  "links": [
+    {
+      "id": "1",
+      "title": "X (Twitter)",
+      "url": "https://x.com/jk_na_ri_ta_i",
+      "sub": "@jk_na_ri_ta_i",
+      "icon": "twitter"
+    }
+  ]
+}
