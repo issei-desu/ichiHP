@@ -1,12 +1,12 @@
 {
   "profile": {
-    "name": "jk_na_ri_ta_i",
+    "name": "いち",
     "handle": "@jk_na_ri_ta_i",
-    "bio": "ようこそ！ここは私のホームページです。\n日々のつぶやきや活動を気ままに発信しています。",
+    "bio": "どうも、いちです。",
     "cardBio": "Xで気ままにポスト中！最新情報はリンク先からチェックしてみてね。",
     "about": {
       "name": "jk_na_ri_ta_i",
-      "hobby": "（ここに入れたい内容があれば教えてください！）",
+      "hobby": "こんな感じのページを作ったりしてます。AIで作ってる部分が結構あったりします。",
       "message": "気ままにのんびりやってます。仲良くしてください✨"
     }
   },
@@ -19,7 +19,7 @@
       "id": "1",
       "title": "X (Twitter)",
       "url": "https://x.com/jk_na_ri_ta_i",
-      "sub": "@jk_na_ri_ta_i",
+      "sub": "メイン垢",
       "icon": "twitter"
     }
   ]
