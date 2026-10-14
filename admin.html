@@ -50,15 +50,19 @@
           <input type="password" id="github-token" class="form-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
           <button type="button" id="save-token-btn" class="btn btn-primary btn-sm">連携する</button>
         </div>
-        <details class="token-guide">
-          <summary>💡 トークンの作り方（1分でできます）</summary>
+        <details class="token-guide" open>
+          <summary>💡 トークンの作り方（自動設定リンク付き）</summary>
           <div class="guide-content">
+            <p style="margin-bottom: 8px;">以下のボタンを押すと、<strong>必要な権限（repo）があらかじめ選択された状態</strong>で作成画面が開きます：</p>
+            <p style="margin-bottom: 10px;">
+              <a href="https://github.com/settings/tokens/new?description=ichiHP-admin&scopes=repo" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="display: inline-block; color: #fff; text-decoration: none;">
+                🔑 トークン作成画面を開く（自動チェック付き）
+              </a>
+            </p>
             <ol>
-              <li>GitHubの <a href="https://github.com/settings/tokens/new" target="_blank" rel="noopener">Token作成ページ</a> を開きます。</li>
-              <li>「Note」に <code>my-hp-admin</code> などわかりやすい名前を入力します。</li>
-              <li>「Expiration」をお好みの期間（例: 90 days や No expiration）にします。</li>
-              <li>「Select scopes」で <strong>「repo」</strong> にチェックを入れます。</li>
-              <li>一番下の緑の「Generate token」を押し、表示された <code>ghp_...</code> をコピーしてここに入力します。</li>
+              <li>上のリンクを開いたら、一番下までスクロールして緑色の <strong>「Generate token」</strong> ボタンを押します。</li>
+              <li>画面に表示された <code>ghp_...</code> から始まる文字列をコピーします。</li>
+              <li>このページの入力欄に貼り付けて <strong>「連携する」</strong> を押せば完了です！</li>
             </ol>
           </div>
         </details>

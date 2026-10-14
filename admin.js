@@ -12,6 +12,12 @@ document.addEventListener('DOMContentLoaded', () => {
   setupEventListeners();
 });
 
+function getAuthHeader(token) {
+  // If classic token (starts with ghp_), both token and Bearer work, Bearer is standard
+  // If fine-grained (starts with github_pat_), Bearer is required
+  return `Bearer ${token.trim()}`;
+}
+
 // Authentication Handling with LocalStorage
 function initAuth() {
   const token = localStorage.getItem('gh_token');
@@ -33,18 +39,33 @@ function initAuth() {
 }
 
 function setupEventListeners() {
-  // Token save
-  document.getElementById('save-token-btn').addEventListener('click', () => {
+  // Token save with verification
+  document.getElementById('save-token-btn').addEventListener('click', async () => {
     const tokenInput = document.getElementById('github-token');
     const token = tokenInput.value.trim();
     if (!token) {
       showToast('トークンを入力してください', 'error');
       return;
     }
+
+    const saveBtn = document.getElementById('save-token-btn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = '検証中...';
+
+    const verification = await verifyToken(token);
+    saveBtn.disabled = false;
+    saveBtn.textContent = '連携する';
+
+    if (!verification.valid) {
+      showToast(verification.message, 'error');
+      alert(`【連携エラー】\n${verification.message}`);
+      return;
+    }
+
     localStorage.setItem('gh_token', token);
     tokenInput.value = '';
     initAuth();
-    showToast('GitHub連携が完了しました！', 'success');
+    showToast('✨ GitHub連携が完了しました！', 'success');
   });
 
   // Token clear
@@ -91,6 +112,43 @@ function setupEventListeners() {
       previewModal.classList.remove('show');
     }
   });
+}
+
+// Verify token permissions against repository
+async function verifyToken(token) {
+  try {
+    const res = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}`, {
+      headers: {
+        'Authorization': getAuthHeader(token),
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+
+    if (res.status === 401) {
+      return { valid: false, message: 'トークンが無効または期限切れです。' };
+    }
+    if (res.status === 404) {
+      return { 
+        valid: false, 
+        message: 'リポジトリが見つからないか、トークンに「repo」権限が付いていません。下の「トークン作成画面を開く」リンクから作成し直してください。' 
+      };
+    }
+    if (!res.ok) {
+      return { valid: false, message: `GitHub確認エラー (${res.status})` };
+    }
+
+    const data = await res.json();
+    if (data.permissions && !data.permissions.push) {
+      return { 
+        valid: false, 
+        message: 'このトークンにはリポジトリへの書き込み（push）権限がありません。「repo」権限を有効にしたトークンが必要です。' 
+      };
+    }
+
+    return { valid: true };
+  } catch (err) {
+    return { valid: false, message: `通信エラー: ${err.message}` };
+  }
 }
 
 // Load current data from data.json
@@ -236,7 +294,7 @@ async function saveToGitHub() {
     const getUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${DATA_FILE_PATH}`;
     const getRes = await fetch(getUrl, {
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': getAuthHeader(token),
         'Accept': 'application/vnd.github.v3+json'
       }
     });
@@ -246,7 +304,19 @@ async function saveToGitHub() {
       const fileData = await getRes.json();
       sha = fileData.sha;
     } else if (getRes.status === 401) {
-      throw new Error('トークンが無効または期限切れです。再設定してください。');
+      throw new Error('トークンが無効または期限切れです。「連携解除」して再設定してください。');
+    } else if (getRes.status === 404) {
+      // 404 can mean file not found OR token lacks repo permissions
+      // Let's verify repository access
+      const repoCheck = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}`, {
+        headers: {
+          'Authorization': getAuthHeader(token),
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      });
+      if (repoCheck.status === 404 || repoCheck.status === 403) {
+        throw new Error('トークンにリポジトリの編集権限（repo）がありません。トークンを作り直してください。');
+      }
     }
 
     // 2. Put file to GitHub
@@ -264,7 +334,7 @@ async function saveToGitHub() {
     const putRes = await fetch(putUrl, {
       method: 'PUT',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': getAuthHeader(token),
         'Accept': 'application/vnd.github.v3+json',
         'Content-Type': 'application/json'
       },
@@ -272,14 +342,18 @@ async function saveToGitHub() {
     });
 
     if (!putRes.ok) {
+      if (putRes.status === 404) {
+        throw new Error('トークンに「repo」書き込み権限がありません。トークン作成時に「repo」にチェックが入っているかご確認ください。');
+      }
       const errData = await putRes.json().catch(() => ({}));
-      throw new Error(errData.message || 'GitHubへの保存に失敗しました');
+      throw new Error(errData.message || `GitHub保存失敗 (${putRes.status})`);
     }
 
     showToast('✨ 保存完了！約1分でHPに反映されます', 'success');
   } catch (err) {
     console.error('Save error:', err);
     showToast(`エラー: ${err.message}`, 'error');
+    alert(`【保存エラー】\n${err.message}`);
   } finally {
     saveBtn.disabled = false;
     btnText.textContent = '🚀 保存してHPに反映';
@@ -305,5 +379,5 @@ function showToast(message, type = 'success') {
   toast.className = `toast show ${type}`;
   setTimeout(() => {
     toast.className = 'toast';
-  }, 4000);
+  }, 4500);
 }
