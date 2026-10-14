@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>jk_na_ri_ta_i's Official Page</title>
+  <title id="page-title">いちのホームページ</title>
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,13 +18,12 @@
   <header class="header">
     <div class="container nav-container">
       <a href="#" class="logo">
-        <span class="logo-badge">HP</span>
-        <span class="logo-text" id="nav-name">jk_na_ri_ta_i</span>
+        <span class="logo-badge" id="logo-badge">HP</span>
+        <span class="logo-text" id="nav-name">いち</span>
       </a>
       <nav class="nav-links">
-        <a href="#about">About</a>
         <a href="#twitter">X (Twitter)</a>
-        <a href="#links">Links</a>
+        <a href="#contents">Profile</a>
       </nav>
     </div>
   </header>
@@ -40,11 +39,10 @@
             <span>✨</span>
           </div>
         </div>
-        <h1 class="hero-title" id="hero-title">jk_na_ri_ta_i</h1>
+        <h1 class="hero-title" id="hero-title">いち</h1>
         <span class="hero-handle" id="hero-handle">@jk_na_ri_ta_i</span>
         <p class="hero-desc" id="hero-desc">
-          ようこそ！ここは私のホームページです。<br>
-          日々のつぶやきや活動を気ままに発信しています。
+          どうも、いちです。
         </p>
         <div class="hero-actions">
           <a href="https://x.com/jk_na_ri_ta_i" target="_blank" rel="noopener noreferrer" class="btn btn-primary" id="hero-x-btn">
@@ -53,7 +51,7 @@
             </svg>
             <span id="hero-x-btn-text">X (@jk_na_ri_ta_i) を見に行く</span>
           </a>
-          <a href="#about" class="btn btn-secondary">自己紹介を見る</a>
+          <a href="#contents" class="btn btn-secondary">プロフィールを見る</a>
         </div>
       </div>
     </section>
@@ -63,8 +61,8 @@
       <div class="container">
         <div class="section-header">
           <span class="section-tag">Social</span>
-          <h2 class="section-title">Latest on X</h2>
-          <p class="section-subtitle">X（旧Twitter）のプロフィール＆最新ポスト</p>
+          <h2 class="section-title" id="twitter-section-title">Latest on X</h2>
+          <p class="section-subtitle" id="twitter-section-subtitle">X（旧Twitter）のプロフィール＆最新ポスト</p>
         </div>
 
         <div class="twitter-stack">
@@ -76,7 +74,7 @@
                 <span id="card-avatar-placeholder">🎀</span>
               </div>
               <div class="profile-info">
-                <h3 class="profile-name" id="card-name">jk_na_ri_ta_i</h3>
+                <h3 class="profile-name" id="card-name">いち</h3>
                 <span class="profile-id" id="card-handle">@jk_na_ri_ta_i</span>
               </div>
             </div>
@@ -97,7 +95,7 @@
           <div class="card twitter-timeline-card" id="timeline-card-wrapper">
             <div class="timeline-header">
               <span class="pulse-dot"></span>
-              <span>タイムライン（最新投稿）</span>
+              <span id="timeline-box-title">タイムライン（最新投稿）</span>
             </div>
             <div class="timeline-container" id="timeline-container">
               <a class="twitter-timeline" 
@@ -114,55 +112,19 @@
       </div>
     </section>
 
-    <!-- About Section -->
-    <section id="about" class="section about-section">
+    <!-- Tabs Container Section (Real, Oshi, etc.) -->
+    <section id="contents" class="section tabs-section">
       <div class="container">
-        <div class="section-header">
-          <span class="section-tag">Profile</span>
-          <h2 class="section-title">About Me</h2>
-          <p class="section-subtitle">自己紹介</p>
-        </div>
-
-        <div class="card about-card">
-          <div class="about-grid">
-            <div class="about-item">
-              <span class="about-label">名前 / ハンドルネーム</span>
-              <p class="about-value" id="about-name">jk_na_ri_ta_i</p>
-            </div>
-            <div class="about-item">
-              <span class="about-label">好きなこと / 趣味</span>
-              <p class="about-value" id="about-hobby">（ここに入れたい内容があれば教えてください！）</p>
-            </div>
-            <div class="about-item">
-              <span class="about-label">ひとこと</span>
-              <p class="about-value" id="about-message">気ままにのんびりやってます。仲良くしてください✨</p>
-            </div>
+        <!-- Tabs Navigation -->
+        <div class="tabs-nav-wrapper">
+          <div class="tabs-nav" id="tabs-nav">
+            <!-- Dynamically populated tab buttons -->
           </div>
         </div>
-      </div>
-    </section>
 
-    <!-- Links Section -->
-    <section id="links" class="section links-section">
-      <div class="container">
-        <div class="section-header">
-          <span class="section-tag">Links</span>
-          <h2 class="section-title">Official Links</h2>
-          <p class="section-subtitle">関連リンク</p>
-        </div>
-
-        <div class="links-list" id="links-container">
-          <!-- Dynamically populated or fallback -->
-          <a href="https://x.com/jk_na_ri_ta_i" target="_blank" rel="noopener noreferrer" class="link-item">
-            <div class="link-icon">
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-            </div>
-            <div class="link-text">
-              <span class="link-title">X (Twitter)</span>
-              <span class="link-sub">@jk_na_ri_ta_i</span>
-            </div>
-            <span class="link-arrow">→</span>
-          </a>
+        <!-- Tab Panes Container -->
+        <div id="tab-panes-container">
+          <!-- Dynamically populated tab contents -->
         </div>
       </div>
     </section>
@@ -170,7 +132,7 @@
 
   <footer class="footer">
     <div class="container footer-container">
-      <p>&copy; 2026 <span id="footer-name">jk_na_ri_ta_i</span>. All rights reserved.</p>
+      <p id="footer-text">&copy; 2026 いち. All rights reserved.</p>
       <p class="footer-sub">Designed for Mobile · <a href="admin.html" style="color: var(--text-light); text-decoration: none; font-size: 0.7rem;">Admin</a></p>
     </div>
   </footer>

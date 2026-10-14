@@ -1,4 +1,6 @@
-// Dynamic data loader and interactions
+// Dynamic data loader and tab interaction
+let currentActiveTabId = null;
+
 document.addEventListener('DOMContentLoaded', () => {
   // Smooth scroll
   const links = document.querySelectorAll('a[href^="#"]');
@@ -18,7 +20,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Load data.json
   loadPageData();
 });
 
@@ -36,10 +37,31 @@ async function loadPageData() {
 function applyData(data) {
   if (!data) return;
 
-  const { profile, twitter, links } = data;
+  const { site, profile, twitter, tabs } = data;
 
+  // Site Header / Footer texts
+  if (site) {
+    if (site.title) {
+      document.title = site.title;
+      const pt = document.getElementById('page-title');
+      if (pt) pt.textContent = site.title;
+    }
+    if (site.logoBadge) {
+      const lb = document.getElementById('logo-badge');
+      if (lb) lb.textContent = site.logoBadge;
+    }
+    if (site.logoText) {
+      const lt = document.getElementById('nav-name');
+      if (lt) lt.textContent = site.logoText;
+    }
+    if (site.footerText) {
+      const ft = document.getElementById('footer-text');
+      if (ft) ft.textContent = site.footerText;
+    }
+  }
+
+  // Profile
   if (profile) {
-    // Avatar image handling
     const heroAvatarImg = document.getElementById('hero-avatar-img');
     const heroAvatarPlaceholder = document.getElementById('hero-avatar-placeholder');
     const cardAvatarImg = document.getElementById('card-avatar-img');
@@ -65,14 +87,10 @@ function applyData(data) {
     }
 
     if (profile.name) {
-      const navName = document.getElementById('nav-name');
       const heroTitle = document.getElementById('hero-title');
       const cardName = document.getElementById('card-name');
-      const footerName = document.getElementById('footer-name');
-      if (navName) navName.textContent = profile.name;
       if (heroTitle) heroTitle.textContent = profile.name;
       if (cardName) cardName.textContent = profile.name;
-      if (footerName) footerName.textContent = profile.name;
     }
     if (profile.handle) {
       const heroHandle = document.getElementById('hero-handle');
@@ -92,16 +110,9 @@ function applyData(data) {
         cardBio.innerHTML = escapeHtml(profile.cardBio).replace(/\n/g, '<br>');
       }
     }
-    if (profile.about) {
-      const aboutName = document.getElementById('about-name');
-      const aboutHobby = document.getElementById('about-hobby');
-      const aboutMessage = document.getElementById('about-message');
-      if (aboutName && profile.about.name) aboutName.textContent = profile.about.name;
-      if (aboutHobby && profile.about.hobby) aboutHobby.textContent = profile.about.hobby;
-      if (aboutMessage && profile.about.message) aboutMessage.textContent = profile.about.message;
-    }
   }
 
+  // Twitter
   if (twitter) {
     const username = (twitter.username || '').replace(/^@/, '');
     if (username) {
@@ -115,16 +126,114 @@ function applyData(data) {
       if (cardXLink) cardXLink.href = xUrl;
     }
 
+    if (twitter.sectionTitle) {
+      const tst = document.getElementById('twitter-section-title');
+      if (tst) tst.textContent = twitter.sectionTitle;
+    }
+    if (twitter.sectionSubtitle) {
+      const tss = document.getElementById('twitter-section-subtitle');
+      if (tss) tss.textContent = twitter.sectionSubtitle;
+    }
+    if (twitter.timelineTitle) {
+      const tbt = document.getElementById('timeline-box-title');
+      if (tbt) tbt.textContent = twitter.timelineTitle;
+    }
+
     const timelineWrapper = document.getElementById('timeline-card-wrapper');
     if (timelineWrapper) {
       timelineWrapper.style.display = twitter.showTimeline === false ? 'none' : 'block';
     }
   }
 
-  if (Array.isArray(links)) {
-    renderLinks(links);
+  // Render Tabs
+  if (Array.isArray(tabs) && tabs.length > 0) {
+    renderTabs(tabs);
   }
 }
+
+function renderTabs(tabs) {
+  const navContainer = document.getElementById('tabs-nav');
+  const panesContainer = document.getElementById('tab-panes-container');
+  if (!navContainer || !panesContainer) return;
+
+  if (!currentActiveTabId || !tabs.find(t => t.id === currentActiveTabId)) {
+    currentActiveTabId = tabs[0].id;
+  }
+
+  // 1. Render Tab Buttons
+  navContainer.innerHTML = tabs.map(tab => `
+    <button type="button" 
+            class="tab-btn ${tab.id === currentActiveTabId ? 'active' : ''}" 
+            onclick="switchTab('${escapeHtml(tab.id)}')">
+      ${escapeHtml(tab.name)}
+    </button>
+  `).join('');
+
+  // 2. Render Tab Panes
+  panesContainer.innerHTML = tabs.map(tab => `
+    <div id="tab-pane-${escapeHtml(tab.id)}" class="tab-pane ${tab.id === currentActiveTabId ? 'active' : ''}">
+      <!-- About Card in Tab -->
+      <section class="section about-section" style="padding-top: 10px;">
+        <div class="section-header">
+          <span class="section-tag">${escapeHtml(tab.name)}</span>
+          <h2 class="section-title">${escapeHtml(tab.aboutTitle || 'About Me')}</h2>
+          ${tab.aboutSubtitle ? `<p class="section-subtitle">${escapeHtml(tab.aboutSubtitle)}</p>` : ''}
+        </div>
+
+        <div class="card about-card">
+          <div class="about-grid">
+            ${(tab.items || []).map(item => `
+              <div class="about-item">
+                <span class="about-label">${escapeHtml(item.label)}</span>
+                <p class="about-value">${escapeHtml(item.value).replace(/\n/g, '<br>')}</p>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </section>
+
+      <!-- Links in Tab -->
+      <section class="section links-section">
+        <div class="section-header">
+          <span class="section-tag">Links</span>
+          <h2 class="section-title">${escapeHtml(tab.linksTitle || 'Official Links')}</h2>
+          ${tab.linksSubtitle ? `<p class="section-subtitle">${escapeHtml(tab.linksSubtitle)}</p>` : ''}
+        </div>
+
+        <div class="links-list">
+          ${(tab.links && tab.links.length > 0) ? tab.links.map(link => `
+            <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer" class="link-item">
+              <div class="link-icon">
+                ${getIconSvg(link.icon)}
+              </div>
+              <div class="link-text">
+                <span class="link-title">${escapeHtml(link.title)}</span>
+                ${link.sub ? `<span class="link-sub">${escapeHtml(link.sub)}</span>` : ''}
+              </div>
+              <span class="link-arrow">→</span>
+            </a>
+          `).join('') : '<div class="link-placeholder"><span>リンクがまだありません</span></div>'}
+        </div>
+      </section>
+    </div>
+  `).join('');
+}
+
+window.switchTab = function(tabId) {
+  currentActiveTabId = tabId;
+
+  // Update Buttons
+  const buttons = document.querySelectorAll('.tab-btn');
+  buttons.forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('onclick').includes(`'${tabId}'`));
+  });
+
+  // Update Panes
+  const panes = document.querySelectorAll('.tab-pane');
+  panes.forEach(pane => {
+    pane.classList.toggle('active', pane.id === `tab-pane-${tabId}`);
+  });
+};
 
 function getIconSvg(type) {
   switch (type) {
@@ -142,29 +251,6 @@ function getIconSvg(type) {
     default:
       return '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>';
   }
-}
-
-function renderLinks(links) {
-  const container = document.getElementById('links-container');
-  if (!container) return;
-
-  if (links.length === 0) {
-    container.innerHTML = '<div class="link-placeholder"><span>リンクがまだありません</span></div>';
-    return;
-  }
-
-  container.innerHTML = links.map(link => `
-    <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer" class="link-item">
-      <div class="link-icon">
-        ${getIconSvg(link.icon)}
-      </div>
-      <div class="link-text">
-        <span class="link-title">${escapeHtml(link.title)}</span>
-        ${link.sub ? `<span class="link-sub">${escapeHtml(link.sub)}</span>` : ''}
-      </div>
-      <span class="link-arrow">→</span>
-    </a>
-  `).join('');
 }
 
 function escapeHtml(str) {

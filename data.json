@@ -1,26 +1,74 @@
 {
+  "site": {
+    "title": "いちのホームページ",
+    "logoBadge": "HP",
+    "logoText": "jk_na_ri_ta_i",
+    "footerText": "© 2026 いち. All rights reserved."
+  },
   "profile": {
     "name": "いち",
     "handle": "@jk_na_ri_ta_i",
+    "avatar": "images/avatar.png",
     "bio": "どうも、いちです。",
-    "cardBio": "Xで気ままにポスト中！最新情報はリンク先からチェックしてみてね。",
-    "about": {
-      "name": "jk_na_ri_ta_i",
-      "hobby": "こんな感じのページを作ったりしてます。AIで作ってる部分が結構あったりします。",
-      "message": "気ままにのんびりやってます。仲良くしてください✨"
-    }
+    "cardBio": "Xで気ままにポスト中！最新情報はリンク先からチェックしてみてね。"
   },
   "twitter": {
     "username": "jk_na_ri_ta_i",
-    "showTimeline": true
+    "showTimeline": true,
+    "sectionTitle": "Latest on X",
+    "sectionSubtitle": "X（旧Twitter）のプロフィール＆最新ポスト"
   },
-  "links": [
+  "tabs": [
     {
-      "id": "1",
-      "title": "X (Twitter)",
-      "url": "https://x.com/jk_na_ri_ta_i",
-      "sub": "メイン垢",
-      "icon": "twitter"
+      "id": "real",
+      "name": "リアル・日常 🌿",
+      "aboutTitle": "About Me（リアル）",
+      "aboutSubtitle": "日常やリアルの自己紹介",
+      "items": [
+        { "label": "お名前 / 呼び名", "value": "いち" },
+        { "label": "好きなこと / 趣味", "value": "こんな感じのページを作ったりしてます。AIで作ってる部分が結構あったりします。" },
+        { "label": "ひとこと", "value": "気ままにのんびりやってます。仲良くしてください✨" }
+      ],
+      "linksTitle": "Links（リアル）",
+      "linksSubtitle": "関連リンク",
+      "links": [
+        {
+          "id": "1",
+          "title": "X (Twitter)",
+          "url": "https://x.com/jk_na_ri_ta_i",
+          "sub": "メイン垢",
+          "icon": "twitter"
+        }
+      ]
+    },
+    {
+      "id": "oshi",
+      "name": "推し活 🎀",
+      "aboutTitle": "My Favorite（推しについて）",
+      "aboutSubtitle": "推しへの愛や活動情報",
+      "items": [
+        { "label": "最推し / 担当", "value": "（ここに推しの名前を入力！）" },
+        { "label": "推し歴 / きっかけ", "value": "（推し始めた時期やきっかけ）" },
+        { "label": "推しへのひとこと", "value": "いつも元気をくれてありがとう！一生推します✨" }
+      ],
+      "linksTitle": "推し活Links",
+      "linksSubtitle": "推し活関連のSNSや布教リンク",
+      "links": [
+        {
+          "id": "2",
+          "title": "推し活X垢",
+          "url": "https://x.com/jk_na_ri_ta_i",
+          "sub": "推し活専用アカウント",
+          "icon": "twitter"
+        },
+        {
+          "id": "3",
+          "title": "推しの公式YouTube",
+          "url": "https://youtube.com",
+          "sub": "MVやライブ映像はこちら",
+          "icon": "youtube"
+        }
+      ]
     }
   ]
 }

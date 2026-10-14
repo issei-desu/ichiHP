@@ -566,6 +566,71 @@ body {
   background: rgba(255, 255, 255, 0.5);
 }
 
+/* Tabs Navigation */
+.tabs-nav-wrapper {
+  margin: 16px 0 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.tabs-nav {
+  display: inline-flex;
+  gap: 6px;
+  background: rgba(226, 232, 240, 0.6);
+  padding: 5px;
+  border-radius: var(--radius-full);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  padding: 9px 18px;
+  border-radius: var(--radius-full);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+}
+
+.tab-btn:hover {
+  color: var(--text-main);
+}
+
+.tab-btn.active {
+  background: #ffffff;
+  color: var(--primary);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+}
+
+/* Tab Content Transitions */
+.tab-pane {
+  display: none;
+  animation: tabFadeIn 0.3s ease-out;
+}
+
+.tab-pane.active {
+  display: block;
+}
+
+@keyframes tabFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Footer */
 .footer {
   margin-top: 40px;

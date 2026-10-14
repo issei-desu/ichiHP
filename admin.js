@@ -4,9 +4,14 @@ const GITHUB_REPO = 'ichiHP';
 const DATA_FILE_PATH = 'data.json';
 const AVATAR_IMAGE_PATH = 'images/avatar.png';
 
-let linksState = [];
+let siteState = {};
+let profileState = {};
+let twitterState = {};
+let tabsState = [];
+let currentAdminTabId = null;
+
 let currentAvatarUrl = '';
-let newAvatarBase64 = null; // Holds base64 if a new file was picked
+let newAvatarBase64 = null;
 
 document.addEventListener('DOMContentLoaded', () => {
   initAuth();
@@ -18,7 +23,7 @@ function getAuthHeader(token) {
   return `Bearer ${token.trim()}`;
 }
 
-// Authentication Handling with LocalStorage
+// Authentication Handling
 function initAuth() {
   const token = localStorage.getItem('gh_token');
   const tokenInputGroup = document.getElementById('token-input-group');
@@ -39,7 +44,7 @@ function initAuth() {
 }
 
 function setupEventListeners() {
-  // Token save with verification
+  // Token save
   document.getElementById('save-token-btn').addEventListener('click', async () => {
     const tokenInput = document.getElementById('github-token');
     const token = tokenInput.value.trim();
@@ -77,7 +82,7 @@ function setupEventListeners() {
     }
   });
 
-  // Avatar File Upload Selection
+  // Avatar File Upload
   const fileInput = document.getElementById('avatar-file-input');
   fileInput.addEventListener('change', async (e) => {
     const file = e.target.files[0];
@@ -85,7 +90,6 @@ function setupEventListeners() {
 
     try {
       showToast('画像を最適化中...', 'info');
-      // Resize and convert to Base64
       newAvatarBase64 = await processAndResizeImage(file, 600);
       setAvatarPreview(newAvatarBase64);
       document.getElementById('avatar-url-input').value = '';
@@ -122,19 +126,27 @@ function setupEventListeners() {
     showToast('アイコンを初期絵文字に戻しました', 'info');
   });
 
-  // Add Link
-  document.getElementById('add-link-btn').addEventListener('click', () => {
-    linksState.push({
-      id: Date.now().toString(),
-      title: '新しいリンク',
-      url: 'https://',
-      sub: '',
-      icon: 'other'
+  // Add Tab Button
+  document.getElementById('add-tab-btn').addEventListener('click', () => {
+    const newTabId = 'tab_' + Date.now();
+    tabsState.push({
+      id: newTabId,
+      name: '新しいタブ',
+      aboutTitle: 'About Me',
+      aboutSubtitle: '',
+      items: [
+        { label: '項目名', value: '内容を入力してください' }
+      ],
+      linksTitle: 'Links',
+      linksSubtitle: '',
+      links: []
     });
-    renderLinksEditor();
+    currentAdminTabId = newTabId;
+    renderAdminTabs();
+    showToast('新しいタブを追加しました', 'success');
   });
 
-  // Form submit (Save all)
+  // Form submit
   document.getElementById('admin-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     await saveToGitHub();
@@ -173,7 +185,7 @@ function setAvatarPreview(src) {
   }
 }
 
-// Compress & Resize image to max 600px width/height and return base64 data url
+// Process and resize image
 function processAndResizeImage(file, maxSize = 600) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -201,7 +213,6 @@ function processAndResizeImage(file, maxSize = 600) {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
 
-        // Export as WebP or PNG data URL
         const dataUrl = canvas.toDataURL('image/png', 0.9);
         resolve(dataUrl);
       };
@@ -213,7 +224,7 @@ function processAndResizeImage(file, maxSize = 600) {
   });
 }
 
-// Verify token permissions against repository
+// Verify Token
 async function verifyToken(token) {
   try {
     const res = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}`, {
@@ -223,34 +234,21 @@ async function verifyToken(token) {
       }
     });
 
-    if (res.status === 401) {
-      return { valid: false, message: 'トークンが無効または期限切れです。' };
-    }
-    if (res.status === 404) {
-      return { 
-        valid: false, 
-        message: 'リポジトリが見つからないか、トークンに「repo」権限が付いていません。下のリンクから作成し直してください。' 
-      };
-    }
-    if (!res.ok) {
-      return { valid: false, message: `GitHub確認エラー (${res.status})` };
-    }
+    if (res.status === 401) return { valid: false, message: 'トークンが無効または期限切れです。' };
+    if (res.status === 404) return { valid: false, message: 'リポジトリが見つからないか、トークンに「repo」権限が付いていません。' };
+    if (!res.ok) return { valid: false, message: `GitHub確認エラー (${res.status})` };
 
     const data = await res.json();
     if (data.permissions && !data.permissions.push) {
-      return { 
-        valid: false, 
-        message: 'このトークンにはリポジトリへの書き込み（push）権限がありません。「repo」権限を有効にしたトークンが必要です。' 
-      };
+      return { valid: false, message: 'リポジトリへの書き込み（push）権限がありません。「repo」権限を有効にしてください。' };
     }
-
     return { valid: true };
   } catch (err) {
     return { valid: false, message: `通信エラー: ${err.message}` };
   }
 }
 
-// Load current data from data.json
+// Load data.json
 async function loadData() {
   try {
     const res = await fetch(`data.json?t=${Date.now()}`);
@@ -266,128 +264,292 @@ async function loadData() {
 function populateForm(data) {
   if (!data) return;
 
-  const { profile, twitter, links } = data;
+  const { site, profile, twitter, tabs } = data;
 
-  if (profile) {
-    document.getElementById('profile-name').value = profile.name || '';
-    document.getElementById('profile-bio').value = profile.bio || '';
-    document.getElementById('card-bio').value = profile.cardBio || '';
-    
-    // Avatar
-    currentAvatarUrl = profile.avatar || '';
-    if (currentAvatarUrl) {
-      setAvatarPreview(currentAvatarUrl);
-      if (!currentAvatarUrl.startsWith('images/')) {
-        document.getElementById('avatar-url-input').value = currentAvatarUrl;
+  // Site Meta
+  siteState = site || {};
+  document.getElementById('site-title-input').value = siteState.title || '';
+  document.getElementById('logo-badge-input').value = siteState.logoBadge || '';
+  document.getElementById('logo-text-input').value = siteState.logoText || '';
+  document.getElementById('footer-text-input').value = siteState.footerText || '';
+
+  // Profile
+  profileState = profile || {};
+  document.getElementById('profile-name').value = profileState.name || '';
+  document.getElementById('profile-bio').value = profileState.bio || '';
+  document.getElementById('card-bio').value = profileState.cardBio || '';
+
+  currentAvatarUrl = profileState.avatar || '';
+  if (currentAvatarUrl) {
+    setAvatarPreview(currentAvatarUrl);
+    if (!currentAvatarUrl.startsWith('images/')) {
+      document.getElementById('avatar-url-input').value = currentAvatarUrl;
+    }
+  } else {
+    setAvatarPreview('');
+  }
+
+  // Twitter
+  twitterState = twitter || {};
+  document.getElementById('twitter-username').value = (twitterState.username || '').replace(/^@/, '');
+  document.getElementById('twitter-section-title-input').value = twitterState.sectionTitle || 'Latest on X';
+  document.getElementById('twitter-section-subtitle-input').value = twitterState.sectionSubtitle || 'X（旧Twitter）のプロフィール＆最新ポスト';
+  document.getElementById('show-timeline-checkbox').checked = twitterState.showTimeline !== false;
+
+  // Tabs
+  tabsState = Array.isArray(tabs) ? [...tabs] : [];
+  if (tabsState.length === 0) {
+    tabsState = [
+      {
+        id: 'real',
+        name: 'リアル・日常 🌿',
+        aboutTitle: 'About Me',
+        aboutSubtitle: '',
+        items: [{ label: 'お名前', value: profileState.name || 'いち' }],
+        linksTitle: 'Links',
+        linksSubtitle: '',
+        links: []
       }
-    } else {
-      setAvatarPreview('');
-    }
-
-    if (profile.about) {
-      document.getElementById('about-name').value = profile.about.name || '';
-      document.getElementById('about-hobby').value = profile.about.hobby || '';
-      document.getElementById('about-message').value = profile.about.message || '';
-    }
+    ];
   }
 
-  if (twitter) {
-    document.getElementById('twitter-username').value = (twitter.username || '').replace(/^@/, '');
-    document.getElementById('show-timeline-checkbox').checked = twitter.showTimeline !== false;
-  }
-
-  linksState = Array.isArray(links) ? [...links] : [];
-  renderLinksEditor();
+  currentAdminTabId = tabsState[0].id;
+  renderAdminTabs();
 }
 
-function renderLinksEditor() {
-  const container = document.getElementById('links-list-editor');
-  if (!container) return;
+function renderAdminTabs() {
+  const switcher = document.getElementById('admin-tab-switcher');
+  const editor = document.getElementById('active-tab-editor');
+  if (!switcher || !editor) return;
 
-  if (linksState.length === 0) {
-    container.innerHTML = '<p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 10px;">リンクがありません。「＋ リンク追加」から追加できます。</p>';
+  // 1. Render switcher pills
+  switcher.innerHTML = tabsState.map(tab => `
+    <button type="button" 
+            class="admin-tab-pill ${tab.id === currentAdminTabId ? 'active' : ''}" 
+            onclick="selectAdminTab('${tab.id}')">
+      ${escapeHtml(tab.name)}
+    </button>
+  `).join('');
+
+  // 2. Render active tab editor
+  const tab = tabsState.find(t => t.id === currentAdminTabId) || tabsState[0];
+  if (!tab) {
+    editor.innerHTML = '<p>タブがありません</p>';
     return;
   }
 
-  container.innerHTML = linksState.map((link, index) => `
-    <div class="link-editor-card" data-index="${index}">
-      <div class="link-editor-top">
-        <strong style="font-size: 0.88rem;">リンク #${index + 1}</strong>
-        <button type="button" class="btn-delete-link" onclick="deleteLink(${index})">削除</button>
+  const tabIndex = tabsState.findIndex(t => t.id === tab.id);
+
+  editor.innerHTML = `
+    <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
+      <strong style="color: var(--primary); font-size: 0.95rem;">タブの基本設定</strong>
+      ${tabsState.length > 1 ? `<button type="button" class="btn-delete-link" onclick="deleteTab(${tabIndex})">このタブを削除</button>` : ''}
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">タブの表示名（絵文字もOK）</label>
+      <input type="text" class="form-input" value="${escapeAttr(tab.name)}" oninput="updateTabField(${tabIndex}, 'name', this.value)" placeholder="例: リアル・日常 🌿">
+    </div>
+
+    <!-- About Section in Tab -->
+    <div class="tab-sub-section">
+      <div class="card-header-row">
+        <strong style="font-size: 0.92rem;">📝 自己紹介（プロフィール項目）</strong>
+        <button type="button" class="btn btn-subtle-primary btn-sm" onclick="addTabItem(${tabIndex})">＋ 項目追加</button>
       </div>
-      <div class="link-editor-grid">
-        <div class="form-group">
-          <label class="form-label" style="font-size: 0.78rem;">タイトル</label>
-          <input type="text" class="form-input" value="${escapeAttr(link.title)}" onchange="updateLink(${index}, 'title', this.value)" placeholder="例: Instagram" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label" style="font-size: 0.78rem;">アイコン種別</label>
-          <select class="form-select" onchange="updateLink(${index}, 'icon', this.value)">
-            <option value="twitter" ${link.icon === 'twitter' || link.icon === 'x' ? 'selected' : ''}>X (Twitter)</option>
-            <option value="instagram" ${link.icon === 'instagram' ? 'selected' : ''}>Instagram</option>
-            <option value="youtube" ${link.icon === 'youtube' ? 'selected' : ''}>YouTube</option>
-            <option value="tiktok" ${link.icon === 'tiktok' ? 'selected' : ''}>TikTok</option>
-            <option value="github" ${link.icon === 'github' ? 'selected' : ''}>GitHub</option>
-            <option value="other" ${link.icon === 'other' || !link.icon ? 'selected' : ''}>その他 / Web</option>
-          </select>
-        </div>
+
+      <div class="form-group">
+        <label class="form-label" style="font-size: 0.78rem;">見出しタイトル</label>
+        <input type="text" class="form-input" value="${escapeAttr(tab.aboutTitle || '')}" oninput="updateTabField(${tabIndex}, 'aboutTitle', this.value)" placeholder="例: About Me（リアル）">
       </div>
       <div class="form-group">
-        <label class="form-label" style="font-size: 0.78rem;">URL</label>
-        <input type="url" class="form-input" value="${escapeAttr(link.url)}" onchange="updateLink(${index}, 'url', this.value)" placeholder="https://..." required>
+        <label class="form-label" style="font-size: 0.78rem;">サブ見出し（任意）</label>
+        <input type="text" class="form-input" value="${escapeAttr(tab.aboutSubtitle || '')}" oninput="updateTabField(${tabIndex}, 'aboutSubtitle', this.value)" placeholder="例: 日常やリアルの自己紹介">
       </div>
-      <div class="form-group">
-        <label class="form-label" style="font-size: 0.78rem;">サブテキスト（任意）</label>
-        <input type="text" class="form-input" value="${escapeAttr(link.sub || '')}" onchange="updateLink(${index}, 'sub', this.value)" placeholder="例: @ユーザー名 や 日常の写真など">
+
+      <div class="items-editor-list" id="tab-items-list">
+        ${(tab.items || []).map((item, itemIdx) => `
+          <div class="item-editor-row">
+            <div class="item-editor-header">
+              <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted);">項目 #${itemIdx + 1}</span>
+              <button type="button" class="btn-delete-link" onclick="deleteTabItem(${tabIndex}, ${itemIdx})">削除</button>
+            </div>
+            <div class="form-group">
+              <input type="text" class="form-input" value="${escapeAttr(item.label)}" oninput="updateTabItem(${tabIndex}, ${itemIdx}, 'label', this.value)" placeholder="項目名（例: 最推し、趣味など）" style="font-weight: 700;">
+            </div>
+            <div class="form-group">
+              <textarea class="form-textarea" rows="2" oninput="updateTabItem(${tabIndex}, ${itemIdx}, 'value', this.value)" placeholder="内容を入力">${escapeHtml(item.value)}</textarea>
+            </div>
+          </div>
+        `).join('')}
       </div>
     </div>
-  `).join('');
+
+    <!-- Links Section in Tab -->
+    <div class="tab-sub-section">
+      <div class="card-header-row">
+        <strong style="font-size: 0.92rem;">🔗 リンク一覧</strong>
+        <button type="button" class="btn btn-subtle-primary btn-sm" onclick="addTabLink(${tabIndex})">＋ リンク追加</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" style="font-size: 0.78rem;">見出しタイトル</label>
+        <input type="text" class="form-input" value="${escapeAttr(tab.linksTitle || '')}" oninput="updateTabField(${tabIndex}, 'linksTitle', this.value)" placeholder="例: Links（リアル）">
+      </div>
+      <div class="form-group">
+        <label class="form-label" style="font-size: 0.78rem;">サブ見出し（任意）</label>
+        <input type="text" class="form-input" value="${escapeAttr(tab.linksSubtitle || '')}" oninput="updateTabField(${tabIndex}, 'linksSubtitle', this.value)" placeholder="例: 関連リンク">
+      </div>
+
+      <div class="links-editor-list">
+        ${(tab.links || []).map((link, linkIdx) => `
+          <div class="link-editor-card">
+            <div class="link-editor-top">
+              <strong style="font-size: 0.85rem;">リンク #${linkIdx + 1}</strong>
+              <button type="button" class="btn-delete-link" onclick="deleteTabLink(${tabIndex}, ${linkIdx})">削除</button>
+            </div>
+            <div class="link-editor-grid">
+              <div class="form-group">
+                <label class="form-label" style="font-size: 0.78rem;">タイトル</label>
+                <input type="text" class="form-input" value="${escapeAttr(link.title)}" oninput="updateTabLink(${tabIndex}, ${linkIdx}, 'title', this.value)" placeholder="例: X (Twitter)" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" style="font-size: 0.78rem;">アイコン種別</label>
+                <select class="form-select" onchange="updateTabLink(${tabIndex}, ${linkIdx}, 'icon', this.value)">
+                  <option value="twitter" ${link.icon === 'twitter' || link.icon === 'x' ? 'selected' : ''}>X (Twitter)</option>
+                  <option value="instagram" ${link.icon === 'instagram' ? 'selected' : ''}>Instagram</option>
+                  <option value="youtube" ${link.icon === 'youtube' ? 'selected' : ''}>YouTube</option>
+                  <option value="tiktok" ${link.icon === 'tiktok' ? 'selected' : ''}>TikTok</option>
+                  <option value="github" ${link.icon === 'github' ? 'selected' : ''}>GitHub</option>
+                  <option value="other" ${link.icon === 'other' || !link.icon ? 'selected' : ''}>その他 / Web</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" style="font-size: 0.78rem;">URL</label>
+              <input type="url" class="form-input" value="${escapeAttr(link.url)}" oninput="updateTabLink(${tabIndex}, ${linkIdx}, 'url', this.value)" placeholder="https://..." required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" style="font-size: 0.78rem;">サブテキスト（任意）</label>
+              <input type="text" class="form-input" value="${escapeAttr(link.sub || '')}" oninput="updateTabLink(${tabIndex}, ${linkIdx}, 'sub', this.value)" placeholder="例: @ユーザー名 や メイン垢など">
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
 }
 
-window.deleteLink = function(index) {
-  linksState.splice(index, 1);
-  renderLinksEditor();
+window.selectAdminTab = function(tabId) {
+  currentAdminTabId = tabId;
+  renderAdminTabs();
 };
 
-window.updateLink = function(index, field, value) {
-  if (linksState[index]) {
-    linksState[index][field] = value;
+window.updateTabField = function(tabIndex, field, value) {
+  if (tabsState[tabIndex]) {
+    tabsState[tabIndex][field] = value;
+    if (field === 'name') {
+      const switcher = document.getElementById('admin-tab-switcher');
+      const pill = switcher.querySelectorAll('.admin-tab-pill')[tabIndex];
+      if (pill) pill.textContent = value;
+    }
   }
 };
 
-// Build current JSON object from form
+window.deleteTab = function(tabIndex) {
+  if (confirm(`タブ「${tabsState[tabIndex].name}」を削除しますか？`)) {
+    tabsState.splice(tabIndex, 1);
+    if (tabsState.length > 0) {
+      currentAdminTabId = tabsState[0].id;
+    }
+    renderAdminTabs();
+    showToast('タブを削除しました', 'info');
+  }
+};
+
+window.addTabItem = function(tabIndex) {
+  if (tabsState[tabIndex]) {
+    if (!tabsState[tabIndex].items) tabsState[tabIndex].items = [];
+    tabsState[tabIndex].items.push({ label: '新しい項目', value: '' });
+    renderAdminTabs();
+  }
+};
+
+window.deleteTabItem = function(tabIndex, itemIdx) {
+  if (tabsState[tabIndex] && tabsState[tabIndex].items) {
+    tabsState[tabIndex].items.splice(itemIdx, 1);
+    renderAdminTabs();
+  }
+};
+
+window.updateTabItem = function(tabIndex, itemIdx, field, value) {
+  if (tabsState[tabIndex] && tabsState[tabIndex].items && tabsState[tabIndex].items[itemIdx]) {
+    tabsState[tabIndex].items[itemIdx][field] = value;
+  }
+};
+
+window.addTabLink = function(tabIndex) {
+  if (tabsState[tabIndex]) {
+    if (!tabsState[tabIndex].links) tabsState[tabIndex].links = [];
+    tabsState[tabIndex].links.push({
+      id: Date.now().toString(),
+      title: '新しいリンク',
+      url: 'https://',
+      sub: '',
+      icon: 'other'
+    });
+    renderAdminTabs();
+  }
+};
+
+window.deleteTabLink = function(tabIndex, linkIdx) {
+  if (tabsState[tabIndex] && tabsState[tabIndex].links) {
+    tabsState[tabIndex].links.splice(linkIdx, 1);
+    renderAdminTabs();
+  }
+};
+
+window.updateTabLink = function(tabIndex, linkIdx, field, value) {
+  if (tabsState[tabIndex] && tabsState[tabIndex].links && tabsState[tabIndex].links[linkIdx]) {
+    tabsState[tabIndex].links[linkIdx][field] = value;
+  }
+};
+
+// Build current JSON object
 function buildDataJson(avatarUrl) {
   const username = document.getElementById('twitter-username').value.trim();
   const name = document.getElementById('profile-name').value.trim();
 
   return {
+    site: {
+      title: document.getElementById('site-title-input').value.trim() || `${name}のホームページ`,
+      logoBadge: document.getElementById('logo-badge-input').value.trim() || 'HP',
+      logoText: document.getElementById('logo-text-input').value.trim() || username || name,
+      footerText: document.getElementById('footer-text-input').value.trim() || `© 2026 ${name}. All rights reserved.`
+    },
     profile: {
       name: name,
       handle: username ? `@${username}` : '',
       avatar: avatarUrl,
       bio: document.getElementById('profile-bio').value,
-      cardBio: document.getElementById('card-bio').value,
-      about: {
-        name: document.getElementById('about-name').value || name,
-        hobby: document.getElementById('about-hobby').value,
-        message: document.getElementById('about-message').value
-      }
+      cardBio: document.getElementById('card-bio').value
     },
     twitter: {
       username: username,
-      showTimeline: document.getElementById('show-timeline-checkbox').checked
+      sectionTitle: document.getElementById('twitter-section-title-input').value.trim() || 'Latest on X',
+      sectionSubtitle: document.getElementById('twitter-section-subtitle-input').value.trim() || 'X（旧Twitter）のプロフィール＆最新ポスト',
+      showTimeline: document.getElementById('show-timeline-checkbox').checked,
+      timelineTitle: 'タイムライン（最新投稿）'
     },
-    links: linksState
+    tabs: tabsState
   };
 }
 
-// Upload image file to GitHub repository if a new file is selected
+// Upload image file
 async function uploadAvatarImageToGitHub(token, dataUrl) {
-  // Strip "data:image/png;base64," header
   const base64Content = dataUrl.split(',')[1];
   const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${AVATAR_IMAGE_PATH}`;
 
-  // Check if avatar.png exists to get sha
   let sha = null;
   const getRes = await fetch(url, {
     headers: {
@@ -400,7 +562,6 @@ async function uploadAvatarImageToGitHub(token, dataUrl) {
     sha = data.sha;
   }
 
-  // Put image file
   const putPayload = {
     message: 'Upload avatar image via Admin Dashboard',
     content: base64Content
@@ -425,7 +586,7 @@ async function uploadAvatarImageToGitHub(token, dataUrl) {
   return `${AVATAR_IMAGE_PATH}?v=${Date.now()}`;
 }
 
-// Save all to GitHub via API
+// Save all to GitHub
 async function saveToGitHub() {
   const token = localStorage.getItem('gh_token');
   if (!token) {
@@ -445,7 +606,6 @@ async function saveToGitHub() {
   try {
     let finalAvatarUrl = currentAvatarUrl;
 
-    // 1. If a new image was selected, upload it first
     if (newAvatarBase64) {
       btnText.textContent = '画像を保存中...';
       finalAvatarUrl = await uploadAvatarImageToGitHub(token, newAvatarBase64);
@@ -453,16 +613,13 @@ async function saveToGitHub() {
       currentAvatarUrl = finalAvatarUrl;
     } else {
       const manualUrl = document.getElementById('avatar-url-input').value.trim();
-      if (manualUrl) {
-        finalAvatarUrl = manualUrl;
-      }
+      if (manualUrl) finalAvatarUrl = manualUrl;
     }
 
     btnText.textContent = 'データを保存中...';
     const updatedData = buildDataJson(finalAvatarUrl);
     const jsonString = JSON.stringify(updatedData, null, 2);
 
-    // 2. Get current file sha of data.json
     const getUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${DATA_FILE_PATH}`;
     const getRes = await fetch(getUrl, {
       headers: {
@@ -479,7 +636,6 @@ async function saveToGitHub() {
       throw new Error('トークンが無効または期限切れです。「連携解除」して再設定してください。');
     }
 
-    // 3. Put data.json to GitHub
     const putUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${DATA_FILE_PATH}`;
     const contentBase64 = utf8ToBase64(jsonString);
 
@@ -487,9 +643,7 @@ async function saveToGitHub() {
       message: 'Update data.json via Admin Dashboard',
       content: contentBase64
     };
-    if (sha) {
-      putPayload.sha = sha;
-    }
+    if (sha) putPayload.sha = sha;
 
     const putRes = await fetch(putUrl, {
       method: 'PUT',
@@ -518,11 +672,20 @@ async function saveToGitHub() {
   }
 }
 
-// UTF-8 to Base64 (browser safe)
 function utf8ToBase64(str) {
   const bytes = new TextEncoder().encode(str);
   const binString = Array.from(bytes, (byte) => String.fromCharCode(byte)).join('');
   return btoa(binString);
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 function escapeAttr(str) {

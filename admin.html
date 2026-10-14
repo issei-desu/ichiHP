@@ -29,8 +29,8 @@
     <div class="admin-banner">
       <div class="banner-icon">📱</div>
       <div class="banner-text">
-        <strong>スマホからHPを自由に編集！</strong>
-        <span>変更した内容は「保存する」を押すと自動でGitHubに反映されます。</span>
+        <strong>リアル用・推し活用タブ対応！</strong>
+        <span>すべての文章・項目・リンクをスマホから自由に編集して保存できます。</span>
       </div>
     </div>
 
@@ -106,20 +106,12 @@
 
         <div class="form-group">
           <label for="profile-name" class="form-label">表示名（名前）</label>
-          <input type="text" id="profile-name" class="form-input" placeholder="jk_na_ri_ta_i" required>
-        </div>
-
-        <div class="form-group">
-          <label for="twitter-username" class="form-label">X（Twitter）ユーザー名（@なし）</label>
-          <div class="input-prefix-wrapper">
-            <span class="input-prefix">@</span>
-            <input type="text" id="twitter-username" class="form-input with-prefix" placeholder="jk_na_ri_ta_i" required>
-          </div>
+          <input type="text" id="profile-name" class="form-input" placeholder="いち" required>
         </div>
 
         <div class="form-group">
           <label for="profile-bio" class="form-label">トップの紹介文（Bio）</label>
-          <textarea id="profile-bio" class="form-textarea" rows="3" placeholder="ようこそ！ここは私のホームページです。"></textarea>
+          <textarea id="profile-bio" class="form-textarea" rows="2" placeholder="どうも、いちです。"></textarea>
         </div>
 
         <div class="form-group">
@@ -128,34 +120,32 @@
         </div>
       </section>
 
-      <!-- About Details Section -->
-      <section class="card admin-card">
-        <h2 class="card-title">📝 自己紹介（About Me）</h2>
-        
-        <div class="form-group">
-          <label for="about-name" class="form-label">お名前 / 呼び名</label>
-          <input type="text" id="about-name" class="form-input" placeholder="jk_na_ri_ta_i">
-        </div>
-
-        <div class="form-group">
-          <label for="about-hobby" class="form-label">好きなこと / 趣味</label>
-          <input type="text" id="about-hobby" class="form-input" placeholder="音楽を聴くこと、カフェ巡り、ゲーム">
-        </div>
-
-        <div class="form-group">
-          <label for="about-message" class="form-label">ひとことメッセージ</label>
-          <textarea id="about-message" class="form-textarea" rows="2" placeholder="気ままにのんびりやってます。仲良くしてください✨"></textarea>
-        </div>
-      </section>
-
       <!-- Twitter Settings -->
       <section class="card admin-card">
         <h2 class="card-title">🐦 X（Twitter）設定</h2>
         
+        <div class="form-group">
+          <label for="twitter-username" class="form-label">ユーザー名（@なし）</label>
+          <div class="input-prefix-wrapper">
+            <span class="input-prefix">@</span>
+            <input type="text" id="twitter-username" class="form-input with-prefix" placeholder="jk_na_ri_ta_i" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="twitter-section-title-input" class="form-label">Xセクション見出し</label>
+          <input type="text" id="twitter-section-title-input" class="form-input" placeholder="Latest on X">
+        </div>
+
+        <div class="form-group">
+          <label for="twitter-section-subtitle-input" class="form-label">Xセクションサブ見出し</label>
+          <input type="text" id="twitter-section-subtitle-input" class="form-input" placeholder="X（旧Twitter）のプロフィール＆最新ポスト">
+        </div>
+
         <div class="form-toggle-row">
           <div>
             <strong>タイムライン（最新ポスト）を表示する</strong>
-            <p class="form-subtext">OFFにするとプロフィールカードのみのすっきりした表示になります。</p>
+            <p class="form-subtext">OFFにするとプロフィールカードのみのスッキリ表示になります。</p>
           </div>
           <label class="switch">
             <input type="checkbox" id="show-timeline-checkbox" checked>
@@ -164,17 +154,48 @@
         </div>
       </section>
 
-      <!-- Links Manager -->
+      <!-- Tabs Manager Section -->
       <section class="card admin-card">
         <div class="card-header-row">
-          <h2 class="card-title">🔗 関連リンク一覧</h2>
-          <button type="button" id="add-link-btn" class="btn btn-subtle-primary btn-sm">＋ リンク追加</button>
+          <h2 class="card-title">📑 タブ別コンテンツ管理</h2>
+          <button type="button" id="add-tab-btn" class="btn btn-subtle-primary btn-sm">＋ タブ追加</button>
         </div>
-        <p class="card-desc">Instagram、YouTube、TikTok、ブログなどのリンクを自由に追加できます。</p>
+        <p class="card-desc">「リアル用」「推し活用」など、タブごとに自己紹介項目やリンクを自由にカスタマイズできます。</p>
 
-        <div id="links-list-editor" class="links-editor-list">
-          <!-- Dynamic Link Items will be rendered here -->
+        <!-- Admin Tab Switcher -->
+        <div class="admin-tab-switcher" id="admin-tab-switcher">
+          <!-- Dynamically populated buttons -->
         </div>
+
+        <!-- Active Tab Editor Container -->
+        <div id="active-tab-editor" class="active-tab-editor">
+          <!-- Dynamically rendered editor for the currently selected tab -->
+        </div>
+      </section>
+
+      <!-- Site Meta Section -->
+      <section class="card admin-card">
+        <details>
+          <summary class="card-title" style="cursor: pointer; font-size: 1rem;">⚙️ サイト全体設定（タイトル・フッターなど）</summary>
+          <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 12px;">
+            <div class="form-group">
+              <label for="site-title-input" class="form-label">ブラウザのタブ名（ページタイトル）</label>
+              <input type="text" id="site-title-input" class="form-input" placeholder="いちのホームページ">
+            </div>
+            <div class="form-group">
+              <label for="logo-badge-input" class="form-label">ヘッダーのバッジ文字</label>
+              <input type="text" id="logo-badge-input" class="form-input" placeholder="HP">
+            </div>
+            <div class="form-group">
+              <label for="logo-text-input" class="form-label">ヘッダーのロゴ文字</label>
+              <input type="text" id="logo-text-input" class="form-input" placeholder="jk_na_ri_ta_i">
+            </div>
+            <div class="form-group">
+              <label for="footer-text-input" class="form-label">フッターのコピーライト文字</label>
+              <input type="text" id="footer-text-input" class="form-input" placeholder="© 2026 いち. All rights reserved.">
+            </div>
+          </div>
+        </details>
       </section>
 
       <!-- Bottom Floating Save Bar -->
@@ -190,7 +211,7 @@
     </form>
   </main>
 
-  <!-- Status Toast / Modal -->
+  <!-- Status Toast -->
   <div id="toast" class="toast"></div>
 
   <!-- Preview Modal -->
