@@ -146,9 +146,40 @@ function applyData(data) {
   }
 
   // Render Tabs
-  if (Array.isArray(tabs) && tabs.length > 0) {
-    renderTabs(tabs);
+  let resolvedTabs = tabs;
+  if (!Array.isArray(resolvedTabs) || resolvedTabs.length === 0) {
+    resolvedTabs = [
+      {
+        id: 'real',
+        name: 'リアル・日常 🌿',
+        aboutTitle: 'About Me（リアル）',
+        aboutSubtitle: '日常やリアルの自己紹介',
+        items: [
+          { label: 'お名前 / 呼び名', value: (profile && profile.name) || 'いち' },
+          { label: '好きなこと / 趣味', value: 'こんな感じのページを作ったりしてます。AIで作ってる部分が結構あったりします。' },
+          { label: 'ひとこと', value: '気ままにのんびりやってます。仲良くしてください✨' }
+        ],
+        linksTitle: 'Links（リアル）',
+        linksSubtitle: '関連リンク',
+        links: data.links || []
+      },
+      {
+        id: 'oshi',
+        name: '推し活 🎀',
+        aboutTitle: 'My Favorite（推しについて）',
+        aboutSubtitle: '推しへの愛や活動情報',
+        items: [
+          { label: '最推し / 担当', value: '（ここに推しの名前を入力！）' },
+          { label: '推し歴 / きっかけ', value: '（推し始めた時期やきっかけ）' },
+          { label: '推しへのひとこと', value: 'いつも元気をくれてありがとう！一生推します✨' }
+        ],
+        linksTitle: '推し活Links',
+        linksSubtitle: '推し活関連のSNSや布教リンク',
+        links: []
+      }
+    ];
   }
+  renderTabs(resolvedTabs);
 }
 
 function renderTabs(tabs) {
