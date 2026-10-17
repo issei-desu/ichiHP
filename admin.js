@@ -447,12 +447,12 @@ function renderAdminTabs() {
             <div class="link-editor-grid">
               <div class="form-group">
                 <label class="form-label" style="font-size: 0.78rem;">タイトル</label>
-                <input type="text" class="form-input" value="${escapeAttr(link.title)}" oninput="updateTabLink(${tabIndex}, ${linkIdx}, 'title', this.value)" placeholder="例: X (Twitter)" required>
+                <input type="text" class="form-input" value="${escapeAttr(link.title)}" oninput="updateTabLink(${tabIndex}, ${linkIdx}, 'title', this.value)" placeholder="例: Twitter" required>
               </div>
               <div class="form-group">
                 <label class="form-label" style="font-size: 0.78rem;">アイコン種別</label>
                 <select class="form-select" onchange="updateTabLink(${tabIndex}, ${linkIdx}, 'icon', this.value)">
-                  <option value="twitter" ${link.icon === 'twitter' || link.icon === 'x' ? 'selected' : ''}>X (Twitter)</option>
+                  <option value="twitter" ${link.icon === 'twitter' || link.icon === 'x' ? 'selected' : ''}>Twitter</option>
                   <option value="instagram" ${link.icon === 'instagram' ? 'selected' : ''}>Instagram</option>
                   <option value="youtube" ${link.icon === 'youtube' ? 'selected' : ''}>YouTube</option>
                   <option value="tiktok" ${link.icon === 'tiktok' ? 'selected' : ''}>TikTok</option>

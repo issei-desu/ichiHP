@@ -150,7 +150,7 @@ function applyData(data) {
         heroXBtn.href = xUrl;
         heroXBtn.style.display = 'inline-flex';
       }
-      if (heroXBtnText) heroXBtnText.textContent = `X (@${username})`;
+      if (heroXBtnText) heroXBtnText.textContent = `Twitter (@${username})`;
     } else if (heroXBtn) {
       heroXBtn.style.display = 'none';
     }
