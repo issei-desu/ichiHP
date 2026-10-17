@@ -277,7 +277,6 @@ function populateForm(data) {
   profileState = profile || {};
   document.getElementById('profile-name').value = profileState.name || '';
   document.getElementById('profile-bio').value = profileState.bio || '';
-  document.getElementById('card-bio').value = profileState.cardBio || '';
 
   currentAvatarUrl = profileState.avatar || '';
   if (currentAvatarUrl) {
@@ -292,9 +291,6 @@ function populateForm(data) {
   // Twitter
   twitterState = twitter || {};
   document.getElementById('twitter-username').value = (twitterState.username || '').replace(/^@/, '');
-  document.getElementById('twitter-section-title-input').value = twitterState.sectionTitle || 'Latest on X';
-  document.getElementById('twitter-section-subtitle-input').value = twitterState.sectionSubtitle || 'X（旧Twitter）のプロフィール＆最新ポスト';
-  document.getElementById('show-timeline-checkbox').checked = twitterState.showTimeline !== false;
 
   // Tabs
   tabsState = Array.isArray(tabs) ? [...tabs] : [];
@@ -531,15 +527,10 @@ function buildDataJson(avatarUrl) {
       name: name,
       handle: username ? `@${username}` : '',
       avatar: avatarUrl,
-      bio: document.getElementById('profile-bio').value,
-      cardBio: document.getElementById('card-bio').value
+      bio: document.getElementById('profile-bio').value
     },
     twitter: {
-      username: username,
-      sectionTitle: document.getElementById('twitter-section-title-input').value.trim() || 'Latest on X',
-      sectionSubtitle: document.getElementById('twitter-section-subtitle-input').value.trim() || 'X（旧Twitter）のプロフィール＆最新ポスト',
-      showTimeline: document.getElementById('show-timeline-checkbox').checked,
-      timelineTitle: 'タイムライン（最新投稿）'
+      username: username
     },
     tabs: tabsState
   };

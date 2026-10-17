@@ -9,15 +9,10 @@
     "name": "いち",
     "handle": "@jk_na_ri_ta_i",
     "avatar": "images/avatar.png?v=1791960919323",
-    "bio": "どうも、いちです。",
-    "cardBio": "Xで気ままにポスト中！最新情報はリンク先からチェックしてみてね。"
+    "bio": "どうも、いちです。"
   },
   "twitter": {
-    "username": "jk_na_ri_ta_i",
-    "sectionTitle": "Latest on X",
-    "sectionSubtitle": "X（旧Twitter）のプロフィール＆最新ポスト",
-    "showTimeline": true,
-    "timelineTitle": "タイムライン（最新投稿）"
+    "username": "jk_na_ri_ta_i"
   },
   "tabs": [
     {

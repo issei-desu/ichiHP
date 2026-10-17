@@ -112,36 +112,15 @@ function applyData(data) {
     }
   }
 
-  // Twitter
+  // Twitter Button
   if (twitter) {
     const username = (twitter.username || '').replace(/^@/, '');
     if (username) {
       const heroXBtn = document.getElementById('hero-x-btn');
       const heroXBtnText = document.getElementById('hero-x-btn-text');
-      const cardXLink = document.getElementById('card-x-link');
-      
       const xUrl = `https://x.com/${username}`;
       if (heroXBtn) heroXBtn.href = xUrl;
-      if (heroXBtnText) heroXBtnText.textContent = `X (@${username}) を見に行く`;
-      if (cardXLink) cardXLink.href = xUrl;
-    }
-
-    if (twitter.sectionTitle) {
-      const tst = document.getElementById('twitter-section-title');
-      if (tst) tst.textContent = twitter.sectionTitle;
-    }
-    if (twitter.sectionSubtitle) {
-      const tss = document.getElementById('twitter-section-subtitle');
-      if (tss) tss.textContent = twitter.sectionSubtitle;
-    }
-    if (twitter.timelineTitle) {
-      const tbt = document.getElementById('timeline-box-title');
-      if (tbt) tbt.textContent = twitter.timelineTitle;
-    }
-
-    const timelineWrapper = document.getElementById('timeline-card-wrapper');
-    if (timelineWrapper) {
-      timelineWrapper.style.display = twitter.showTimeline === false ? 'none' : 'block';
+      if (heroXBtnText) heroXBtnText.textContent = `X (@${username})`;
     }
   }
 
