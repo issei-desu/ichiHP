@@ -311,8 +311,6 @@ function populateForm(data) {
   // Site Meta
   siteState = site || {};
   document.getElementById('site-title-input').value = siteState.title || '';
-  document.getElementById('logo-badge-input').value = siteState.logoBadge || '';
-  document.getElementById('logo-text-input').value = siteState.logoText || '';
   document.getElementById('footer-text-input').value = siteState.footerText || '';
 
   // Profile
@@ -559,13 +557,10 @@ function buildDataJson(avatarUrl) {
   return {
     site: {
       title: document.getElementById('site-title-input').value.trim() || `${name}のホームページ`,
-      logoBadge: document.getElementById('logo-badge-input').value.trim() || 'HP',
-      logoText: document.getElementById('logo-text-input').value.trim() || username || name,
       footerText: document.getElementById('footer-text-input').value.trim() || `© 2026 ${name}. All rights reserved.`
     },
     profile: {
       name: name,
-      handle: username ? `@${username}` : '',
       avatar: avatarUrl,
       bio: document.getElementById('profile-bio').value
     },

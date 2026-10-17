@@ -71,20 +71,12 @@ function applyData(data) {
 
   const { site, profile, twitter, tabs } = data;
 
-  // Site Header / Footer texts
+  // Site Title / Footer texts
   if (site) {
     if (site.title !== undefined && site.title !== '') {
       document.title = site.title;
       const pt = document.getElementById('page-title');
       if (pt) pt.textContent = site.title;
-    }
-    if (site.logoBadge !== undefined && site.logoBadge !== '') {
-      const lb = document.getElementById('logo-badge');
-      if (lb) lb.textContent = site.logoBadge;
-    }
-    if (site.logoText !== undefined && site.logoText !== '') {
-      const lt = document.getElementById('nav-name');
-      if (lt) lt.textContent = site.logoText;
     }
     if (site.footerText !== undefined && site.footerText !== '') {
       const ft = document.getElementById('footer-text');
@@ -113,14 +105,6 @@ function applyData(data) {
       if (heroTitle) {
         heroTitle.textContent = profile.name;
         heroTitle.style.display = profile.name ? 'block' : 'none';
-      }
-    }
-
-    if (profile.handle !== undefined) {
-      const heroHandle = document.getElementById('hero-handle');
-      if (heroHandle) {
-        heroHandle.textContent = profile.handle;
-        heroHandle.style.display = profile.handle ? 'inline-block' : 'none';
       }
     }
 

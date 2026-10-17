@@ -1,13 +1,10 @@
 {
   "site": {
     "title": "いちのホームページ",
-    "logoBadge": "HP",
-    "logoText": "jk_na_ri_ta_i",
     "footerText": "© 2026 いち. All rights reserved."
   },
   "profile": {
     "name": "いち",
-    "handle": "@jk_na_ri_ta_i",
     "avatar": "images/avatar.png?v=1791960919323",
     "bio": "どうも、いちです。\n⬇️主な生息地。⬇️"
   },
