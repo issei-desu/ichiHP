@@ -17,13 +17,13 @@
   "tabs": [
     {
       "id": "real",
-      "name": "リアル・日常 🌿",
-      "aboutTitle": "About Me（リアル）",
-      "aboutSubtitle": "日常やリアルの自己紹介",
+      "name": "リアルのいち。",
+      "aboutTitle": "school。",
+      "aboutSubtitle": "がっこー。",
       "items": [
         {
-          "label": "お名前 / 呼び名",
-          "value": "いち"
+          "label": "名前。",
+          "value": "いち。\n本名はどっかから漁ってください。"
         },
         {
           "label": "好きなこと / 趣味",
@@ -31,7 +31,7 @@
         },
         {
           "label": "ひとこと",
-          "value": "気ままにのんびりやってます。仲良くしてください✨"
+          "value": ""
         }
       ],
       "linksTitle": "Links（リアル）",
@@ -48,7 +48,7 @@
     },
     {
       "id": "oshi",
-      "name": "推し活 🎀",
+      "name": "ネットでのいち。",
       "aboutTitle": "My Favorite（推しについて）",
       "aboutSubtitle": "推しへの愛や活動情報",
       "items": [
@@ -83,6 +83,21 @@
           "icon": "youtube"
         }
       ]
+    },
+    {
+      "id": "tab_1792206528579",
+      "name": "crewのいち。",
+      "aboutTitle": "About Me",
+      "aboutSubtitle": "",
+      "items": [
+        {
+          "label": "項目名",
+          "value": "内容を入力してください"
+        }
+      ],
+      "linksTitle": "Links",
+      "linksSubtitle": "",
+      "links": []
     }
   ]
 }
