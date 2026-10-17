@@ -170,6 +170,13 @@ function setupEventListeners() {
   // Preview Modal
   const previewModal = document.getElementById('preview-modal');
   document.getElementById('preview-btn').addEventListener('click', () => {
+    const previewAvatar = newAvatarBase64 || document.getElementById('avatar-url-input').value.trim() || currentAvatarUrl;
+    const previewData = buildDataJson(previewAvatar);
+    try {
+      localStorage.setItem('hp_preview_data', JSON.stringify(previewData));
+    } catch (e) {
+      console.warn('Could not save preview data to localStorage:', e);
+    }
     previewModal.classList.add('show');
     const iframe = document.getElementById('preview-iframe');
     iframe.src = 'index.html?preview=' + Date.now();
@@ -263,10 +270,30 @@ async function verifyToken(token) {
   }
 }
 
-// Load data.json
+// Load data.json (Prefer GitHub API for immediate fresh data, fallback to static file)
 async function loadData() {
   try {
-    const res = await fetch(`data.json?t=${Date.now()}`);
+    const token = localStorage.getItem('gh_token');
+    if (token) {
+      const apiRes = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${DATA_FILE_PATH}?t=${Date.now()}`, {
+        headers: {
+          'Authorization': getAuthHeader(token),
+          'Accept': 'application/vnd.github.v3+json'
+        },
+        cache: 'no-store'
+      });
+      if (apiRes.ok) {
+        const fileData = await apiRes.json();
+        if (fileData && fileData.content) {
+          const jsonText = base64ToUtf8(fileData.content.replace(/\s/g, ''));
+          const data = JSON.parse(jsonText);
+          populateForm(data);
+          return;
+        }
+      }
+    }
+
+    const res = await fetch(`data.json?t=${Date.now()}`, { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to load data.json');
     const data = await res.json();
     populateForm(data);
@@ -624,12 +651,13 @@ async function saveToGitHub() {
     const updatedData = buildDataJson(finalAvatarUrl);
     const jsonString = JSON.stringify(updatedData, null, 2);
 
-    const getUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${DATA_FILE_PATH}`;
+    const getUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${DATA_FILE_PATH}?t=${Date.now()}`;
     const getRes = await fetch(getUrl, {
       headers: {
         'Authorization': getAuthHeader(token),
         'Accept': 'application/vnd.github.v3+json'
-      }
+      },
+      cache: 'no-store'
     });
 
     let sha = null;
@@ -664,7 +692,16 @@ async function saveToGitHub() {
       throw new Error(errData.message || `GitHub保存失敗 (${putRes.status})`);
     }
 
-    showToast('✨ 保存完了！約1分でHPに反映されます', 'success');
+    try {
+      localStorage.setItem('hp_latest_data', JSON.stringify({
+        savedAt: Date.now(),
+        data: updatedData
+      }));
+    } catch (e) {
+      console.warn('Could not cache latest data:', e);
+    }
+
+    showToast('✨ 保存完了！HPに反映されました', 'success');
   } catch (err) {
     console.error('Save error:', err);
     showToast(`エラー: ${err.message}`, 'error');
@@ -680,6 +717,12 @@ function utf8ToBase64(str) {
   const bytes = new TextEncoder().encode(str);
   const binString = Array.from(bytes, (byte) => String.fromCharCode(byte)).join('');
   return btoa(binString);
+}
+
+function base64ToUtf8(base64) {
+  const binString = atob(base64);
+  const bytes = Uint8Array.from(binString, (m) => m.codePointAt(0));
+  return new TextDecoder().decode(bytes);
 }
 
 function escapeHtml(str) {

@@ -24,11 +24,43 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function loadPageData() {
+  // 1. If opened inside Admin Preview Modal, use live preview state
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.has('preview')) {
+    try {
+      const previewRaw = localStorage.getItem('hp_preview_data');
+      if (previewRaw) {
+        applyData(JSON.parse(previewRaw));
+        return;
+      }
+    } catch (e) {
+      console.warn('Preview data parse error:', e);
+    }
+  }
+
+  // 2. Check if admin recently saved data (within 3 minutes) to bypass GitHub Pages CDN delay
+  let appliedRecentCache = false;
   try {
-    const res = await fetch(`data.json?t=${Date.now()}`);
+    const cachedRaw = localStorage.getItem('hp_latest_data');
+    if (cachedRaw) {
+      const cached = JSON.parse(cachedRaw);
+      if (cached && cached.savedAt && (Date.now() - cached.savedAt < 180000) && cached.data) {
+        applyData(cached.data);
+        appliedRecentCache = true;
+      }
+    }
+  } catch (e) {
+    console.warn('Recent cache read error:', e);
+  }
+
+  // 3. Fetch data.json with no-store to avoid browser cache
+  try {
+    const res = await fetch(`data.json?t=${Date.now()}`, { cache: 'no-store' });
     if (!res.ok) return;
     const data = await res.json();
-    applyData(data);
+    if (!appliedRecentCache) {
+      applyData(data);
+    }
   } catch (err) {
     console.log('Using default HTML data:', err);
   }
@@ -41,20 +73,20 @@ function applyData(data) {
 
   // Site Header / Footer texts
   if (site) {
-    if (site.title) {
+    if (site.title !== undefined && site.title !== '') {
       document.title = site.title;
       const pt = document.getElementById('page-title');
       if (pt) pt.textContent = site.title;
     }
-    if (site.logoBadge) {
+    if (site.logoBadge !== undefined && site.logoBadge !== '') {
       const lb = document.getElementById('logo-badge');
       if (lb) lb.textContent = site.logoBadge;
     }
-    if (site.logoText) {
+    if (site.logoText !== undefined && site.logoText !== '') {
       const lt = document.getElementById('nav-name');
       if (lt) lt.textContent = site.logoText;
     }
-    if (site.footerText) {
+    if (site.footerText !== undefined && site.footerText !== '') {
       const ft = document.getElementById('footer-text');
       if (ft) ft.textContent = site.footerText;
     }
@@ -64,8 +96,6 @@ function applyData(data) {
   if (profile) {
     const heroAvatarImg = document.getElementById('hero-avatar-img');
     const heroAvatarPlaceholder = document.getElementById('hero-avatar-placeholder');
-    const cardAvatarImg = document.getElementById('card-avatar-img');
-    const cardAvatarPlaceholder = document.getElementById('card-avatar-placeholder');
 
     if (profile.avatar) {
       if (heroAvatarImg) {
@@ -73,41 +103,38 @@ function applyData(data) {
         heroAvatarImg.style.display = 'block';
       }
       if (heroAvatarPlaceholder) heroAvatarPlaceholder.style.display = 'none';
-
-      if (cardAvatarImg) {
-        cardAvatarImg.src = profile.avatar;
-        cardAvatarImg.style.display = 'block';
-      }
-      if (cardAvatarPlaceholder) cardAvatarPlaceholder.style.display = 'none';
     } else {
       if (heroAvatarImg) heroAvatarImg.style.display = 'none';
       if (heroAvatarPlaceholder) heroAvatarPlaceholder.style.display = 'flex';
-      if (cardAvatarImg) cardAvatarImg.style.display = 'none';
-      if (cardAvatarPlaceholder) cardAvatarPlaceholder.style.display = 'inline';
     }
 
-    if (profile.name) {
+    if (profile.name !== undefined) {
       const heroTitle = document.getElementById('hero-title');
-      const cardName = document.getElementById('card-name');
-      if (heroTitle) heroTitle.textContent = profile.name;
-      if (cardName) cardName.textContent = profile.name;
-    }
-    if (profile.handle) {
-      const heroHandle = document.getElementById('hero-handle');
-      const cardHandle = document.getElementById('card-handle');
-      if (heroHandle) heroHandle.textContent = profile.handle;
-      if (cardHandle) cardHandle.textContent = profile.handle;
-    }
-    if (profile.bio) {
-      const heroDesc = document.getElementById('hero-desc');
-      if (heroDesc) {
-        heroDesc.innerHTML = escapeHtml(profile.bio).replace(/\n/g, '<br>');
+      if (heroTitle) {
+        heroTitle.textContent = profile.name;
+        heroTitle.style.display = profile.name ? 'block' : 'none';
       }
     }
-    if (profile.cardBio) {
-      const cardBio = document.getElementById('card-bio');
-      if (cardBio) {
-        cardBio.innerHTML = escapeHtml(profile.cardBio).replace(/\n/g, '<br>');
+
+    if (profile.handle !== undefined) {
+      const heroHandle = document.getElementById('hero-handle');
+      if (heroHandle) {
+        heroHandle.textContent = profile.handle;
+        heroHandle.style.display = profile.handle ? 'inline-block' : 'none';
+      }
+    }
+
+    if (profile.bio !== undefined) {
+      const heroDesc = document.getElementById('hero-desc');
+      if (heroDesc) {
+        const bioStr = String(profile.bio);
+        if (bioStr.trim().length > 0) {
+          heroDesc.innerHTML = escapeHtml(bioStr).replace(/\n/g, '<br>');
+          heroDesc.style.display = 'block';
+        } else {
+          heroDesc.innerHTML = '';
+          heroDesc.style.display = 'none';
+        }
       }
     }
   }
@@ -115,12 +142,17 @@ function applyData(data) {
   // Twitter Button
   if (twitter) {
     const username = (twitter.username || '').replace(/^@/, '');
+    const heroXBtn = document.getElementById('hero-x-btn');
+    const heroXBtnText = document.getElementById('hero-x-btn-text');
     if (username) {
-      const heroXBtn = document.getElementById('hero-x-btn');
-      const heroXBtnText = document.getElementById('hero-x-btn-text');
       const xUrl = `https://x.com/${username}`;
-      if (heroXBtn) heroXBtn.href = xUrl;
+      if (heroXBtn) {
+        heroXBtn.href = xUrl;
+        heroXBtn.style.display = 'inline-flex';
+      }
       if (heroXBtnText) heroXBtnText.textContent = `X (@${username})`;
+    } else if (heroXBtn) {
+      heroXBtn.style.display = 'none';
     }
   }
 
