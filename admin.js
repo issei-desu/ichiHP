@@ -368,8 +368,10 @@ function populateForm(data) {
   renderAdminTabs();
 
   // Unified Links (migrate from tabs if data.links not yet set)
-  document.getElementById('links-title-input').value = data.linksTitle || 'Links';
-  document.getElementById('links-subtitle-input').value = data.linksSubtitle !== undefined ? data.linksSubtitle : '関連リンク';
+  const tabWithTitle = Array.isArray(tabs) ? tabs.find(t => t.linksTitle !== undefined) : null;
+  const tabWithSubtitle = Array.isArray(tabs) ? tabs.find(t => t.linksSubtitle !== undefined) : null;
+  document.getElementById('links-title-input').value = data.linksTitle !== undefined ? data.linksTitle : (tabWithTitle ? tabWithTitle.linksTitle : 'Links');
+  document.getElementById('links-subtitle-input').value = data.linksSubtitle !== undefined ? data.linksSubtitle : (tabWithSubtitle ? tabWithSubtitle.linksSubtitle : '関連リンク');
 
   if (Array.isArray(data.links)) {
     linksState = [...data.links];

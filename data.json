@@ -1,13 +1,10 @@
 {
   "site": {
     "title": "いちのホームページ",
-    "logoBadge": "HP",
-    "logoText": "jk_na_ri_ta_i",
     "footerText": "© 2026 いち. All rights reserved."
   },
   "profile": {
     "name": "いち",
-    "handle": "@jk_na_ri_ta_i",
     "avatar": "images/avatar.png?v=1791960919323",
     "bio": "どうも、いちです。\n⬇️主な生息地。⬇️"
   },
@@ -33,32 +30,7 @@
           "label": "ひとこと",
           "value": ""
         }
-      ],
-      "linksTitle": "アカウント集",
-      "links": [
-        {
-          "id": "1792222266997",
-          "title": "メイン垢",
-          "url": "https://x.com/jk_na_ri_ta_i?s=11",
-          "sub": "jk_na_ri_ta_i",
-          "icon": "twitter"
-        },
-        {
-          "id": "1792222323817",
-          "title": "サブ垢(選考なし)",
-          "url": "https://x.com/isseisandayon?s=11",
-          "sub": "isseisandayon",
-          "icon": "twitter"
-        },
-        {
-          "id": "1792222325416",
-          "title": "サブ垢(あんま大衆的じゃないこと言ってる)",
-          "url": "https://x.com/xxxxda_xxsei?s=11",
-          "sub": "",
-          "icon": "twitter"
-        }
-      ],
-      "linksSubtitle": "あ。"
+      ]
     },
     {
       "id": "oshi",
@@ -91,6 +63,31 @@
           "value": "内容を入力してください"
         }
       ]
+    }
+  ],
+  "linksTitle": "アカウント集",
+  "linksSubtitle": "あ。",
+  "links": [
+    {
+      "id": "1792222266997",
+      "title": "メイン垢",
+      "url": "https://x.com/jk_na_ri_ta_i?s=11",
+      "sub": "jk_na_ri_ta_i",
+      "icon": "twitter"
+    },
+    {
+      "id": "1792222323817",
+      "title": "サブ垢(選考なし)",
+      "url": "https://x.com/isseisandayon?s=11",
+      "sub": "isseisandayon",
+      "icon": "twitter"
+    },
+    {
+      "id": "1792222325416",
+      "title": "サブ垢(あんま大衆的じゃないこと言ってる)",
+      "url": "https://x.com/xxxxda_xxsei?s=11",
+      "sub": "",
+      "icon": "twitter"
     }
   ]
 }

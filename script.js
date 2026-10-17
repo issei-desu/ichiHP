@@ -180,7 +180,11 @@ function applyData(data) {
       }
     });
   }
-  renderLinks(data.linksTitle || 'Links', data.linksSubtitle !== undefined ? data.linksSubtitle : '関連リンク', resolvedLinks || []);
+  const tabWithTitle = Array.isArray(tabs) ? tabs.find(t => t.linksTitle !== undefined) : null;
+  const tabWithSubtitle = Array.isArray(tabs) ? tabs.find(t => t.linksSubtitle !== undefined) : null;
+  const resolvedLinksTitle = data.linksTitle !== undefined ? data.linksTitle : (tabWithTitle ? tabWithTitle.linksTitle : 'Links');
+  const resolvedLinksSubtitle = data.linksSubtitle !== undefined ? data.linksSubtitle : (tabWithSubtitle ? tabWithSubtitle.linksSubtitle : '関連リンク');
+  renderLinks(resolvedLinksTitle, resolvedLinksSubtitle, resolvedLinks || []);
 }
 
 function renderTabs(tabs) {
