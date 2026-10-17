@@ -1,13 +1,10 @@
 {
   "site": {
     "title": "いちのホームページ",
-    "logoBadge": "HP",
-    "logoText": "jk_na_ri_ta_i",
     "footerText": "© 2026 いち. All rights reserved."
   },
   "profile": {
     "name": "いち",
-    "handle": "@jk_na_ri_ta_i",
     "avatar": "images/avatar.png?v=1791960919323",
     "bio": "どうも、いちです。\n⬇️主な生息地。⬇️"
   },
@@ -23,7 +20,7 @@
       "items": [
         {
           "label": "名前。",
-          "value": "ネットでは、いち。として生きてます。\n本名はどっかから漁ってください。"
+          "value": "本名はどっかから漁ってください。\nさっすがの俺でもネット上に書いたりはしないですねぇ。"
         },
         {
           "label": "なう所属。",
@@ -31,7 +28,7 @@
         },
         {
           "label": "趣味",
-          "value": ""
+          "value": "ネットに生きたり(詳細は別タブにて。)\n浦島坂田船を推したり(詳細は別タブにて。)\nこんな感じでウェブページを作ったり(詳細は以下略。)\nしてます。"
         }
       ]
     },
@@ -66,6 +63,17 @@
           "value": "内容を入力してください"
         }
       ]
+    }
+  ],
+  "linksTitle": "ネット上でのいろいろ垢。",
+  "linksSubtitle": "",
+  "links": [
+    {
+      "id": "1792233956000",
+      "title": "メインのついった。",
+      "url": "https://twitter.com/jk_na_ri_ta_i",
+      "sub": "@jk_na_ri_ta_i",
+      "icon": "twitter"
     }
   ]
 }
