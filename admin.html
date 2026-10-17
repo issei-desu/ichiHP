@@ -124,10 +124,10 @@
         <!-- Tabs Manager Section -->
         <section class="card admin-card">
           <div class="card-header-row">
-            <h2 class="card-title">📑 タブ別コンテンツ管理</h2>
+            <h2 class="card-title">📑 タブ別プロフィール管理</h2>
             <button type="button" id="add-tab-btn" class="btn btn-subtle-primary btn-sm">＋ タブ追加</button>
           </div>
-          <p class="card-desc">「リアル用」「推し活用」など、タブごとに自己紹介項目やリンクを自由にカスタマイズできます。</p>
+          <p class="card-desc">「リアル用」「推し活用」など、タブごとに自己紹介項目を自由にカスタマイズできます。</p>
 
           <!-- Admin Tab Switcher -->
           <div class="admin-tab-switcher" id="admin-tab-switcher">
@@ -137,6 +137,28 @@
           <!-- Active Tab Editor Container -->
           <div id="active-tab-editor" class="active-tab-editor">
             <!-- Dynamically rendered editor for the currently selected tab -->
+          </div>
+        </section>
+
+        <!-- Unified Links Manager Section -->
+        <section class="card admin-card">
+          <div class="card-header-row">
+            <h2 class="card-title">🔗 リンク一覧管理（共通）</h2>
+            <button type="button" id="add-link-btn" class="btn btn-subtle-primary btn-sm">＋ リンク追加</button>
+          </div>
+          <p class="card-desc">タブの下に一括で表示されるリンク一覧を編集できます。</p>
+
+          <div class="form-group">
+            <label for="links-title-input" class="form-label" style="font-size: 0.78rem;">見出しタイトル</label>
+            <input type="text" id="links-title-input" class="form-input" placeholder="例: Links">
+          </div>
+          <div class="form-group">
+            <label for="links-subtitle-input" class="form-label" style="font-size: 0.78rem;">サブ見出し（任意）</label>
+            <input type="text" id="links-subtitle-input" class="form-input" placeholder="例: 関連リンク">
+          </div>
+
+          <div class="links-editor-list" id="links-editor-list">
+            <!-- Dynamically populated links -->
           </div>
         </section>
 
@@ -187,6 +209,6 @@
     </div>
   </div>
 
-  <script src="admin.js?v=20261017_4"></script>
+  <script src="admin.js?v=20261017_5"></script>
 </body>
 </html>

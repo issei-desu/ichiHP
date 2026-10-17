@@ -153,10 +153,7 @@ function applyData(data) {
           { label: 'お名前 / 呼び名', value: (profile && profile.name) || 'いち' },
           { label: '好きなこと / 趣味', value: 'こんな感じのページを作ったりしてます。AIで作ってる部分が結構あったりします。' },
           { label: 'ひとこと', value: '気ままにのんびりやってます。仲良くしてください✨' }
-        ],
-        linksTitle: 'Links（リアル）',
-        linksSubtitle: '関連リンク',
-        links: data.links || []
+        ]
       },
       {
         id: 'oshi',
@@ -167,14 +164,23 @@ function applyData(data) {
           { label: '最推し / 担当', value: '（ここに推しの名前を入力！）' },
           { label: '推し歴 / きっかけ', value: '（推し始めた時期やきっかけ）' },
           { label: '推しへのひとこと', value: 'いつも元気をくれてありがとう！一生推します✨' }
-        ],
-        linksTitle: '推し活Links',
-        linksSubtitle: '推し活関連のSNSや布教リンク',
-        links: []
+        ]
       }
     ];
   }
   renderTabs(resolvedTabs);
+
+  // Render Unified Links Section (with fallback if links were stored in tabs)
+  let resolvedLinks = Array.isArray(data.links) ? data.links : null;
+  if (!resolvedLinks && Array.isArray(tabs)) {
+    resolvedLinks = [];
+    tabs.forEach(tab => {
+      if (Array.isArray(tab.links)) {
+        resolvedLinks.push(...tab.links);
+      }
+    });
+  }
+  renderLinks(data.linksTitle || 'Links', data.linksSubtitle !== undefined ? data.linksSubtitle : '関連リンク', resolvedLinks || []);
 }
 
 function renderTabs(tabs) {
@@ -195,10 +201,9 @@ function renderTabs(tabs) {
     </button>
   `).join('');
 
-  // 2. Render Tab Panes
+  // 2. Render Tab Panes (About Section only)
   panesContainer.innerHTML = tabs.map(tab => `
     <div id="tab-pane-${escapeHtml(tab.id)}" class="tab-pane ${tab.id === currentActiveTabId ? 'active' : ''}">
-      <!-- About Card in Tab -->
       <section class="section about-section" style="padding-top: 10px;">
         <div class="section-header">
           <span class="section-tag">${escapeHtml(tab.name)}</span>
@@ -217,32 +222,38 @@ function renderTabs(tabs) {
           </div>
         </div>
       </section>
-
-      <!-- Links in Tab -->
-      <section class="section links-section">
-        <div class="section-header">
-          <span class="section-tag">Links</span>
-          <h2 class="section-title">${escapeHtml(tab.linksTitle || 'Official Links')}</h2>
-          ${tab.linksSubtitle ? `<p class="section-subtitle">${escapeHtml(tab.linksSubtitle)}</p>` : ''}
-        </div>
-
-        <div class="links-list">
-          ${(tab.links && tab.links.length > 0) ? tab.links.map(link => `
-            <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer" class="link-item">
-              <div class="link-icon">
-                ${getIconSvg(link.icon)}
-              </div>
-              <div class="link-text">
-                <span class="link-title">${escapeHtml(link.title)}</span>
-                ${link.sub ? `<span class="link-sub">${escapeHtml(link.sub)}</span>` : ''}
-              </div>
-              <span class="link-arrow">→</span>
-            </a>
-          `).join('') : '<div class="link-placeholder"><span>リンクがまだありません</span></div>'}
-        </div>
-      </section>
     </div>
   `).join('');
+}
+
+function renderLinks(title, subtitle, links) {
+  const titleEl = document.getElementById('links-section-title');
+  const subtitleEl = document.getElementById('links-section-subtitle');
+  const listEl = document.getElementById('links-list');
+  if (!listEl) return;
+
+  if (titleEl) titleEl.textContent = title || 'Links';
+  if (subtitleEl) {
+    subtitleEl.textContent = subtitle || '';
+    subtitleEl.style.display = subtitle ? 'block' : 'none';
+  }
+
+  if (Array.isArray(links) && links.length > 0) {
+    listEl.innerHTML = links.map(link => `
+      <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer" class="link-item">
+        <div class="link-icon">
+          ${getIconSvg(link.icon)}
+        </div>
+        <div class="link-text">
+          <span class="link-title">${escapeHtml(link.title)}</span>
+          ${link.sub ? `<span class="link-sub">${escapeHtml(link.sub)}</span>` : ''}
+        </div>
+        <span class="link-arrow">→</span>
+      </a>
+    `).join('');
+  } else {
+    listEl.innerHTML = '<div class="link-placeholder"><span>リンクがまだありません</span></div>';
+  }
 }
 
 window.switchTab = function(tabId) {

@@ -8,6 +8,7 @@ let siteState = {};
 let profileState = {};
 let twitterState = {};
 let tabsState = [];
+let linksState = [];
 let currentAdminTabId = null;
 
 let currentAvatarUrl = '';
@@ -151,14 +152,24 @@ function setupEventListeners() {
       aboutSubtitle: '',
       items: [
         { label: '項目名', value: '内容を入力してください' }
-      ],
-      linksTitle: 'Links',
-      linksSubtitle: '',
-      links: []
+      ]
     });
     currentAdminTabId = newTabId;
     renderAdminTabs();
     showToast('新しいタブを追加しました', 'success');
+  });
+
+  // Add Link Button (Unified Links)
+  document.getElementById('add-link-btn').addEventListener('click', () => {
+    linksState.push({
+      id: Date.now().toString(),
+      title: '新しいリンク',
+      url: 'https://',
+      sub: '',
+      icon: 'other'
+    });
+    renderAdminLinks();
+    showToast('新しいリンクを追加しました', 'success');
   });
 
   // Form submit
@@ -333,7 +344,14 @@ function populateForm(data) {
   document.getElementById('twitter-username').value = (twitterState.username || '').replace(/^@/, '');
 
   // Tabs
-  tabsState = Array.isArray(tabs) ? [...tabs] : [];
+  tabsState = Array.isArray(tabs) ? tabs.map(t => ({
+    id: t.id,
+    name: t.name,
+    aboutTitle: t.aboutTitle || '',
+    aboutSubtitle: t.aboutSubtitle || '',
+    items: Array.isArray(t.items) ? [...t.items] : []
+  })) : [];
+
   if (tabsState.length === 0) {
     tabsState = [
       {
@@ -341,16 +359,31 @@ function populateForm(data) {
         name: 'リアル・日常 🌿',
         aboutTitle: 'About Me',
         aboutSubtitle: '',
-        items: [{ label: 'お名前', value: profileState.name || 'いち' }],
-        linksTitle: 'Links',
-        linksSubtitle: '',
-        links: []
+        items: [{ label: 'お名前', value: profileState.name || 'いち' }]
       }
     ];
   }
 
   currentAdminTabId = tabsState[0].id;
   renderAdminTabs();
+
+  // Unified Links (migrate from tabs if data.links not yet set)
+  document.getElementById('links-title-input').value = data.linksTitle || 'Links';
+  document.getElementById('links-subtitle-input').value = data.linksSubtitle !== undefined ? data.linksSubtitle : '関連リンク';
+
+  if (Array.isArray(data.links)) {
+    linksState = [...data.links];
+  } else if (Array.isArray(tabs)) {
+    linksState = [];
+    tabs.forEach(t => {
+      if (Array.isArray(t.links)) {
+        linksState.push(...t.links);
+      }
+    });
+  } else {
+    linksState = [];
+  }
+  renderAdminLinks();
 }
 
 function renderAdminTabs() {
@@ -418,60 +451,51 @@ function renderAdminTabs() {
         `).join('')}
       </div>
     </div>
+  `;
+}
 
-    <!-- Links Section in Tab -->
-    <div class="tab-sub-section">
-      <div class="card-header-row">
-        <strong style="font-size: 0.92rem;">🔗 リンク一覧</strong>
-        <button type="button" class="btn btn-subtle-primary btn-sm" onclick="addTabLink(${tabIndex})">＋ リンク追加</button>
+function renderAdminLinks() {
+  const container = document.getElementById('links-editor-list');
+  if (!container) return;
+
+  if (linksState.length === 0) {
+    container.innerHTML = '<p style="font-size: 0.85rem; color: var(--text-muted); text-align: center; padding: 12px;">リンクがまだありません。「＋ リンク追加」から追加できます。</p>';
+    return;
+  }
+
+  container.innerHTML = linksState.map((link, linkIdx) => `
+    <div class="link-editor-card">
+      <div class="link-editor-top">
+        <strong style="font-size: 0.85rem;">リンク #${linkIdx + 1}</strong>
+        <button type="button" class="btn-delete-link" onclick="deleteLink(${linkIdx})">削除</button>
       </div>
-
+      <div class="link-editor-grid">
+        <div class="form-group">
+          <label class="form-label" style="font-size: 0.78rem;">タイトル</label>
+          <input type="text" class="form-input" value="${escapeAttr(link.title)}" oninput="updateLink(${linkIdx}, 'title', this.value)" placeholder="例: Twitter" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="font-size: 0.78rem;">アイコン種別</label>
+          <select class="form-select" onchange="updateLink(${linkIdx}, 'icon', this.value)">
+            <option value="twitter" ${link.icon === 'twitter' || link.icon === 'x' ? 'selected' : ''}>Twitter</option>
+            <option value="instagram" ${link.icon === 'instagram' ? 'selected' : ''}>Instagram</option>
+            <option value="youtube" ${link.icon === 'youtube' ? 'selected' : ''}>YouTube</option>
+            <option value="tiktok" ${link.icon === 'tiktok' ? 'selected' : ''}>TikTok</option>
+            <option value="github" ${link.icon === 'github' ? 'selected' : ''}>GitHub</option>
+            <option value="other" ${link.icon === 'other' || !link.icon ? 'selected' : ''}>その他 / Web</option>
+          </select>
+        </div>
+      </div>
       <div class="form-group">
-        <label class="form-label" style="font-size: 0.78rem;">見出しタイトル</label>
-        <input type="text" class="form-input" value="${escapeAttr(tab.linksTitle || '')}" oninput="updateTabField(${tabIndex}, 'linksTitle', this.value)" placeholder="例: Links（リアル）">
+        <label class="form-label" style="font-size: 0.78rem;">URL</label>
+        <input type="url" class="form-input" value="${escapeAttr(link.url)}" oninput="updateLink(${linkIdx}, 'url', this.value)" placeholder="https://..." required>
       </div>
       <div class="form-group">
-        <label class="form-label" style="font-size: 0.78rem;">サブ見出し（任意）</label>
-        <input type="text" class="form-input" value="${escapeAttr(tab.linksSubtitle || '')}" oninput="updateTabField(${tabIndex}, 'linksSubtitle', this.value)" placeholder="例: 関連リンク">
-      </div>
-
-      <div class="links-editor-list">
-        ${(tab.links || []).map((link, linkIdx) => `
-          <div class="link-editor-card">
-            <div class="link-editor-top">
-              <strong style="font-size: 0.85rem;">リンク #${linkIdx + 1}</strong>
-              <button type="button" class="btn-delete-link" onclick="deleteTabLink(${tabIndex}, ${linkIdx})">削除</button>
-            </div>
-            <div class="link-editor-grid">
-              <div class="form-group">
-                <label class="form-label" style="font-size: 0.78rem;">タイトル</label>
-                <input type="text" class="form-input" value="${escapeAttr(link.title)}" oninput="updateTabLink(${tabIndex}, ${linkIdx}, 'title', this.value)" placeholder="例: Twitter" required>
-              </div>
-              <div class="form-group">
-                <label class="form-label" style="font-size: 0.78rem;">アイコン種別</label>
-                <select class="form-select" onchange="updateTabLink(${tabIndex}, ${linkIdx}, 'icon', this.value)">
-                  <option value="twitter" ${link.icon === 'twitter' || link.icon === 'x' ? 'selected' : ''}>Twitter</option>
-                  <option value="instagram" ${link.icon === 'instagram' ? 'selected' : ''}>Instagram</option>
-                  <option value="youtube" ${link.icon === 'youtube' ? 'selected' : ''}>YouTube</option>
-                  <option value="tiktok" ${link.icon === 'tiktok' ? 'selected' : ''}>TikTok</option>
-                  <option value="github" ${link.icon === 'github' ? 'selected' : ''}>GitHub</option>
-                  <option value="other" ${link.icon === 'other' || !link.icon ? 'selected' : ''}>その他 / Web</option>
-                </select>
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label" style="font-size: 0.78rem;">URL</label>
-              <input type="url" class="form-input" value="${escapeAttr(link.url)}" oninput="updateTabLink(${tabIndex}, ${linkIdx}, 'url', this.value)" placeholder="https://..." required>
-            </div>
-            <div class="form-group">
-              <label class="form-label" style="font-size: 0.78rem;">サブテキスト（任意）</label>
-              <input type="text" class="form-input" value="${escapeAttr(link.sub || '')}" oninput="updateTabLink(${tabIndex}, ${linkIdx}, 'sub', this.value)" placeholder="例: @ユーザー名 や メイン垢など">
-            </div>
-          </div>
-        `).join('')}
+        <label class="form-label" style="font-size: 0.78rem;">サブテキスト（任意）</label>
+        <input type="text" class="form-input" value="${escapeAttr(link.sub || '')}" oninput="updateLink(${linkIdx}, 'sub', this.value)" placeholder="例: @ユーザー名 や メイン垢など">
       </div>
     </div>
-  `;
+  `).join('');
 }
 
 window.selectAdminTab = function(tabId) {
@@ -522,30 +546,14 @@ window.updateTabItem = function(tabIndex, itemIdx, field, value) {
   }
 };
 
-window.addTabLink = function(tabIndex) {
-  if (tabsState[tabIndex]) {
-    if (!tabsState[tabIndex].links) tabsState[tabIndex].links = [];
-    tabsState[tabIndex].links.push({
-      id: Date.now().toString(),
-      title: '新しいリンク',
-      url: 'https://',
-      sub: '',
-      icon: 'other'
-    });
-    renderAdminTabs();
-  }
+window.deleteLink = function(linkIdx) {
+  linksState.splice(linkIdx, 1);
+  renderAdminLinks();
 };
 
-window.deleteTabLink = function(tabIndex, linkIdx) {
-  if (tabsState[tabIndex] && tabsState[tabIndex].links) {
-    tabsState[tabIndex].links.splice(linkIdx, 1);
-    renderAdminTabs();
-  }
-};
-
-window.updateTabLink = function(tabIndex, linkIdx, field, value) {
-  if (tabsState[tabIndex] && tabsState[tabIndex].links && tabsState[tabIndex].links[linkIdx]) {
-    tabsState[tabIndex].links[linkIdx][field] = value;
+window.updateLink = function(linkIdx, field, value) {
+  if (linksState[linkIdx]) {
+    linksState[linkIdx][field] = value;
   }
 };
 
@@ -567,7 +575,10 @@ function buildDataJson(avatarUrl) {
     twitter: {
       username: username
     },
-    tabs: tabsState
+    tabs: tabsState,
+    linksTitle: document.getElementById('links-title-input').value.trim() || 'Links',
+    linksSubtitle: document.getElementById('links-subtitle-input').value.trim(),
+    links: linksState
   };
 }
 
