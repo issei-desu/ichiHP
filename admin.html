@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>HP管理画面 - Admin Dashboard</title>
-  <link rel="stylesheet" href="style.css?v=20261014_3">
-  <link rel="stylesheet" href="admin.css?v=20261014_3">
+  <link rel="stylesheet" href="style.css?v=20261017_1">
+  <link rel="stylesheet" href="admin.css?v=20261017_1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
@@ -19,165 +19,164 @@
         <span class="logo-text">HP管理画面</span>
       </div>
       <div class="nav-links">
+        <button type="button" id="header-logout-btn" class="btn-subtle" style="display: none; border: none; cursor: pointer;">🔒 ログアウト</button>
         <a href="index.html" class="btn-subtle">← HPを見る</a>
       </div>
     </div>
   </header>
 
   <main class="container admin-container">
-    <!-- Notice Banner -->
-    <div class="admin-banner">
-      <div class="banner-icon">📱</div>
-      <div class="banner-text">
-        <strong>リアル用・推し活用タブ対応！</strong>
-        <span>すべての文章・項目・リンクをスマホから自由に編集して保存できます。</span>
-      </div>
-    </div>
-
-    <!-- Auth / Token Section -->
-    <section class="card admin-card" id="auth-section">
-      <div class="card-header-row">
-        <h2 class="card-title">🔑 GitHub連携設定</h2>
-        <span class="badge" id="auth-status-badge">未設定</span>
-      </div>
-      <p class="card-desc">
-        HPのデータを書き換えるための自分専用のGitHubトークンを設定します（ブラウザにのみ安全に保存されます）。
-      </p>
-
-      <div class="form-group" id="token-input-group">
-        <label for="github-token" class="form-label">GitHub 個人アクセストークン (PAT)</label>
-        <div class="input-with-btn">
-          <input type="password" id="github-token" class="form-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
-          <button type="button" id="save-token-btn" class="btn btn-primary btn-sm">連携する</button>
+    <!-- 1. Lock Screen (Displayed when not authenticated) -->
+    <section id="auth-lock-screen" class="lock-screen-wrapper">
+      <div class="card lock-card">
+        <div class="lock-icon-circle">
+          <span>🔒</span>
         </div>
-        <details class="token-guide" open>
-          <summary>💡 トークンの作り方（自動設定リンク付き）</summary>
+        <h2 class="lock-title">管理者認証</h2>
+        <p class="lock-desc">
+          このページは管理者専用です。<br>
+          認証コード（GitHubトークン）を入力してロックを解除してください。
+        </p>
+
+        <form id="lock-form" class="lock-form">
+          <div class="form-group">
+            <label for="lock-token-input" class="form-label">認証コード</label>
+            <input type="password" id="lock-token-input" class="form-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="current-password" required>
+          </div>
+          <button type="submit" id="unlock-btn" class="btn btn-primary" style="margin-top: 10px;">
+            <span id="unlock-btn-text">🔓 ロック解除してログイン</span>
+            <span id="unlock-btn-spinner" class="spinner" style="display: none;"></span>
+          </button>
+        </form>
+
+        <details class="token-guide" style="margin-top: 20px; text-align: left;">
+          <summary>💡 認証コードについて</summary>
           <div class="guide-content">
-            <p style="margin-bottom: 8px;">以下のボタンを押すと、<strong>必要な権限（repo）があらかじめ選択された状態</strong>で作成画面が開きます：</p>
+            <p style="margin-bottom: 8px;">認証コードには、GitHubで発行した個人アクセストークン（repo権限）を使用します：</p>
             <p style="margin-bottom: 10px;">
               <a href="https://github.com/settings/tokens/new?description=ichiHP-admin&scopes=repo" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="display: inline-block; color: #fff; text-decoration: none;">
-                🔑 トークン作成画面を開く（自動チェック付き）
+                🔑 トークン作成画面を開く
               </a>
             </p>
-            <ol>
-              <li>上のリンクを開いたら、一番下までスクロールして緑色の <strong>「Generate token」</strong> ボタンを押します。</li>
-              <li>画面に表示された <code>ghp_...</code> から始まる文字列をコピーします。</li>
-              <li>このページの入力欄に貼り付けて <strong>「連携する」</strong> を押せば完了です！</li>
-            </ol>
+            <p style="font-size: 0.78rem; color: var(--text-muted);">※入力されたコードはお使いのスマホ（ブラウザ）にのみ安全に保存され、第三者には見えません。</p>
           </div>
         </details>
-      </div>
-
-      <div id="token-active-group" class="token-active-box" style="display: none;">
-        <div class="active-info">
-          <span class="check-icon">✓</span>
-          <span>GitHubと正常に連携されています</span>
-        </div>
-        <button type="button" id="clear-token-btn" class="btn btn-secondary btn-sm">連携解除 / 変更</button>
       </div>
     </section>
 
-    <!-- Main Edit Form -->
-    <form id="admin-form">
-      <!-- Profile Section -->
-      <section class="card admin-card">
-        <h2 class="card-title">👤 プロフィール基本情報</h2>
-        
-        <!-- Avatar Image Editor -->
-        <div class="avatar-editor-box">
-          <label class="form-label">アイコン画像（アバター）</label>
-          <div class="avatar-editor-content">
-            <div class="avatar-preview-wrapper">
-              <img id="admin-avatar-preview" src="" alt="Avatar Preview" class="admin-avatar-img" style="display: none;">
-              <div id="admin-avatar-fallback" class="admin-avatar-fallback">✨</div>
-            </div>
-            <div class="avatar-editor-actions">
-              <label for="avatar-file-input" class="btn btn-secondary btn-sm file-upload-label">
-                📷 写真を選ぶ（スマホから選択）
-              </label>
-              <input type="file" id="avatar-file-input" accept="image/*" style="display: none;">
-              <button type="button" id="remove-avatar-btn" class="btn-subtle" style="font-size: 0.78rem;">画像を削除</button>
-            </div>
-          </div>
-          <div class="form-group" style="margin-top: 8px;">
-            <input type="text" id="avatar-url-input" class="form-input" placeholder="または画像URLを直接入力（任意）" style="font-size: 0.82rem;">
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="profile-name" class="form-label">表示名（名前）</label>
-          <input type="text" id="profile-name" class="form-input" placeholder="いち" required>
-        </div>
-
-        <div class="form-group">
-          <label for="profile-bio" class="form-label">トップの紹介文（Bio）</label>
-          <textarea id="profile-bio" class="form-textarea" rows="2" placeholder="どうも、いちです。"></textarea>
-        </div>
-
-        <div class="form-group">
-          <label for="twitter-username" class="form-label">X（Twitter）ユーザー名（@なし）</label>
-          <div class="input-prefix-wrapper">
-            <span class="input-prefix">@</span>
-            <input type="text" id="twitter-username" class="form-input with-prefix" placeholder="jk_na_ri_ta_i">
-          </div>
-        </div>
-      </section>
-
-      <!-- Tabs Manager Section -->
-      <section class="card admin-card">
-        <div class="card-header-row">
-          <h2 class="card-title">📑 タブ別コンテンツ管理</h2>
-          <button type="button" id="add-tab-btn" class="btn btn-subtle-primary btn-sm">＋ タブ追加</button>
-        </div>
-        <p class="card-desc">「リアル用」「推し活用」など、タブごとに自己紹介項目やリンクを自由にカスタマイズできます。</p>
-
-        <!-- Admin Tab Switcher -->
-        <div class="admin-tab-switcher" id="admin-tab-switcher">
-          <!-- Dynamically populated buttons -->
-        </div>
-
-        <!-- Active Tab Editor Container -->
-        <div id="active-tab-editor" class="active-tab-editor">
-          <!-- Dynamically rendered editor for the currently selected tab -->
-        </div>
-      </section>
-
-      <!-- Site Meta Section -->
-      <section class="card admin-card">
-        <details>
-          <summary class="card-title" style="cursor: pointer; font-size: 1rem;">⚙️ サイト全体設定（タイトル・フッターなど）</summary>
-          <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 12px;">
-            <div class="form-group">
-              <label for="site-title-input" class="form-label">ブラウザのタブ名（ページタイトル）</label>
-              <input type="text" id="site-title-input" class="form-input" placeholder="いちのホームページ">
-            </div>
-            <div class="form-group">
-              <label for="logo-badge-input" class="form-label">ヘッダーのバッジ文字</label>
-              <input type="text" id="logo-badge-input" class="form-input" placeholder="HP">
-            </div>
-            <div class="form-group">
-              <label for="logo-text-input" class="form-label">ヘッダーのロゴ文字</label>
-              <input type="text" id="logo-text-input" class="form-input" placeholder="jk_na_ri_ta_i">
-            </div>
-            <div class="form-group">
-              <label for="footer-text-input" class="form-label">フッターのコピーライト文字</label>
-              <input type="text" id="footer-text-input" class="form-input" placeholder="© 2026 いち. All rights reserved.">
-            </div>
-          </div>
-        </details>
-      </section>
-
-      <!-- Bottom Floating Save Bar -->
-      <div class="save-bar">
-        <div class="save-bar-content">
-          <button type="button" id="preview-btn" class="btn btn-secondary">プレビュー</button>
-          <button type="submit" id="save-all-btn" class="btn btn-primary">
-            <span id="save-btn-text">🚀 保存してHPに反映</span>
-            <span id="save-btn-spinner" class="spinner" style="display: none;"></span>
-          </button>
+    <!-- 2. Admin Content (Strictly hidden until authenticated) -->
+    <div id="admin-content" style="display: none; flex-direction: column; gap: 20px;">
+      <!-- Notice Banner -->
+      <div class="admin-banner">
+        <div class="banner-icon">📱</div>
+        <div class="banner-text">
+          <strong>管理者モード（認証済み）</strong>
+          <span>文章や項目、画像を編集して「保存」を押すとHPに即座に反映されます。</span>
         </div>
       </div>
-    </form>
+
+      <!-- Main Edit Form -->
+      <form id="admin-form">
+        <!-- Profile Section -->
+        <section class="card admin-card">
+          <h2 class="card-title">👤 プロフィール基本情報</h2>
+          
+          <!-- Avatar Image Editor -->
+          <div class="avatar-editor-box">
+            <label class="form-label">アイコン画像（アバター）</label>
+            <div class="avatar-editor-content">
+              <div class="avatar-preview-wrapper">
+                <img id="admin-avatar-preview" src="" alt="Avatar Preview" class="admin-avatar-img" style="display: none;">
+                <div id="admin-avatar-fallback" class="admin-avatar-fallback">✨</div>
+              </div>
+              <div class="avatar-editor-actions">
+                <label for="avatar-file-input" class="btn btn-secondary btn-sm file-upload-label">
+                  📷 写真を選ぶ（スマホから選択）
+                </label>
+                <input type="file" id="avatar-file-input" accept="image/*" style="display: none;">
+                <button type="button" id="remove-avatar-btn" class="btn-subtle" style="font-size: 0.78rem;">画像を削除</button>
+              </div>
+            </div>
+            <div class="form-group" style="margin-top: 8px;">
+              <input type="text" id="avatar-url-input" class="form-input" placeholder="または画像URLを直接入力（任意）" style="font-size: 0.82rem;">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="profile-name" class="form-label">表示名（名前）</label>
+            <input type="text" id="profile-name" class="form-input" placeholder="いち" required>
+          </div>
+
+          <div class="form-group">
+            <label for="profile-bio" class="form-label">トップの紹介文（Bio）</label>
+            <textarea id="profile-bio" class="form-textarea" rows="2" placeholder="どうも、いちです。"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="twitter-username" class="form-label">X（Twitter）ユーザー名（@なし）</label>
+            <div class="input-prefix-wrapper">
+              <span class="input-prefix">@</span>
+              <input type="text" id="twitter-username" class="form-input with-prefix" placeholder="jk_na_ri_ta_i">
+            </div>
+          </div>
+        </section>
+
+        <!-- Tabs Manager Section -->
+        <section class="card admin-card">
+          <div class="card-header-row">
+            <h2 class="card-title">📑 タブ別コンテンツ管理</h2>
+            <button type="button" id="add-tab-btn" class="btn btn-subtle-primary btn-sm">＋ タブ追加</button>
+          </div>
+          <p class="card-desc">「リアル用」「推し活用」など、タブごとに自己紹介項目やリンクを自由にカスタマイズできます。</p>
+
+          <!-- Admin Tab Switcher -->
+          <div class="admin-tab-switcher" id="admin-tab-switcher">
+            <!-- Dynamically populated buttons -->
+          </div>
+
+          <!-- Active Tab Editor Container -->
+          <div id="active-tab-editor" class="active-tab-editor">
+            <!-- Dynamically rendered editor for the currently selected tab -->
+          </div>
+        </section>
+
+        <!-- Site Meta Section -->
+        <section class="card admin-card">
+          <details>
+            <summary class="card-title" style="cursor: pointer; font-size: 1rem;">⚙️ サイト全体設定（タイトル・フッターなど）</summary>
+            <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 12px;">
+              <div class="form-group">
+                <label for="site-title-input" class="form-label">ブラウザのタブ名（ページタイトル）</label>
+                <input type="text" id="site-title-input" class="form-input" placeholder="いちのホームページ">
+              </div>
+              <div class="form-group">
+                <label for="logo-badge-input" class="form-label">ヘッダーのバッジ文字</label>
+                <input type="text" id="logo-badge-input" class="form-input" placeholder="HP">
+              </div>
+              <div class="form-group">
+                <label for="logo-text-input" class="form-label">ヘッダーのロゴ文字</label>
+                <input type="text" id="logo-text-input" class="form-input" placeholder="jk_na_ri_ta_i">
+              </div>
+              <div class="form-group">
+                <label for="footer-text-input" class="form-label">フッターのコピーライト文字</label>
+                <input type="text" id="footer-text-input" class="form-input" placeholder="© 2026 いち. All rights reserved.">
+              </div>
+            </div>
+          </details>
+        </section>
+
+        <!-- Bottom Floating Save Bar -->
+        <div class="save-bar">
+          <div class="save-bar-content">
+            <button type="button" id="preview-btn" class="btn btn-secondary">プレビュー</button>
+            <button type="submit" id="save-all-btn" class="btn btn-primary">
+              <span id="save-btn-text">🚀 保存してHPに反映</span>
+              <span id="save-btn-spinner" class="spinner" style="display: none;"></span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
   </main>
 
   <!-- Status Toast -->
@@ -196,6 +195,6 @@
     </div>
   </div>
 
-  <script src="admin.js?v=20261014_3"></script>
+  <script src="admin.js?v=20261017_1"></script>
 </body>
 </html>

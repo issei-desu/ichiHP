@@ -14,71 +14,86 @@ let currentAvatarUrl = '';
 let newAvatarBase64 = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-  initAuth();
-  loadData();
   setupEventListeners();
+  checkAuthAndInitialize();
 });
 
 function getAuthHeader(token) {
   return `Bearer ${token.trim()}`;
 }
 
-// Authentication Handling
-function initAuth() {
+// Check authentication state on page load
+async function checkAuthAndInitialize() {
   const token = localStorage.getItem('gh_token');
-  const tokenInputGroup = document.getElementById('token-input-group');
-  const tokenActiveGroup = document.getElementById('token-active-group');
-  const badge = document.getElementById('auth-status-badge');
-
   if (token) {
-    tokenInputGroup.style.display = 'none';
-    tokenActiveGroup.style.display = 'flex';
-    badge.textContent = '連携済み';
-    badge.className = 'badge success';
-  } else {
-    tokenInputGroup.style.display = 'block';
-    tokenActiveGroup.style.display = 'none';
-    badge.textContent = '未設定';
-    badge.className = 'badge';
+    const verification = await verifyToken(token);
+    if (verification.valid) {
+      unlockAdminScreen();
+      return;
+    } else {
+      localStorage.removeItem('gh_token');
+    }
   }
+  lockAdminScreen();
+}
+
+function unlockAdminScreen() {
+  document.getElementById('auth-lock-screen').style.display = 'none';
+  document.getElementById('admin-content').style.display = 'flex';
+  document.getElementById('header-logout-btn').style.display = 'inline-block';
+  loadData();
+}
+
+function lockAdminScreen() {
+  document.getElementById('auth-lock-screen').style.display = 'flex';
+  document.getElementById('admin-content').style.display = 'none';
+  document.getElementById('header-logout-btn').style.display = 'none';
 }
 
 function setupEventListeners() {
-  // Token save
-  document.getElementById('save-token-btn').addEventListener('click', async () => {
-    const tokenInput = document.getElementById('github-token');
+  // Lock Form Submit (Unlock)
+  const lockForm = document.getElementById('lock-form');
+  lockForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const tokenInput = document.getElementById('lock-token-input');
     const token = tokenInput.value.trim();
     if (!token) {
-      showToast('トークンを入力してください', 'error');
+      showToast('認証コードを入力してください', 'error');
       return;
     }
 
-    const saveBtn = document.getElementById('save-token-btn');
-    saveBtn.disabled = true;
-    saveBtn.textContent = '検証中...';
+    const unlockBtn = document.getElementById('unlock-btn');
+    const btnText = document.getElementById('unlock-btn-text');
+    const spinner = document.getElementById('unlock-btn-spinner');
+
+    unlockBtn.disabled = true;
+    btnText.textContent = '認証中...';
+    spinner.style.display = 'inline-block';
 
     const verification = await verifyToken(token);
-    saveBtn.disabled = false;
-    saveBtn.textContent = '連携する';
+
+    unlockBtn.disabled = false;
+    btnText.textContent = '🔓 ロック解除してログイン';
+    spinner.style.display = 'none';
 
     if (!verification.valid) {
       showToast(verification.message, 'error');
-      alert(`【連携エラー】\n${verification.message}`);
+      alert(`【認証失敗】\n${verification.message}`);
       return;
     }
 
     localStorage.setItem('gh_token', token);
     tokenInput.value = '';
-    initAuth();
-    showToast('✨ GitHub連携が完了しました！', 'success');
+    unlockAdminScreen();
+    showToast('✨ 認証に成功しました！', 'success');
   });
 
-  // Token clear
-  document.getElementById('clear-token-btn').addEventListener('click', () => {
-    if (confirm('GitHub連携を解除しますか？')) {
+  // Logout (Lock) Button
+  document.getElementById('header-logout-btn').addEventListener('click', () => {
+    if (confirm('ログアウトして画面をロックしますか？')) {
       localStorage.removeItem('gh_token');
-      initAuth();
-      showToast('連携を解除しました', 'success');
+      lockAdminScreen();
+      showToast('ログアウトしました', 'info');
     }
   });
 
@@ -224,7 +239,7 @@ function processAndResizeImage(file, maxSize = 600) {
   });
 }
 
-// Verify Token
+// Verify Token against repository
 async function verifyToken(token) {
   try {
     const res = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}`, {
@@ -234,13 +249,13 @@ async function verifyToken(token) {
       }
     });
 
-    if (res.status === 401) return { valid: false, message: 'トークンが無効または期限切れです。' };
-    if (res.status === 404) return { valid: false, message: 'リポジトリが見つからないか、トークンに「repo」権限が付いていません。' };
+    if (res.status === 401) return { valid: false, message: '認証コードが無効または期限切れです。' };
+    if (res.status === 404) return { valid: false, message: 'リポジトリが見つからないか、repo権限がありません。' };
     if (!res.ok) return { valid: false, message: `GitHub確認エラー (${res.status})` };
 
     const data = await res.json();
     if (data.permissions && !data.permissions.push) {
-      return { valid: false, message: 'リポジトリへの書き込み（push）権限がありません。「repo」権限を有効にしてください。' };
+      return { valid: false, message: 'リポジトリへの書き込み（push）権限がありません。' };
     }
     return { valid: true };
   } catch (err) {
@@ -288,7 +303,7 @@ function populateForm(data) {
     setAvatarPreview('');
   }
 
-  // Twitter
+  // Twitter username
   twitterState = twitter || {};
   document.getElementById('twitter-username').value = (twitterState.username || '').replace(/^@/, '');
 
@@ -318,7 +333,6 @@ function renderAdminTabs() {
   const editor = document.getElementById('active-tab-editor');
   if (!switcher || !editor) return;
 
-  // 1. Render switcher pills
   switcher.innerHTML = tabsState.map(tab => `
     <button type="button" 
             class="admin-tab-pill ${tab.id === currentAdminTabId ? 'active' : ''}" 
@@ -327,7 +341,6 @@ function renderAdminTabs() {
     </button>
   `).join('');
 
-  // 2. Render active tab editor
   const tab = tabsState.find(t => t.id === currentAdminTabId) || tabsState[0];
   if (!tab) {
     editor.innerHTML = '<p>タブがありません</p>';
@@ -581,8 +594,8 @@ async function uploadAvatarImageToGitHub(token, dataUrl) {
 async function saveToGitHub() {
   const token = localStorage.getItem('gh_token');
   if (!token) {
-    showToast('先に「GitHub連携設定」でトークンを登録してください', 'error');
-    document.getElementById('auth-section').scrollIntoView({ behavior: 'smooth' });
+    showToast('認証コードが見つかりません。再ログインしてください', 'error');
+    lockAdminScreen();
     return;
   }
 
@@ -624,7 +637,7 @@ async function saveToGitHub() {
       const fileData = await getRes.json();
       sha = fileData.sha;
     } else if (getRes.status === 401) {
-      throw new Error('トークンが無効または期限切れです。「連携解除」して再設定してください。');
+      throw new Error('認証コードが無効または期限切れです。再ログインしてください。');
     }
 
     const putUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${DATA_FILE_PATH}`;
