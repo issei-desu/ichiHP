@@ -47,7 +47,7 @@
       "items": [
         {
           "label": "推し！！！！！！！",
-          "value": "志麻さんを愛してます。\n"
+          "value": "志麻さんを愛してます。\n志麻セン寄りの志麻リスのため、稀にセンワン行ったりもしてます...。"
         },
         {
           "label": "",
@@ -64,6 +64,13 @@
       "title": "メインのついった。",
       "url": "https://twitter.com/jk_na_ri_ta_i",
       "sub": "@jk_na_ri_ta_i",
+      "icon": "twitter"
+    },
+    {
+      "id": "1792306918049",
+      "title": "サブのついった。(選考なし！)",
+      "url": "https://twitter.com/isseisandayon",
+      "sub": "@isseisandayon",
       "icon": "twitter"
     }
   ]
