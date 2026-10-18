@@ -15,7 +15,7 @@
     {
       "id": "real",
       "name": "リアルのいち。",
-      "aboutTitle": "About Me",
+      "aboutTitle": "",
       "aboutSubtitle": "",
       "items": [
         {
@@ -35,32 +35,23 @@
     {
       "id": "oshi",
       "name": "ネットでのいち。",
-      "aboutTitle": "My Favorite（推しについて）",
-      "aboutSubtitle": "推しへの愛や活動情報",
-      "items": [
-        {
-          "label": "最推し / 担当",
-          "value": "（ここに推しの名前を入力！）"
-        },
-        {
-          "label": "推し歴 / きっかけ",
-          "value": "（推し始めた時期やきっかけ）"
-        },
-        {
-          "label": "推しへのひとこと",
-          "value": "いつも元気をくれてありがとう！一生推します✨"
-        }
-      ]
+      "aboutTitle": "",
+      "aboutSubtitle": "",
+      "items": []
     },
     {
       "id": "tab_1792206528579",
       "name": "crewのいち。",
-      "aboutTitle": "About Me",
+      "aboutTitle": "",
       "aboutSubtitle": "",
       "items": [
         {
-          "label": "項目名",
-          "value": "内容を入力してください"
+          "label": "推し！！！！！！！",
+          "value": "志麻さんを愛してます。\n"
+        },
+        {
+          "label": "",
+          "value": ""
         }
       ]
     }
