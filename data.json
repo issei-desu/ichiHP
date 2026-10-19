@@ -146,7 +146,7 @@
       ],
       "blocks": [
         {
-          "tag": "",
+          "tag": "小さいタグ文字",
           "aboutTitle": "優勝話&ハイタ会レポ！",
           "aboutSubtitle": "表示するを選ぶと、各項目名だけ表示されるよーん。",
           "font": "",
@@ -156,14 +156,39 @@
           "sensitiveWarning": "",
           "items": [
             {
-              "label": "項目名",
-              "value": "",
+              "label": "志麻さんハイタ会レポ",
+              "value": "志麻さんのハイタ会のレポです\n\n💜star!　愛知\n💜shiki　愛知\n💛brun　愛知\n💜Alice　愛知",
               "font": "",
               "labelColor": "",
               "valueColor": "",
-              "isSensitive": false,
+              "isSensitive": true,
               "sensitiveWarning": "",
-              "subItems": []
+              "subItems": [
+                {
+                  "label": "💜star!愛知",
+                  "value": "彼女に連れられて来ました。\n[bg=#f3e8ff]💜ありがとう。(頭ぽんぽん)[/bg]\n大好きになりました。また来ます。\n[bg=#f3e8ff]💜ありがとう。また来てな。[/bg]",
+                  "isSensitive": true,
+                  "sensitiveWarning": ""
+                },
+                {
+                  "label": "💜shiki愛知",
+                  "value": "",
+                  "isSensitive": true,
+                  "sensitiveWarning": ""
+                },
+                {
+                  "label": "💛brun愛知",
+                  "value": "れぽ。",
+                  "isSensitive": true,
+                  "sensitiveWarning": ""
+                },
+                {
+                  "label": "💜",
+                  "value": "れぽ。",
+                  "isSensitive": true,
+                  "sensitiveWarning": ""
+                }
+              ]
             }
           ]
         }
