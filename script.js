@@ -223,6 +223,147 @@ function applyData(data) {
   });
 }
 
+let inlineSensitiveCounter = 0;
+
+function renderSensitiveGuard(uid, warningText, innerHtml) {
+  const safeUid = escapeAttr(uid);
+  const note = warningText && warningText.trim()
+    ? warningText.trim()
+    : 'センシティブな内容（またはネタバレ等）が含まれています。閲覧注意・自衛お願いします。';
+  return `
+    <div class="sensitive-container" id="sens-wrap-${safeUid}">
+      <div class="sensitive-guard-box" id="sens-guard-${safeUid}">
+        <div class="sensitive-guard-icon">🔞</div>
+        <div class="sensitive-guard-title">センシティブ設定（非表示中）</div>
+        <div class="sensitive-guard-note">${escapeHtml(note)}</div>
+        <div id="sens-step1-${safeUid}">
+          <button type="button" class="sensitive-btn-step1" onclick="requestSensitiveUnlock('${safeUid}')">🔒 表示する（確認へ）</button>
+        </div>
+        <div id="sens-step2-${safeUid}" style="display: none !important;">
+          <div class="sensitive-guard-note" style="color: var(--primary); font-weight: 800; margin-top: 4px;">
+            ⚠️ 誤タップ防止確認：本当に表示しますか？
+          </div>
+          <div class="sensitive-confirm-row">
+            <button type="button" class="sensitive-btn-cancel" onclick="cancelSensitiveUnlock('${safeUid}')">キャンセル</button>
+            <button type="button" class="sensitive-btn-confirm" id="sens-confirm-btn-${safeUid}" disabled onclick="confirmSensitiveUnlock('${safeUid}')">⏳ 準備中...</button>
+          </div>
+        </div>
+      </div>
+      <div id="sens-unlocked-${safeUid}" style="display: none !important;">
+        <div class="sensitive-rehide-bar">
+          <button type="button" class="sensitive-btn-rehide" onclick="rehideSensitiveContent('${safeUid}')">🙈 もう一度隠す</button>
+        </div>
+        <div id="sens-body-${safeUid}"></div>
+      </div>
+      <template id="sens-tpl-${safeUid}">${innerHtml}</template>
+    </div>
+  `;
+}
+
+window.requestSensitiveUnlock = function(uid) {
+  const step1 = document.getElementById(`sens-step1-${uid}`);
+  const step2 = document.getElementById(`sens-step2-${uid}`);
+  const confirmBtn = document.getElementById(`sens-confirm-btn-${uid}`);
+  if (!step1 || !step2 || !confirmBtn) return;
+
+  step1.style.setProperty('display', 'none', 'important');
+  step2.style.setProperty('display', 'block', 'important');
+  confirmBtn.disabled = true;
+  confirmBtn.textContent = '⏳ 確認中...';
+
+  // 500ms anti-lag / anti-double-tap guard so buffered taps or scroll lag can NEVER trigger unlock
+  setTimeout(() => {
+    if (document.body.contains(confirmBtn)) {
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = '🔓 はい、表示する';
+    }
+  }, 500);
+};
+
+window.cancelSensitiveUnlock = function(uid) {
+  const step1 = document.getElementById(`sens-step1-${uid}`);
+  const step2 = document.getElementById(`sens-step2-${uid}`);
+  const confirmBtn = document.getElementById(`sens-confirm-btn-${uid}`);
+  if (step1) step1.style.setProperty('display', 'block', 'important');
+  if (step2) step2.style.setProperty('display', 'none', 'important');
+  if (confirmBtn) confirmBtn.disabled = true;
+};
+
+window.confirmSensitiveUnlock = function(uid) {
+  const confirmBtn = document.getElementById(`sens-confirm-btn-${uid}`);
+  if (!confirmBtn || confirmBtn.disabled) return;
+
+  const guardBox = document.getElementById(`sens-guard-${uid}`);
+  const unlockedBox = document.getElementById(`sens-unlocked-${uid}`);
+  const bodyBox = document.getElementById(`sens-body-${uid}`);
+  const tpl = document.getElementById(`sens-tpl-${uid}`);
+  if (!guardBox || !unlockedBox || !bodyBox || !tpl) return;
+
+  bodyBox.innerHTML = tpl.innerHTML;
+  guardBox.style.setProperty('display', 'none', 'important');
+  unlockedBox.style.setProperty('display', 'block', 'important');
+};
+
+window.rehideSensitiveContent = function(uid) {
+  const guardBox = document.getElementById(`sens-guard-${uid}`);
+  const unlockedBox = document.getElementById(`sens-unlocked-${uid}`);
+  const bodyBox = document.getElementById(`sens-body-${uid}`);
+  if (bodyBox) bodyBox.innerHTML = '';
+  if (unlockedBox) unlockedBox.style.setProperty('display', 'none', 'important');
+  if (guardBox) guardBox.style.setProperty('display', 'flex', 'important');
+  window.cancelSensitiveUnlock(uid);
+};
+
+window.requestInlineSensitiveUnlock = function(uid) {
+  const step1Btn = document.getElementById(`inl-sens-s1-${uid}`);
+  const step2Span = document.getElementById(`inl-sens-s2-${uid}`);
+  const confirmBtn = document.getElementById(`inl-sens-confirm-${uid}`);
+  if (!step1Btn || !step2Span || !confirmBtn) return;
+
+  step1Btn.style.setProperty('display', 'none', 'important');
+  step2Span.style.setProperty('display', 'inline-flex', 'important');
+  confirmBtn.disabled = true;
+  confirmBtn.textContent = '⏳ 確認...';
+
+  setTimeout(() => {
+    if (document.body.contains(confirmBtn)) {
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = '🔓 本当に見る';
+    }
+  }, 450);
+};
+
+window.cancelInlineSensitiveUnlock = function(uid) {
+  const step1Btn = document.getElementById(`inl-sens-s1-${uid}`);
+  const step2Span = document.getElementById(`inl-sens-s2-${uid}`);
+  const confirmBtn = document.getElementById(`inl-sens-confirm-${uid}`);
+  if (step1Btn) step1Btn.style.setProperty('display', 'inline-flex', 'important');
+  if (step2Span) step2Span.style.setProperty('display', 'none', 'important');
+  if (confirmBtn) confirmBtn.disabled = true;
+};
+
+window.confirmInlineSensitiveUnlock = function(uid) {
+  const confirmBtn = document.getElementById(`inl-sens-confirm-${uid}`);
+  if (!confirmBtn || confirmBtn.disabled) return;
+  const step2Span = document.getElementById(`inl-sens-s2-${uid}`);
+  const unlockedSpan = document.getElementById(`inl-sens-open-${uid}`);
+  const bodySpan = document.getElementById(`inl-sens-body-${uid}`);
+  const tpl = document.getElementById(`inl-sens-tpl-${uid}`);
+  if (!step2Span || !unlockedSpan || !bodySpan || !tpl) return;
+
+  bodySpan.innerHTML = tpl.innerHTML;
+  step2Span.style.setProperty('display', 'none', 'important');
+  unlockedSpan.style.setProperty('display', 'inline', 'important');
+};
+
+window.rehideInlineSensitive = function(uid) {
+  const unlockedSpan = document.getElementById(`inl-sens-open-${uid}`);
+  const bodySpan = document.getElementById(`inl-sens-body-${uid}`);
+  if (bodySpan) bodySpan.innerHTML = '';
+  if (unlockedSpan) unlockedSpan.style.setProperty('display', 'none', 'important');
+  window.cancelInlineSensitiveUnlock(uid);
+};
+
 function renderTabs(tabs) {
   const navContainer = document.getElementById('tabs-nav');
   const panesContainer = document.getElementById('tab-panes-container');
@@ -235,12 +376,13 @@ function renderTabs(tabs) {
   // 1. Render Tab Buttons
   navContainer.innerHTML = tabs.map(tab => {
     const tabFontCss = getFontFamilyCss(tab.font);
+    const sensBadge = tab.isSensitive ? '🔞 ' : '';
     return `
       <button type="button" 
               class="tab-btn ${tab.id === currentActiveTabId ? 'active' : ''}" 
               style="${tabFontCss ? `font-family: ${escapeAttr(tabFontCss)};` : ''}"
               onclick="switchTab('${escapeAttr(tab.id)}')">
-        ${formatRichText(tab.name)}
+        ${sensBadge}${formatRichText(tab.name)}
       </button>
     `;
   }).join('');
@@ -253,32 +395,44 @@ function renderTabs(tabs) {
     const paneStyleAttr = paneStyleParts.length ? `style="${escapeAttr(paneStyleParts.join('; '))}"` : '';
     const titleColorStyle = tab.titleColor ? `style="color: ${escapeAttr(tab.titleColor)};"` : '';
 
+    const itemsGridHtml = `
+      <div class="about-grid">
+        ${(tab.items || []).map((item, itemIdx) => {
+          const itemFontCss = getFontFamilyCss(item.font);
+          const itemStyle = itemFontCss ? `style="font-family: ${escapeAttr(itemFontCss)};"` : '';
+          const labelColor = item.labelColor || tab.titleColor || '';
+          const valueColor = item.valueColor || tab.textColor || '';
+          const labelStyle = labelColor ? `style="color: ${escapeAttr(labelColor)};"` : '';
+          const valueStyle = valueColor ? `style="color: ${escapeAttr(valueColor)};"` : '';
+          const valueHtml = `<p class="about-value" ${valueStyle}>${formatRichText(item.value)}</p>`;
+
+          return `
+            <div class="about-item" ${itemStyle}>
+              <span class="about-label" ${labelStyle}>${item.isSensitive ? '🔞 ' : ''}${formatRichText(item.label)}</span>
+              ${item.isSensitive
+                ? renderSensitiveGuard(`item_${tab.id}_${itemIdx}`, item.sensitiveWarning, valueHtml)
+                : valueHtml
+              }
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+
     return `
       <div id="tab-pane-${escapeAttr(tab.id)}" class="tab-pane ${tab.id === currentActiveTabId ? 'active' : ''}" ${paneStyleAttr}>
         <section class="section about-section" style="padding-top: 10px;">
           <div class="section-header">
-            <span class="section-tag">${formatRichText(tab.name)}</span>
+            <span class="section-tag">${tab.isSensitive ? '🔞 ' : ''}${formatRichText(tab.name)}</span>
             ${tab.aboutTitle ? `<h2 class="section-title" ${titleColorStyle}>${formatRichText(tab.aboutTitle)}</h2>` : ''}
             ${tab.aboutSubtitle ? `<p class="section-subtitle" ${titleColorStyle}>${formatRichText(tab.aboutSubtitle)}</p>` : ''}
           </div>
 
           <div class="card about-card">
-            <div class="about-grid">
-              ${(tab.items || []).map(item => {
-                const itemFontCss = getFontFamilyCss(item.font);
-                const itemStyle = itemFontCss ? `style="font-family: ${escapeAttr(itemFontCss)};"` : '';
-                const labelColor = item.labelColor || tab.titleColor || '';
-                const valueColor = item.valueColor || tab.textColor || '';
-                const labelStyle = labelColor ? `style="color: ${escapeAttr(labelColor)};"` : '';
-                const valueStyle = valueColor ? `style="color: ${escapeAttr(valueColor)};"` : '';
-                return `
-                  <div class="about-item" ${itemStyle}>
-                    <span class="about-label" ${labelStyle}>${formatRichText(item.label)}</span>
-                    <p class="about-value" ${valueStyle}>${formatRichText(item.value)}</p>
-                  </div>
-                `;
-              }).join('')}
-            </div>
+            ${tab.isSensitive
+              ? renderSensitiveGuard(`tab_${tab.id}`, tab.sensitiveWarning, itemsGridHtml)
+              : itemsGridHtml
+            }
           </div>
         </section>
       </div>
@@ -308,12 +462,13 @@ function renderLinks(title, subtitle, links, linksStyle = {}) {
   }
 
   if (Array.isArray(links) && links.length > 0) {
-    listEl.innerHTML = links.map(link => {
+    listEl.innerHTML = links.map((link, linkIdx) => {
       const linkFontCss = getFontFamilyCss(link.font);
       const itemStyle = linkFontCss ? `style="font-family: ${escapeAttr(linkFontCss)};"` : '';
       const titleStyle = link.titleColor ? `style="color: ${escapeAttr(link.titleColor)};"` : '';
       const subStyle = link.subColor ? `style="color: ${escapeAttr(link.subColor)};"` : '';
-      return `
+
+      const anchorHtml = `
         <a href="${escapeAttr(link.url)}" target="_blank" rel="noopener noreferrer" class="link-item" ${itemStyle}>
           <div class="link-icon">
             ${getIconSvg(link.icon)}
@@ -325,6 +480,18 @@ function renderLinks(title, subtitle, links, linksStyle = {}) {
           <span class="link-arrow">→</span>
         </a>
       `;
+
+      if (link.isSensitive) {
+        return `
+          <div class="card" style="padding: 14px;" ${itemStyle}>
+            <div style="font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;" ${titleStyle}>
+              🔞 ${formatRichText(link.title)}
+            </div>
+            ${renderSensitiveGuard(`link_${linkIdx}`, link.sensitiveWarning, anchorHtml)}
+          </div>
+        `;
+      }
+      return anchorHtml;
     }).join('');
   } else {
     listEl.innerHTML = '<div class="link-placeholder"><span>リンクがまだありません</span></div>';
@@ -333,6 +500,16 @@ function renderLinks(title, subtitle, links, linksStyle = {}) {
 
 window.switchTab = function(tabId) {
   currentActiveTabId = tabId;
+
+  // Auto re-lock any unlocked or half-open sensitive blocks when switching tabs
+  document.querySelectorAll('.sensitive-container').forEach(el => {
+    const uid = (el.id || '').replace(/^sens-wrap-/, '');
+    if (uid) window.rehideSensitiveContent(uid);
+  });
+  document.querySelectorAll('.sensitive-inline-wrapper').forEach(el => {
+    const uid = (el.id || '').replace(/^inl-sens-wrap-/, '');
+    if (uid) window.rehideInlineSensitive(uid);
+  });
 
   // Update Buttons
   const buttons = document.querySelectorAll('.tab-btn');
@@ -486,9 +663,10 @@ function escapeAttr(str) {
 function stripRichTags(str) {
   if (!str) return '';
   return String(str)
+    .replace(/\[hide\][\s\S]*?\[\/hide\]/gi, '🔞[非表示]')
     .replace(/\[(?:color|bg|font|size)=[^\]]+\]/gi, '')
-    .replace(/\[\/(?:color|bg|font|size|b)\]/gi, '')
-    .replace(/\[b\]/gi, '');
+    .replace(/\[\/(?:color|bg|font|size|b|hide)\]/gi, '')
+    .replace(/\[(?:b|hide)\]/gi, '');
 }
 
 function formatRichText(str) {
@@ -502,7 +680,11 @@ function formatRichText(str) {
       .replace(/\[bg=(#[0-9a-fA-F]{3,6})\]([\s\S]*?)\[\/bg\]/gi, '<span style="background-color: $1; padding: 1px 5px; border-radius: 4px;">$2</span>')
       .replace(/\[font=(rounded|sans|serif|handwriting|pop|marupop|pixel)\]([\s\S]*?)\[\/font\]/gi, '<span class="font-$1">$2</span>')
       .replace(/\[size=(sm|lg|xl)\]([\s\S]*?)\[\/size\]/gi, '<span class="text-size-$1">$2</span>')
-      .replace(/\[b\]([\s\S]*?)\[\/b\]/gi, '<strong>$1</strong>');
+      .replace(/\[b\]([\s\S]*?)\[\/b\]/gi, '<strong>$1</strong>')
+      .replace(/\[hide\]([\s\S]*?)\[\/hide\]/gi, (_, inner) => {
+        const uid = `inl_${++inlineSensitiveCounter}`;
+        return `<span class="sensitive-inline-wrapper" id="inl-sens-wrap-${uid}"><button type="button" class="sensitive-inline-pill" id="inl-sens-s1-${uid}" onclick="event.preventDefault();event.stopPropagation();requestInlineSensitiveUnlock('${uid}')">🔞 センシティブ表示（確認へ）</button><span class="sensitive-inline-confirm" id="inl-sens-s2-${uid}" style="display: none !important;"><button type="button" class="sensitive-inline-btn-cancel" onclick="event.preventDefault();event.stopPropagation();cancelInlineSensitiveUnlock('${uid}')">✕</button><button type="button" class="sensitive-inline-btn-ok" id="inl-sens-confirm-${uid}" disabled onclick="event.preventDefault();event.stopPropagation();confirmInlineSensitiveUnlock('${uid}')">⏳ 確認...</button></span><span class="sensitive-inline-revealed" id="inl-sens-open-${uid}" style="display: none !important;"><span id="inl-sens-body-${uid}"></span><button type="button" class="sensitive-inline-btn-rehide" onclick="event.preventDefault();event.stopPropagation();rehideInlineSensitive('${uid}')">🙈 隠す</button></span><template id="inl-sens-tpl-${uid}">${inner}</template></span>`;
+      });
     if (html === prev) break;
   }
 
