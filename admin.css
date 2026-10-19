@@ -996,4 +996,130 @@ input:checked + .slider:before {
   margin-bottom: 4px;
 }
 
+/* Visitor Access Logs Section */
+.logs-stats-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.log-stat-box {
+  background: linear-gradient(135deg, #f8fafc, #f3e8ff);
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.log-stat-label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.log-stat-value {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #6d28d9;
+}
+
+.logs-toolbar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  background: #f8fafc;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid #e2e8f0;
+}
+
+.ignore-self-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #334155;
+  cursor: pointer;
+}
+
+.logs-toolbar-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.visitor-logs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 380px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.logs-empty-state {
+  text-align: center;
+  padding: 20px 12px;
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: var(--radius-md);
+}
+
+.visitor-log-item {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-left: 3.5px solid #8b5cf6;
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.8rem;
+}
+
+.log-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.log-time {
+  font-weight: 800;
+  color: #334155;
+  font-size: 0.78rem;
+}
+
+.log-ip-badge {
+  font-family: monospace;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: #ede9fe;
+  color: #5b21b6;
+  padding: 2px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid #ddd6fe;
+}
+
+.log-ip-badge:hover {
+  background: #ddd6fe;
+}
+
+.log-meta-line {
+  color: #475569;
+  font-size: 0.77rem;
+  line-height: 1.4;
+  word-break: break-all;
+}
+
+
 

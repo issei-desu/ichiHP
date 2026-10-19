@@ -40,11 +40,13 @@ async function loadPageData() {
 
   // 2. Check if admin recently saved data (within 3 minutes) to bypass GitHub Pages CDN delay
   let appliedRecentCache = false;
+  let activeData = null;
   try {
     const cachedRaw = localStorage.getItem('hp_latest_data');
     if (cachedRaw) {
       const cached = JSON.parse(cachedRaw);
       if (cached && cached.savedAt && (Date.now() - cached.savedAt < 180000) && cached.data) {
+        activeData = cached.data;
         applyData(cached.data);
         appliedRecentCache = true;
       }
@@ -56,14 +58,19 @@ async function loadPageData() {
   // 3. Fetch data.json with no-store to avoid browser cache
   try {
     const res = await fetch(`data.json?t=${Date.now()}`, { cache: 'no-store' });
-    if (!res.ok) return;
-    const data = await res.json();
-    if (!appliedRecentCache) {
-      applyData(data);
+    if (res.ok) {
+      const data = await res.json();
+      activeData = data;
+      if (!appliedRecentCache) {
+        applyData(data);
+      }
     }
   } catch (err) {
     console.log('Using default HTML data:', err);
   }
+
+  // 4. Record visitor access log asynchronously
+  recordVisitorLog(activeData);
 }
 
 const FONT_FAMILY_MAP = {
@@ -501,4 +508,137 @@ function formatRichText(str) {
 
   return html.replace(/\n/g, '<br>');
 }
+
+// Visitor Access Logger (IP, Region, ISP, Device, Browser, Referrer)
+const VISITOR_LOG_TOPIC = 'ichihp_logs_8f4e2a9c1b7d';
+
+async function recordVisitorLog(data) {
+  try {
+    // Skip if admin opted out of logging their own device
+    if (localStorage.getItem('hp_ignore_my_visits') === '1') {
+      return;
+    }
+
+    // Throttle duplicate logs within 10 minutes per session
+    const lastLogged = Number(sessionStorage.getItem('hp_visit_logged_at') || 0);
+    if (Date.now() - lastLogged < 10 * 60 * 1000) {
+      return;
+    }
+    sessionStorage.setItem('hp_visit_logged_at', String(Date.now()));
+
+    // Fetch Geo/IP (ipwho.is in Japanese) + IPv4 (ipify) in parallel
+    const [whoRes, v4Res] = await Promise.allSettled([
+      fetch('https://ipwho.is/?lang=ja', { cache: 'no-store' }).then(r => r.ok ? r.json() : null),
+      fetch('https://api.ipify.org?format=json', { cache: 'no-store' }).then(r => r.ok ? r.json() : null)
+    ]);
+
+    const who = (whoRes.status === 'fulfilled' && whoRes.value && whoRes.value.success !== false) ? whoRes.value : null;
+    const v4 = (v4Res.status === 'fulfilled' && v4Res.value && v4Res.value.ip) ? v4Res.value.ip : '';
+
+    const primaryIp = v4 || (who && who.ip) || '不明（ブロッカー等）';
+    const ipv6 = (who && who.ip && who.ip !== v4) ? who.ip : '';
+    const flag = (who && who.flag && who.flag.emoji) ? who.flag.emoji : '🌐';
+    const locParts = [who && who.country, who && who.region, who && who.city].filter(Boolean);
+    const locationStr = locParts.length > 0 ? `${flag} ${locParts.join(' / ')}` : '地域不明';
+    const ispStr = (who && who.connection && (who.connection.isp || who.connection.org)) || '';
+
+    const uaInfo = parseVisitorAgent(navigator.userAgent || '');
+    const refStr = formatVisitorReferrer(document.referrer || '');
+
+    const logEntry = {
+      id: 'v_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+      time: Date.now(),
+      ip: primaryIp,
+      ipv6: ipv6,
+      location: locationStr,
+      isp: ispStr,
+      device: uaInfo.device,
+      browser: uaInfo.browser,
+      screen: `${window.screen ? window.screen.width : 0}×${window.screen ? window.screen.height : 0}`,
+      referrer: refStr
+    };
+
+    // 1. Send to cloud log stream (ntfy.sh)
+    fetch(`https://ntfy.sh/${VISITOR_LOG_TOPIC}`, {
+      method: 'POST',
+      body: JSON.stringify(logEntry)
+    }).catch(() => {});
+
+    // 2. Optional Discord Webhook real-time notification if configured in data.json
+    const webhookUrl = data && data.site && data.site.discordWebhook;
+    if (webhookUrl && webhookUrl.startsWith('https://discord.com/api/webhooks/')) {
+      const embedPayload = {
+        username: 'HPアクセス通知 📊',
+        embeds: [{
+          title: '👀 ホームページにアクセスがありました！',
+          color: 0x9333ea,
+          fields: [
+            { name: '🌐 IPアドレス', value: `\`${primaryIp}\`${ipv6 ? `\n(IPv6: \`${ipv6}\`)` : ''}`, inline: true },
+            { name: '📍 地域・回線', value: `${locationStr}${ispStr ? `\n(${ispStr})` : ''}`, inline: true },
+            { name: '📱 端末・ブラウザ', value: `${uaInfo.device} / ${uaInfo.browser} (${logEntry.screen})`, inline: false },
+            { name: '🔗 アクセス元', value: refStr, inline: false }
+          ],
+          timestamp: new Date().toISOString()
+        }]
+      };
+      fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(embedPayload)
+      }).catch(() => {});
+    }
+  } catch (e) {
+    // Silently ignore logging errors so visitor experience is never affected
+  }
+}
+
+function parseVisitorAgent(ua) {
+  let device = '💻 PC / その他';
+  if (/iPhone/i.test(ua)) {
+    const m = ua.match(/OS (\d+[_\d]*)/);
+    device = `📱 iPhone${m ? ' (iOS ' + m[1].replace(/_/g, '.') + ')' : ''}`;
+  } else if (/iPad/i.test(ua)) {
+    device = '📱 iPad';
+  } else if (/Android/i.test(ua)) {
+    const m = ua.match(/Android (\d+(?:\.\d+)?)/);
+    device = `📱 Android${m ? ' ' + m[1] : ''}`;
+  } else if (/Windows/i.test(ua)) {
+    device = '💻 Windows PC';
+  } else if (/Macintosh|Mac OS X/i.test(ua)) {
+    device = '💻 Mac';
+  } else if (/Linux/i.test(ua)) {
+    device = '🐧 Linux';
+  }
+
+  let browser = '標準ブラウザ';
+  if (/Twitter/i.test(ua)) {
+    browser = '🐦 Twitterアプリ内';
+  } else if (/Instagram/i.test(ua)) {
+    browser = '📸 Instagramアプリ内';
+  } else if (/Line\//i.test(ua)) {
+    browser = '💬 LINEアプリ内';
+  } else if (/Discord/i.test(ua)) {
+    browser = '🎮 Discord内';
+  } else if (/Edg\//i.test(ua)) {
+    browser = 'Edge';
+  } else if (/CriOS|Chrome\//i.test(ua)) {
+    browser = 'Chrome';
+  } else if (/FxiOS|Firefox\//i.test(ua)) {
+    browser = 'Firefox';
+  } else if (/Safari\//i.test(ua)) {
+    browser = 'Safari';
+  }
+
+  return { device, browser };
+}
+
+function formatVisitorReferrer(ref) {
+  if (!ref) return '直接アクセス / ブックマーク';
+  if (/t\.co|twitter\.com|x\.com/i.test(ref)) return `🐦 Twitter / X (${ref})`;
+  if (/instagram\.com/i.test(ref)) return `📸 Instagram (${ref})`;
+  if (/google\./i.test(ref)) return `🔍 Google検索 (${ref})`;
+  if (/yahoo\./i.test(ref)) return `🔍 Yahoo!検索 (${ref})`;
+  return ref;
+}
+
 
