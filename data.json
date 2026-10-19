@@ -132,16 +132,6 @@
           "isSensitive": false,
           "sensitiveWarning": "",
           "subItems": []
-        },
-        {
-          "label": "優勝話",
-          "value": "①リリイベ\nあいう\n②サイン入りチェキ",
-          "font": "",
-          "labelColor": "",
-          "valueColor": "",
-          "isSensitive": true,
-          "sensitiveWarning": "優勝話を含みます！！！気をつけて開いて！！！",
-          "subItems": []
         }
       ],
       "blocks": [
@@ -189,6 +179,60 @@
                   "sensitiveWarning": ""
                 }
               ]
+            }
+          ]
+        },
+        {
+          "tag": "",
+          "aboutTitle": "",
+          "aboutSubtitle": "",
+          "font": "",
+          "titleColor": "",
+          "textColor": "",
+          "isSensitive": false,
+          "sensitiveWarning": "",
+          "items": [
+            {
+              "label": "項目名",
+              "value": "",
+              "font": "",
+              "labelColor": "",
+              "valueColor": "",
+              "isSensitive": false,
+              "sensitiveWarning": "",
+              "subItems": []
+            }
+          ]
+        },
+        {
+          "tag": "",
+          "aboutTitle": "優勝話。",
+          "aboutSubtitle": "明らかな優勝話です。",
+          "font": "",
+          "titleColor": "",
+          "textColor": "",
+          "isSensitive": false,
+          "sensitiveWarning": "",
+          "items": [
+            {
+              "label": "志麻さんリリイベ(アオウタ)",
+              "value": "アオウタ当たったんすよぉ",
+              "font": "",
+              "labelColor": "",
+              "valueColor": "",
+              "isSensitive": true,
+              "sensitiveWarning": "",
+              "subItems": []
+            },
+            {
+              "label": "志麻さんサイン入りチェキ",
+              "value": "チェキ当たったんすよぉ",
+              "font": "",
+              "labelColor": "",
+              "valueColor": "",
+              "isSensitive": true,
+              "sensitiveWarning": "",
+              "subItems": []
             }
           ]
         }
