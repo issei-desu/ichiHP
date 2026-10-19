@@ -3,6 +3,12 @@
     "title": "いちのホームページ",
     "footerText": "© 2026 いち. All rights reserved."
   },
+  "theme": {
+    "preset": "custom",
+    "primary": "#9333ea",
+    "secondary": "#ffffff",
+    "bg": "#d357fe"
+  },
   "profile": {
     "name": "いち",
     "avatar": "images/avatar.png?v=1791960919323",
