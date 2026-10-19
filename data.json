@@ -103,6 +103,13 @@
           "font": "",
           "labelColor": "",
           "valueColor": ""
+        },
+        {
+          "label": "優勝話",
+          "value": "①リリイベ\nあいう\n②サイン入りチェキ",
+          "font": "",
+          "labelColor": "",
+          "valueColor": ""
         }
       ]
     }
