@@ -655,3 +655,46 @@ body {
   margin-top: 4px;
   color: var(--text-light);
 }
+
+/* Font Family Utility Classes (Per-Box & Inline) */
+.font-rounded {
+  font-family: 'M PLUS Rounded 1c', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+.font-sans {
+  font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+.font-serif {
+  font-family: 'Shippori Mincho', "Hiragino Mincho ProN", "Yu Mincho", serif !important;
+}
+
+.font-handwriting {
+  font-family: 'Yomogi', cursive, sans-serif !important;
+}
+
+.font-pop {
+  font-family: 'Mochiy Pop One', sans-serif !important;
+}
+
+.font-marupop {
+  font-family: 'Hachi Maru Pop', cursive, sans-serif !important;
+}
+
+.font-pixel {
+  font-family: 'DotGothic16', monospace, sans-serif !important;
+}
+
+/* Inline Text Size Utility Classes */
+.text-size-sm {
+  font-size: 0.82em;
+}
+
+.text-size-lg {
+  font-size: 1.22em;
+}
+
+.text-size-xl {
+  font-size: 1.45em;
+}
+

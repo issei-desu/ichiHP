@@ -66,12 +66,26 @@ async function loadPageData() {
   }
 }
 
+const FONT_FAMILY_MAP = {
+  rounded: "'M PLUS Rounded 1c', -apple-system, BlinkMacSystemFont, sans-serif",
+  sans: "'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif",
+  serif: "'Shippori Mincho', 'Hiragino Mincho ProN', 'Yu Mincho', serif",
+  handwriting: "'Yomogi', cursive, sans-serif",
+  pop: "'Mochiy Pop One', sans-serif",
+  marupop: "'Hachi Maru Pop', cursive, sans-serif",
+  pixel: "'DotGothic16', monospace, sans-serif"
+};
+
+function getFontFamilyCss(fontKey) {
+  return FONT_FAMILY_MAP[fontKey] || '';
+}
+
 function applyData(data) {
   if (!data) return;
 
   const { site, profile, twitter, tabs, theme } = data;
 
-  // Apply Color Theme
+  // Apply Color & Font Theme
   if (theme) {
     applyTheme(theme);
   }
@@ -79,18 +93,23 @@ function applyData(data) {
   // Site Title / Footer texts
   if (site) {
     if (site.title !== undefined && site.title !== '') {
-      document.title = site.title;
+      document.title = stripRichTags(site.title);
       const pt = document.getElementById('page-title');
-      if (pt) pt.textContent = site.title;
+      if (pt) pt.textContent = stripRichTags(site.title);
     }
     if (site.footerText !== undefined && site.footerText !== '') {
       const ft = document.getElementById('footer-text');
-      if (ft) ft.textContent = site.footerText;
+      if (ft) ft.innerHTML = formatRichText(site.footerText);
     }
   }
 
   // Profile
   if (profile) {
+    const heroSection = document.querySelector('.hero-section');
+    if (heroSection) {
+      heroSection.style.fontFamily = getFontFamilyCss(profile.font);
+    }
+
     const heroAvatarImg = document.getElementById('hero-avatar-img');
     const heroAvatarPlaceholder = document.getElementById('hero-avatar-placeholder');
 
@@ -108,7 +127,8 @@ function applyData(data) {
     if (profile.name !== undefined) {
       const heroTitle = document.getElementById('hero-title');
       if (heroTitle) {
-        heroTitle.textContent = profile.name;
+        heroTitle.innerHTML = formatRichText(profile.name);
+        heroTitle.style.color = profile.nameColor || '';
         heroTitle.style.display = profile.name ? 'block' : 'none';
       }
     }
@@ -117,8 +137,9 @@ function applyData(data) {
       const heroDesc = document.getElementById('hero-desc');
       if (heroDesc) {
         const bioStr = String(profile.bio);
+        heroDesc.style.color = profile.bioColor || '';
         if (bioStr.trim().length > 0) {
-          heroDesc.innerHTML = escapeHtml(bioStr).replace(/\n/g, '<br>');
+          heroDesc.innerHTML = formatRichText(bioStr);
           heroDesc.style.display = 'block';
         } else {
           heroDesc.innerHTML = '';
@@ -189,7 +210,10 @@ function applyData(data) {
   const tabWithSubtitle = Array.isArray(tabs) ? tabs.find(t => t.linksSubtitle !== undefined) : null;
   const resolvedLinksTitle = data.linksTitle !== undefined ? data.linksTitle : (tabWithTitle ? tabWithTitle.linksTitle : 'Links');
   const resolvedLinksSubtitle = data.linksSubtitle !== undefined ? data.linksSubtitle : (tabWithSubtitle ? tabWithSubtitle.linksSubtitle : '関連リンク');
-  renderLinks(resolvedLinksTitle, resolvedLinksSubtitle, resolvedLinks || []);
+  renderLinks(resolvedLinksTitle, resolvedLinksSubtitle, resolvedLinks || [], {
+    font: data.linksFont || '',
+    titleColor: data.linksTitleColor || ''
+  });
 }
 
 function renderTabs(tabs) {
@@ -202,64 +226,99 @@ function renderTabs(tabs) {
   }
 
   // 1. Render Tab Buttons
-  navContainer.innerHTML = tabs.map(tab => `
-    <button type="button" 
-            class="tab-btn ${tab.id === currentActiveTabId ? 'active' : ''}" 
-            onclick="switchTab('${escapeHtml(tab.id)}')">
-      ${escapeHtml(tab.name)}
-    </button>
-  `).join('');
+  navContainer.innerHTML = tabs.map(tab => {
+    const tabFontCss = getFontFamilyCss(tab.font);
+    return `
+      <button type="button" 
+              class="tab-btn ${tab.id === currentActiveTabId ? 'active' : ''}" 
+              style="${tabFontCss ? `font-family: ${escapeAttr(tabFontCss)};` : ''}"
+              onclick="switchTab('${escapeAttr(tab.id)}')">
+        ${formatRichText(tab.name)}
+      </button>
+    `;
+  }).join('');
 
-  // 2. Render Tab Panes (About Section only)
-  panesContainer.innerHTML = tabs.map(tab => `
-    <div id="tab-pane-${escapeHtml(tab.id)}" class="tab-pane ${tab.id === currentActiveTabId ? 'active' : ''}">
-      <section class="section about-section" style="padding-top: 10px;">
-        <div class="section-header">
-          <span class="section-tag">${escapeHtml(tab.name)}</span>
-          <h2 class="section-title">${escapeHtml(tab.aboutTitle || 'About Me')}</h2>
-          ${tab.aboutSubtitle ? `<p class="section-subtitle">${escapeHtml(tab.aboutSubtitle)}</p>` : ''}
-        </div>
+  // 2. Render Tab Panes (About Section)
+  panesContainer.innerHTML = tabs.map(tab => {
+    const tabFontCss = getFontFamilyCss(tab.font);
+    const paneStyleParts = [];
+    if (tabFontCss) paneStyleParts.push(`font-family: ${tabFontCss}`);
+    const paneStyleAttr = paneStyleParts.length ? `style="${escapeAttr(paneStyleParts.join('; '))}"` : '';
+    const titleColorStyle = tab.titleColor ? `style="color: ${escapeAttr(tab.titleColor)};"` : '';
 
-        <div class="card about-card">
-          <div class="about-grid">
-            ${(tab.items || []).map(item => `
-              <div class="about-item">
-                <span class="about-label">${escapeHtml(item.label)}</span>
-                <p class="about-value">${escapeHtml(item.value).replace(/\n/g, '<br>')}</p>
-              </div>
-            `).join('')}
+    return `
+      <div id="tab-pane-${escapeAttr(tab.id)}" class="tab-pane ${tab.id === currentActiveTabId ? 'active' : ''}" ${paneStyleAttr}>
+        <section class="section about-section" style="padding-top: 10px;">
+          <div class="section-header">
+            <span class="section-tag">${formatRichText(tab.name)}</span>
+            ${tab.aboutTitle ? `<h2 class="section-title" ${titleColorStyle}>${formatRichText(tab.aboutTitle)}</h2>` : ''}
+            ${tab.aboutSubtitle ? `<p class="section-subtitle" ${titleColorStyle}>${formatRichText(tab.aboutSubtitle)}</p>` : ''}
           </div>
-        </div>
-      </section>
-    </div>
-  `).join('');
+
+          <div class="card about-card">
+            <div class="about-grid">
+              ${(tab.items || []).map(item => {
+                const itemFontCss = getFontFamilyCss(item.font);
+                const itemStyle = itemFontCss ? `style="font-family: ${escapeAttr(itemFontCss)};"` : '';
+                const labelColor = item.labelColor || tab.titleColor || '';
+                const valueColor = item.valueColor || tab.textColor || '';
+                const labelStyle = labelColor ? `style="color: ${escapeAttr(labelColor)};"` : '';
+                const valueStyle = valueColor ? `style="color: ${escapeAttr(valueColor)};"` : '';
+                return `
+                  <div class="about-item" ${itemStyle}>
+                    <span class="about-label" ${labelStyle}>${formatRichText(item.label)}</span>
+                    <p class="about-value" ${valueStyle}>${formatRichText(item.value)}</p>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        </section>
+      </div>
+    `;
+  }).join('');
 }
 
-function renderLinks(title, subtitle, links) {
+function renderLinks(title, subtitle, links, linksStyle = {}) {
+  const sectionEl = document.getElementById('links');
   const titleEl = document.getElementById('links-section-title');
   const subtitleEl = document.getElementById('links-section-subtitle');
   const listEl = document.getElementById('links-list');
   if (!listEl) return;
 
-  if (titleEl) titleEl.textContent = title || 'Links';
+  if (sectionEl) {
+    sectionEl.style.fontFamily = getFontFamilyCss(linksStyle.font);
+  }
+
+  if (titleEl) {
+    titleEl.innerHTML = formatRichText(title || 'Links');
+    titleEl.style.color = linksStyle.titleColor || '';
+  }
   if (subtitleEl) {
-    subtitleEl.textContent = subtitle || '';
+    subtitleEl.innerHTML = formatRichText(subtitle || '');
+    subtitleEl.style.color = linksStyle.titleColor || '';
     subtitleEl.style.display = subtitle ? 'block' : 'none';
   }
 
   if (Array.isArray(links) && links.length > 0) {
-    listEl.innerHTML = links.map(link => `
-      <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer" class="link-item">
-        <div class="link-icon">
-          ${getIconSvg(link.icon)}
-        </div>
-        <div class="link-text">
-          <span class="link-title">${escapeHtml(link.title)}</span>
-          ${link.sub ? `<span class="link-sub">${escapeHtml(link.sub)}</span>` : ''}
-        </div>
-        <span class="link-arrow">→</span>
-      </a>
-    `).join('');
+    listEl.innerHTML = links.map(link => {
+      const linkFontCss = getFontFamilyCss(link.font);
+      const itemStyle = linkFontCss ? `style="font-family: ${escapeAttr(linkFontCss)};"` : '';
+      const titleStyle = link.titleColor ? `style="color: ${escapeAttr(link.titleColor)};"` : '';
+      const subStyle = link.subColor ? `style="color: ${escapeAttr(link.subColor)};"` : '';
+      return `
+        <a href="${escapeAttr(link.url)}" target="_blank" rel="noopener noreferrer" class="link-item" ${itemStyle}>
+          <div class="link-icon">
+            ${getIconSvg(link.icon)}
+          </div>
+          <div class="link-text">
+            <span class="link-title" ${titleStyle}>${formatRichText(link.title)}</span>
+            ${link.sub ? `<span class="link-sub" ${subStyle}>${formatRichText(link.sub)}</span>` : ''}
+          </div>
+          <span class="link-arrow">→</span>
+        </a>
+      `;
+    }).join('');
   } else {
     listEl.innerHTML = '<div class="link-placeholder"><span>リンクがまだありません</span></div>';
   }
@@ -304,6 +363,12 @@ function applyTheme(theme) {
   const primary = theme.primary || '#f43f5e';
   const secondary = theme.secondary || '#8b5cf6';
   const bg = theme.bg || '#fff5f7';
+
+  // Apply base font if selected
+  const baseFontCss = getFontFamilyCss(theme.font || 'rounded');
+  if (baseFontCss) {
+    root.style.setProperty('--font-base', baseFontCss);
+  }
 
   const pRgb = hexToRgb(primary) || { r: 244, g: 63, b: 94 };
   const sRgb = hexToRgb(secondary) || { r: 139, g: 92, b: 246 };
@@ -358,6 +423,12 @@ function applyTheme(theme) {
     root.style.setProperty('--tabs-nav-bg', 'rgba(226, 232, 240, 0.6)');
     root.style.setProperty('--tabs-nav-border', 'rgba(255, 255, 255, 0.6)');
   }
+
+  // Override site-wide text color if explicitly specified
+  if (theme.textColor && /^#[0-9a-fA-F]{6}$/.test(theme.textColor)) {
+    root.style.setProperty('--text-main', theme.textColor);
+    root.style.setProperty('--text-muted', mixHex(theme.textColor, isDark ? '#0f172a' : '#ffffff', 0.25));
+  }
 }
 
 function hexToRgb(hex) {
@@ -399,3 +470,35 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 }
+
+function escapeAttr(str) {
+  if (!str) return '';
+  return String(str).replace(/"/g, '&quot;');
+}
+
+function stripRichTags(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/\[(?:color|bg|font|size)=[^\]]+\]/gi, '')
+    .replace(/\[\/(?:color|bg|font|size|b)\]/gi, '')
+    .replace(/\[b\]/gi, '');
+}
+
+function formatRichText(str) {
+  if (!str) return '';
+  let html = escapeHtml(str);
+
+  for (let i = 0; i < 8; i++) {
+    const prev = html;
+    html = html
+      .replace(/\[color=(#[0-9a-fA-F]{3,6})\]([\s\S]*?)\[\/color\]/gi, '<span style="color: $1;">$2</span>')
+      .replace(/\[bg=(#[0-9a-fA-F]{3,6})\]([\s\S]*?)\[\/bg\]/gi, '<span style="background-color: $1; padding: 1px 5px; border-radius: 4px;">$2</span>')
+      .replace(/\[font=(rounded|sans|serif|handwriting|pop|marupop|pixel)\]([\s\S]*?)\[\/font\]/gi, '<span class="font-$1">$2</span>')
+      .replace(/\[size=(sm|lg|xl)\]([\s\S]*?)\[\/size\]/gi, '<span class="text-size-$1">$2</span>')
+      .replace(/\[b\]([\s\S]*?)\[\/b\]/gi, '<strong>$1</strong>');
+    if (html === prev) break;
+  }
+
+  return html.replace(/\n/g, '<br>');
+}
+

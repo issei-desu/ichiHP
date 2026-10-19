@@ -759,3 +759,241 @@ input:checked + .slider:before {
   text-transform: lowercase;
 }
 
+/* Sticky Inline Text Decorator Bar */
+.inline-decorator-card {
+  position: sticky;
+  top: 64px;
+  z-index: 45;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  border: 1.5px solid #c4b5fd;
+  border-radius: var(--radius-lg);
+  padding: 12px 14px;
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inline-decorator-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.inline-decorator-title {
+  font-size: 0.84rem;
+  font-weight: 800;
+  color: #6d28d9;
+}
+
+.inline-decorator-target {
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: #f3e8ff;
+  color: #6d28d9;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+.inline-decorator-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inline-control-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.inline-group-label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #64748b;
+  min-width: 58px;
+}
+
+.quick-color-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.quick-color-btn:hover,
+.quick-color-btn:active {
+  transform: scale(1.18);
+}
+
+.inline-color-picker {
+  width: 28px;
+  height: 26px;
+  padding: 1px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.inline-action-btn {
+  padding: 4px 9px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  font-family: inherit;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #334155;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.inline-action-btn:hover,
+.inline-action-btn:active {
+  background: #e2e8f0;
+}
+
+.inline-action-btn.primary {
+  background: #ede9fe;
+  border-color: #c4b5fd;
+  color: #6d28d9;
+}
+
+.inline-action-btn.danger {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+.inline-font-select {
+  padding: 4px 8px;
+  font-size: 0.76rem;
+  font-family: inherit;
+  font-weight: 700;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1e293b;
+}
+
+/* Per-Box Style Settings (Collapsible & Inline) */
+.box-style-details {
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+}
+
+.box-style-details summary {
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #475569;
+  user-select: none;
+}
+
+.box-style-grid {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.box-style-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.box-style-field label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.form-select-sm {
+  padding: 7px 10px;
+  font-size: 0.82rem;
+}
+
+.mini-color-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mini-color-swatch {
+  width: 34px;
+  height: 32px;
+  padding: 2px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.mini-color-hex {
+  padding: 6px 10px !important;
+  font-size: 0.8rem !important;
+  font-family: monospace;
+  font-weight: 700;
+}
+
+.mini-clear-btn {
+  padding: 6px 10px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #64748b;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.mini-clear-btn:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+/* Rich Text Live Mini Preview */
+.rich-live-preview {
+  display: none;
+  margin-top: 4px;
+  padding: 8px 12px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-left: 3px solid #8b5cf6;
+  border-radius: 8px;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: var(--text-main);
+}
+
+.rich-live-preview.has-content {
+  display: block;
+}
+
+.rich-live-preview-badge {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #6d28d9;
+  background: #f3e8ff;
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-bottom: 4px;
+}
+
+

@@ -4,11 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>HP管理画面 - Admin Dashboard</title>
-  <link rel="stylesheet" href="style.css?v=20261019_1">
-  <link rel="stylesheet" href="admin.css?v=20261019_1">
+  <link rel="stylesheet" href="style.css?v=20261019_2">
+  <link rel="stylesheet" href="admin.css?v=20261019_2">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Hachi+Maru+Pop&family=M+PLUS+Rounded+1c:wght@400;500;700;800&family=Mochiy+Pop+One&family=Noto+Sans+JP:wght@400;500;700&family=Outfit:wght@400;600;700&family=Shippori+Mincho:wght@500;700&family=Yomogi&display=swap" rel="stylesheet">
 </head>
 <body class="admin-body">
   <!-- Header -->
@@ -71,7 +71,56 @@
         <div class="banner-icon">📱</div>
         <div class="banner-text">
           <strong>管理者モード（認証済み）</strong>
-          <span>文章や項目、画像を編集して「保存」を押すとHPに即座に反映されます。</span>
+          <span>各枠の文字色・フォント変更や、文章の選択した一部分だけの色・フォント変更もできます✨</span>
+        </div>
+      </div>
+
+      <!-- Sticky Inline Text Decorator Bar (Works on any focused input/textarea) -->
+      <div class="inline-decorator-card" id="inline-decorator-bar">
+        <div class="inline-decorator-header">
+          <span class="inline-decorator-title">🖍️ 枠の中の文字（選択した部分）の色・フォントを変える</span>
+          <span class="inline-decorator-target" id="inline-decorator-target-label">入力欄の文字を選択してボタンを押してください</span>
+        </div>
+        <div class="inline-decorator-controls">
+          <!-- Quick Color Swatches + Custom Color -->
+          <div class="inline-control-group">
+            <span class="inline-group-label">文字色:</span>
+            <button type="button" class="quick-color-btn" style="background:#9333ea;" title="紫" onclick="applyInlineTag('color', '#9333ea')"></button>
+            <button type="button" class="quick-color-btn" style="background:#eab308;" title="黄" onclick="applyInlineTag('color', '#eab308')"></button>
+            <button type="button" class="quick-color-btn" style="background:#ef4444;" title="赤" onclick="applyInlineTag('color', '#ef4444')"></button>
+            <button type="button" class="quick-color-btn" style="background:#10b981;" title="緑" onclick="applyInlineTag('color', '#10b981')"></button>
+            <button type="button" class="quick-color-btn" style="background:#f43f5e;" title="ピンク" onclick="applyInlineTag('color', '#f43f5e')"></button>
+            <button type="button" class="quick-color-btn" style="background:#3b82f6;" title="青" onclick="applyInlineTag('color', '#3b82f6')"></button>
+            <input type="color" id="inline-custom-color" class="inline-color-picker" value="#9333ea" title="自由な文字色を選択">
+            <button type="button" class="inline-action-btn" onclick="applyInlineTag('color', document.getElementById('inline-custom-color').value)">この色を適用</button>
+          </div>
+
+          <!-- Highlight / Marker & Font & Style -->
+          <div class="inline-control-group">
+            <span class="inline-group-label">マーカー/装飾:</span>
+            <button type="button" class="inline-action-btn" style="background:#fef08a; color:#1e293b;" onclick="applyInlineTag('bg', '#fef08a')">黄マーカー</button>
+            <button type="button" class="inline-action-btn" style="background:#f3e8ff; color:#6b21a8;" onclick="applyInlineTag('bg', '#f3e8ff')">紫マーカー</button>
+            <button type="button" class="inline-action-btn" style="background:#ffe4e6; color:#be123c;" onclick="applyInlineTag('bg', '#ffe4e6')">桃マーカー</button>
+            <button type="button" class="inline-action-btn" style="font-weight:800;" onclick="applyInlineTag('b')"><b>B 太字</b></button>
+            <button type="button" class="inline-action-btn" onclick="applyInlineTag('size', 'lg')">大文字</button>
+            <button type="button" class="inline-action-btn" onclick="applyInlineTag('size', 'sm')">小文字</button>
+          </div>
+
+          <!-- Inline Font Select -->
+          <div class="inline-control-group">
+            <span class="inline-group-label">部分フォント:</span>
+            <select id="inline-font-select" class="inline-font-select">
+              <option value="rounded">丸ゴシック（標準）</option>
+              <option value="sans">すっきりゴシック</option>
+              <option value="serif">明朝体（エモ・上品）</option>
+              <option value="handwriting">手書き風（ゆるかわ）</option>
+              <option value="pop">太めポップ体</option>
+              <option value="marupop">ゆる丸ポップ体</option>
+              <option value="pixel">ドット・レトロ文字</option>
+            </select>
+            <button type="button" class="inline-action-btn primary" onclick="applyInlineTag('font', document.getElementById('inline-font-select').value)">フォント適用</button>
+            <button type="button" class="inline-action-btn danger" onclick="clearInlineTagsFromTarget()">装飾を解除</button>
+          </div>
         </div>
       </div>
 
@@ -104,13 +153,50 @@
 
           <div class="form-group">
             <label for="profile-name" class="form-label">表示名（名前）</label>
-            <input type="text" id="profile-name" class="form-input" placeholder="いち" required>
+            <input type="text" id="profile-name" class="form-input rich-target" data-field-label="表示名（名前）" placeholder="いち" required>
           </div>
 
           <div class="form-group">
             <label for="profile-bio" class="form-label">トップの紹介文（Bio）</label>
-            <textarea id="profile-bio" class="form-textarea" rows="2" placeholder="どうも、いちです。"></textarea>
+            <textarea id="profile-bio" class="form-textarea rich-target" data-field-label="トップの紹介文" rows="3" placeholder="どうも、いちです。"></textarea>
+            <div id="profile-bio-rich-preview" class="rich-live-preview"></div>
           </div>
+
+          <!-- Per-box style settings for Profile -->
+          <details class="box-style-details">
+            <summary>🎨 この枠（プロフィール）の文字色・フォント設定</summary>
+            <div class="box-style-grid">
+              <div class="box-style-field">
+                <label>この枠のフォント</label>
+                <select id="profile-font-select" class="form-select form-select-sm">
+                  <option value="">サイト全体と同じ</option>
+                  <option value="rounded">丸ゴシック</option>
+                  <option value="sans">すっきりゴシック</option>
+                  <option value="serif">明朝体</option>
+                  <option value="handwriting">手書き風</option>
+                  <option value="pop">太めポップ体</option>
+                  <option value="marupop">ゆる丸ポップ体</option>
+                  <option value="pixel">ドット・レトロ文字</option>
+                </select>
+              </div>
+              <div class="box-style-field">
+                <label>名前の文字色</label>
+                <div class="mini-color-row">
+                  <input type="color" id="profile-name-color-picker" class="mini-color-swatch" value="#1e293b">
+                  <input type="text" id="profile-name-color-hex" class="form-input mini-color-hex" placeholder="自動（未指定）">
+                  <button type="button" class="mini-clear-btn" onclick="clearColorPair('profile-name-color-picker', 'profile-name-color-hex')">自動</button>
+                </div>
+              </div>
+              <div class="box-style-field">
+                <label>紹介文の文字色</label>
+                <div class="mini-color-row">
+                  <input type="color" id="profile-bio-color-picker" class="mini-color-swatch" value="#64748b">
+                  <input type="text" id="profile-bio-color-hex" class="form-input mini-color-hex" placeholder="自動（未指定）">
+                  <button type="button" class="mini-clear-btn" onclick="clearColorPair('profile-bio-color-picker', 'profile-bio-color-hex')">自動</button>
+                </div>
+              </div>
+            </div>
+          </details>
 
           <div class="form-group">
             <label for="twitter-username" class="form-label">Twitterユーザー名（@なし）</label>
@@ -127,7 +213,7 @@
             <h2 class="card-title">📑 タブ別プロフィール管理</h2>
             <button type="button" id="add-tab-btn" class="btn btn-subtle-primary btn-sm">＋ タブ追加</button>
           </div>
-          <p class="card-desc">「リアル用」「推し活用」など、タブごとに自己紹介項目を自由にカスタマイズできます。</p>
+          <p class="card-desc">タブごと・項目ごとの枠で文字色やフォントを変えたり、文章の一部分だけ色・フォントを変えられます。</p>
 
           <!-- Admin Tab Switcher -->
           <div class="admin-tab-switcher" id="admin-tab-switcher">
@@ -146,16 +232,43 @@
             <h2 class="card-title">🔗 リンク一覧管理（共通）</h2>
             <button type="button" id="add-link-btn" class="btn btn-subtle-primary btn-sm">＋ リンク追加</button>
           </div>
-          <p class="card-desc">タブの下に一括で表示されるリンク一覧を編集できます。</p>
+          <p class="card-desc">タブの下に一括で表示されるリンク一覧を編集できます。各リンク枠ごとに文字色・フォントも選べます。</p>
 
           <div class="form-group">
             <label for="links-title-input" class="form-label" style="font-size: 0.78rem;">見出しタイトル</label>
-            <input type="text" id="links-title-input" class="form-input" placeholder="例: Links">
+            <input type="text" id="links-title-input" class="form-input rich-target" data-field-label="リンク見出しタイトル" placeholder="例: Links">
           </div>
           <div class="form-group">
             <label for="links-subtitle-input" class="form-label" style="font-size: 0.78rem;">サブ見出し（任意）</label>
-            <input type="text" id="links-subtitle-input" class="form-input" placeholder="例: 関連リンク">
+            <input type="text" id="links-subtitle-input" class="form-input rich-target" data-field-label="リンクサブ見出し" placeholder="例: 関連リンク">
           </div>
+
+          <details class="box-style-details">
+            <summary>🎨 リンク枠全体のフォント・見出し文字色</summary>
+            <div class="box-style-grid">
+              <div class="box-style-field">
+                <label>リンク枠の基本フォント</label>
+                <select id="links-font-select" class="form-select form-select-sm">
+                  <option value="">サイト全体と同じ</option>
+                  <option value="rounded">丸ゴシック</option>
+                  <option value="sans">すっきりゴシック</option>
+                  <option value="serif">明朝体</option>
+                  <option value="handwriting">手書き風</option>
+                  <option value="pop">太めポップ体</option>
+                  <option value="marupop">ゆる丸ポップ体</option>
+                  <option value="pixel">ドット・レトロ文字</option>
+                </select>
+              </div>
+              <div class="box-style-field">
+                <label>見出しの文字色</label>
+                <div class="mini-color-row">
+                  <input type="color" id="links-title-color-picker" class="mini-color-swatch" value="#1e293b">
+                  <input type="text" id="links-title-color-hex" class="form-input mini-color-hex" placeholder="自動（未指定）">
+                  <button type="button" class="mini-clear-btn" onclick="clearColorPair('links-title-color-picker', 'links-title-color-hex')">自動</button>
+                </div>
+              </div>
+            </div>
+          </details>
 
           <div class="links-editor-list" id="links-editor-list">
             <!-- Dynamically populated links -->
@@ -164,8 +277,8 @@
 
         <!-- Color Theme Section -->
         <section class="card admin-card">
-          <h2 class="card-title">🎨 配色・カラーテーマ設定</h2>
-          <p class="card-desc">プリセット（推しカラーなど）から選ぶか、カラーピッカーで好きな色に自由に変更できます。</p>
+          <h2 class="card-title">🎨 配色・全体フォント設定</h2>
+          <p class="card-desc">サイト全体のベース配色や基本フォント・基本文字色を設定できます。</p>
 
           <div class="form-group">
             <label class="form-label">プリセットから選ぶ</label>
@@ -175,8 +288,30 @@
           </div>
 
           <div class="color-pickers-box">
-            <span class="form-label" style="font-size: 0.82rem;">カラーピッカーで微調整・自由指定</span>
+            <span class="form-label" style="font-size: 0.82rem;">カラーピッカー＆全体フォント指定</span>
             <div class="color-pickers-grid">
+              <div class="color-picker-item">
+                <label for="theme-font-select" class="color-picker-label">サイト全体の基本フォント</label>
+                <select id="theme-font-select" class="form-select">
+                  <option value="rounded">丸ゴシック（M PLUS Rounded 1c・初期）</option>
+                  <option value="sans">すっきりゴシック（Noto Sans JP）</option>
+                  <option value="serif">明朝体（しっぽり明朝・エモ/上品）</option>
+                  <option value="handwriting">手書き風（Yomogi・ゆるかわ）</option>
+                  <option value="pop">太めポップ体（Mochiy Pop One）</option>
+                  <option value="marupop">ゆる丸ポップ体（Hachi Maru Pop）</option>
+                  <option value="pixel">ドット・レトロ文字（DotGothic16）</option>
+                </select>
+              </div>
+
+              <div class="color-picker-item">
+                <label for="theme-text-color-input" class="color-picker-label">サイト全体の基本文字色（空欄なら背景に合わせて自動）</label>
+                <div class="color-input-row">
+                  <input type="color" id="theme-text-color-input" class="color-swatch-input" value="#1e293b">
+                  <input type="text" id="theme-text-color-hex" class="form-input color-hex-input" placeholder="自動（背景に合わせる）" maxlength="7">
+                  <button type="button" id="theme-text-color-reset" class="btn-subtle" style="border:none; cursor:pointer; white-space:nowrap;">自動に戻す</button>
+                </div>
+              </div>
+
               <div class="color-picker-item">
                 <label for="theme-primary-input" class="color-picker-label">メインカラー（ボタン・強調）</label>
                 <div class="color-input-row">
@@ -215,7 +350,7 @@
               </div>
               <div class="form-group">
                 <label for="footer-text-input" class="form-label">フッターのコピーライト文字</label>
-                <input type="text" id="footer-text-input" class="form-input" placeholder="© 2026 いち. All rights reserved.">
+                <input type="text" id="footer-text-input" class="form-input rich-target" data-field-label="フッター文字" placeholder="© 2026 いち. All rights reserved.">
               </div>
             </div>
           </details>
@@ -251,6 +386,6 @@
     </div>
   </div>
 
-  <script src="admin.js?v=20261019_1"></script>
+  <script src="admin.js?v=20261019_2"></script>
 </body>
 </html>

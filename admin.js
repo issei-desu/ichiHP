@@ -22,19 +22,44 @@ const THEME_PRESETS = [
   { id: 'dark', name: '🖤 ダーク（黒背景）', primary: '#c084fc', secondary: '#f472b6', bg: '#0f172a' }
 ];
 
+const FONT_OPTIONS = [
+  { value: '', label: 'サイト全体と同じ' },
+  { value: 'rounded', label: '丸ゴシック（標準）' },
+  { value: 'sans', label: 'すっきりゴシック' },
+  { value: 'serif', label: '明朝体（エモ・上品）' },
+  { value: 'handwriting', label: '手書き風（ゆるかわ）' },
+  { value: 'pop', label: '太めポップ体' },
+  { value: 'marupop', label: 'ゆる丸ポップ体' },
+  { value: 'pixel', label: 'ドット・レトロ文字' }
+];
+
+function renderFontSelectOptions(selectedVal) {
+  const current = selectedVal || '';
+  return FONT_OPTIONS.map(opt =>
+    `<option value="${opt.value}" ${current === opt.value ? 'selected' : ''}>${opt.label}</option>`
+  ).join('');
+}
+
 let themeState = {
   preset: 'pink',
   primary: '#f43f5e',
   secondary: '#8b5cf6',
-  bg: '#fff5f7'
+  bg: '#fff5f7',
+  font: 'rounded',
+  textColor: ''
 };
 
 let currentAvatarUrl = '';
 let newAvatarBase64 = null;
 
+// Track active input/textarea and its text selection for Inline Text Decorator
+let lastRichTarget = null;
+let lastRichSelection = { start: 0, end: 0 };
+
 document.addEventListener('DOMContentLoaded', () => {
   renderThemePresets();
   setupEventListeners();
+  setupInlineDecoratorTracking();
   checkAuthAndInitialize();
 });
 
@@ -68,6 +93,187 @@ function lockAdminScreen() {
   document.getElementById('auth-lock-screen').style.display = 'flex';
   document.getElementById('admin-content').style.display = 'none';
   document.getElementById('header-logout-btn').style.display = 'none';
+}
+
+function setupInlineDecoratorTracking() {
+  const updateSelection = (el) => {
+    if (!el || !el.classList || !el.classList.contains('rich-target')) return;
+    lastRichTarget = el;
+    lastRichSelection = {
+      start: typeof el.selectionStart === 'number' ? el.selectionStart : el.value.length,
+      end: typeof el.selectionEnd === 'number' ? el.selectionEnd : el.value.length
+    };
+    const labelEl = document.getElementById('inline-decorator-target-label');
+    if (labelEl) {
+      const fieldName = el.getAttribute('data-field-label') || 'テキスト欄';
+      const selectedStr = el.value.substring(lastRichSelection.start, lastRichSelection.end);
+      if (selectedStr.length > 0) {
+        const previewSel = selectedStr.length > 12 ? selectedStr.substring(0, 12) + '…' : selectedStr;
+        labelEl.textContent = `選択中: 「${previewSel}」（${fieldName}）`;
+      } else {
+        labelEl.textContent = `対象: ${fieldName}（文字を選択してボタンを押してください）`;
+      }
+    }
+  };
+
+  ['focusin', 'mouseup', 'keyup', 'touchend', 'select', 'input'].forEach(evtName => {
+    document.addEventListener(evtName, (e) => {
+      if (e.target && e.target.classList && e.target.classList.contains('rich-target')) {
+        updateSelection(e.target);
+        if (evtName === 'input') {
+          updateLiveRichPreview(e.target);
+        }
+      }
+    });
+  });
+}
+
+window.applyInlineTag = function(tagType, tagValue) {
+  if (!lastRichTarget || !document.body.contains(lastRichTarget)) {
+    const fallback = document.getElementById('profile-bio');
+    if (fallback) {
+      lastRichTarget = fallback;
+      lastRichSelection = { start: fallback.value.length, end: fallback.value.length };
+    } else {
+      showToast('先に色やフォントを変えたい入力欄をタップしてください', 'error');
+      return;
+    }
+  }
+
+  const el = lastRichTarget;
+  const val = el.value || '';
+  const start = Math.min(lastRichSelection.start, val.length);
+  const end = Math.min(lastRichSelection.end, val.length);
+  const selected = val.substring(start, end);
+  const innerText = selected.length > 0 ? selected : 'ここの文字';
+
+  let openTag = '';
+  let closeTag = '';
+  if (tagType === 'b') {
+    openTag = '[b]';
+    closeTag = '[/b]';
+  } else {
+    openTag = `[${tagType}=${tagValue}]`;
+    closeTag = `[/${tagType}]`;
+  }
+
+  const replacement = `${openTag}${innerText}${closeTag}`;
+  el.value = val.substring(0, start) + replacement + val.substring(end);
+
+  // Trigger input event so state arrays update
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+  updateLiveRichPreview(el);
+
+  // Restore focus & select inner text
+  el.focus();
+  const newStart = start + openTag.length;
+  const newEnd = newStart + innerText.length;
+  try {
+    el.setSelectionRange(newStart, newEnd);
+    lastRichSelection = { start: newStart, end: newEnd };
+  } catch (e) {}
+
+  showToast('✨ 文字の装飾を適用しました！', 'success');
+};
+
+window.clearInlineTagsFromTarget = function() {
+  if (!lastRichTarget || !document.body.contains(lastRichTarget)) {
+    showToast('装飾を解除したい入力欄を先にタップしてください', 'error');
+    return;
+  }
+  const el = lastRichTarget;
+  const val = el.value || '';
+  const start = Math.min(lastRichSelection.start, val.length);
+  const end = Math.min(lastRichSelection.end, val.length);
+
+  if (end > start) {
+    const cleanedPart = stripRichTagsAdmin(val.substring(start, end));
+    el.value = val.substring(0, start) + cleanedPart + val.substring(end);
+  } else {
+    el.value = stripRichTagsAdmin(val);
+  }
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+  updateLiveRichPreview(el);
+  showToast('装飾タグを解除しました', 'info');
+};
+
+function stripRichTagsAdmin(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/\[(?:color|bg|font|size)=[^\]]+\]/gi, '')
+    .replace(/\[\/(?:color|bg|font|size|b)\]/gi, '')
+    .replace(/\[b\]/gi, '');
+}
+
+function formatRichTextAdmin(str) {
+  if (!str) return '';
+  let html = escapeHtml(str);
+  for (let i = 0; i < 8; i++) {
+    const prev = html;
+    html = html
+      .replace(/\[color=(#[0-9a-fA-F]{3,6})\]([\s\S]*?)\[\/color\]/gi, '<span style="color: $1;">$2</span>')
+      .replace(/\[bg=(#[0-9a-fA-F]{3,6})\]([\s\S]*?)\[\/bg\]/gi, '<span style="background-color: $1; padding: 1px 5px; border-radius: 4px;">$2</span>')
+      .replace(/\[font=(rounded|sans|serif|handwriting|pop|marupop|pixel)\]([\s\S]*?)\[\/font\]/gi, '<span class="font-$1">$2</span>')
+      .replace(/\[size=(sm|lg|xl)\]([\s\S]*?)\[\/size\]/gi, '<span class="text-size-$1">$2</span>')
+      .replace(/\[b\]([\s\S]*?)\[\/b\]/gi, '<strong>$1</strong>');
+    if (html === prev) break;
+  }
+  return html.replace(/\n/g, '<br>');
+}
+
+function hasRichTags(str) {
+  return /\[(?:color|bg|font|size)=[^\]]+\]|\[b\]/i.test(String(str || ''));
+}
+
+function updateLiveRichPreview(inputEl) {
+  if (!inputEl) return;
+  let previewEl = null;
+  if (inputEl.id === 'profile-bio') {
+    previewEl = document.getElementById('profile-bio-rich-preview');
+  } else if (inputEl.dataset && inputEl.dataset.previewId) {
+    previewEl = document.getElementById(inputEl.dataset.previewId);
+  }
+  if (!previewEl) return;
+
+  const val = inputEl.value || '';
+  if (hasRichTags(val)) {
+    previewEl.classList.add('has-content');
+    previewEl.innerHTML = `<div class="rich-live-preview-badge">👀 装飾プレビュー</div><div>${formatRichTextAdmin(val)}</div>`;
+  } else {
+    previewEl.classList.remove('has-content');
+    previewEl.innerHTML = '';
+  }
+}
+
+window.clearColorPair = function(pickerId, hexId, callback) {
+  const hexInput = document.getElementById(hexId);
+  if (hexInput) {
+    hexInput.value = '';
+    hexInput.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  if (typeof callback === 'function') callback('');
+};
+
+function bindColorPair(pickerId, hexId, onChange) {
+  const picker = document.getElementById(pickerId);
+  const hexInput = document.getElementById(hexId);
+  if (!picker || !hexInput) return;
+
+  picker.addEventListener('input', (e) => {
+    const val = e.target.value.toLowerCase();
+    hexInput.value = val;
+    if (onChange) onChange(val);
+  });
+
+  hexInput.addEventListener('input', (e) => {
+    const val = e.target.value.trim().toLowerCase();
+    if (/^#[0-9a-f]{6}$/i.test(val)) {
+      picker.value = val;
+      if (onChange) onChange(val);
+    } else if (val === '') {
+      if (onChange) onChange('');
+    }
+  });
 }
 
 function setupEventListeners() {
@@ -161,6 +367,11 @@ function setupEventListeners() {
     showToast('アイコンを初期絵文字に戻しました', 'info');
   });
 
+  // Profile Box Color Pickers
+  bindColorPair('profile-name-color-picker', 'profile-name-color-hex');
+  bindColorPair('profile-bio-color-picker', 'profile-bio-color-hex');
+  bindColorPair('links-title-color-picker', 'links-title-color-hex');
+
   // Add Tab Button
   document.getElementById('add-tab-btn').addEventListener('click', () => {
     const newTabId = 'tab_' + Date.now();
@@ -169,8 +380,11 @@ function setupEventListeners() {
       name: '新しいタブ',
       aboutTitle: 'About Me',
       aboutSubtitle: '',
+      font: '',
+      titleColor: '',
+      textColor: '',
       items: [
-        { label: '項目名', value: '内容を入力してください' }
+        { label: '項目名', value: '内容を入力してください', font: '', labelColor: '', valueColor: '' }
       ]
     });
     currentAdminTabId = newTabId;
@@ -185,13 +399,16 @@ function setupEventListeners() {
       title: '新しいリンク',
       url: 'https://',
       sub: '',
-      icon: 'other'
+      icon: 'other',
+      font: '',
+      titleColor: '',
+      subColor: ''
     });
     renderAdminLinks();
     showToast('新しいリンクを追加しました', 'success');
   });
 
-  // Color Picker & Hex Input Sync
+  // Color Picker & Hex Input Sync (Site Theme)
   const colorFields = [
     { key: 'primary', pickerId: 'theme-primary-input', hexId: 'theme-primary-hex' },
     { key: 'secondary', pickerId: 'theme-secondary-input', hexId: 'theme-secondary-hex' },
@@ -221,6 +438,28 @@ function setupEventListeners() {
       });
     }
   });
+
+  // Site-wide Font & Text Color
+  const themeFontSelect = document.getElementById('theme-font-select');
+  if (themeFontSelect) {
+    themeFontSelect.addEventListener('change', (e) => {
+      themeState.font = e.target.value || 'rounded';
+    });
+  }
+
+  bindColorPair('theme-text-color-input', 'theme-text-color-hex', (val) => {
+    themeState.textColor = val;
+  });
+
+  const resetTextColorBtn = document.getElementById('theme-text-color-reset');
+  if (resetTextColorBtn) {
+    resetTextColorBtn.addEventListener('click', () => {
+      themeState.textColor = '';
+      const hexEl = document.getElementById('theme-text-color-hex');
+      if (hexEl) hexEl.value = '';
+      showToast('全体の文字色を「背景に合わせて自動」に戻しました', 'info');
+    });
+  }
 
   // Form submit
   document.getElementById('admin-form').addEventListener('submit', async (e) => {
@@ -289,12 +528,23 @@ function syncThemeInputs() {
     if (picker && themeState[key]) picker.value = themeState[key];
     if (hexInput && themeState[key]) hexInput.value = themeState[key];
   });
+
+  const fontSel = document.getElementById('theme-font-select');
+  if (fontSel) fontSel.value = themeState.font || 'rounded';
+
+  const textPicker = document.getElementById('theme-text-color-input');
+  const textHex = document.getElementById('theme-text-color-hex');
+  if (textHex) textHex.value = themeState.textColor || '';
+  if (textPicker && /^#[0-9a-f]{6}$/i.test(themeState.textColor)) {
+    textPicker.value = themeState.textColor;
+  }
 }
 
 window.selectThemePreset = function(presetId) {
   const found = THEME_PRESETS.find(p => p.id === presetId);
   if (!found) return;
   themeState = {
+    ...themeState,
     preset: found.id,
     primary: found.primary,
     secondary: found.secondary,
@@ -426,14 +676,18 @@ function populateForm(data) {
       preset: theme.preset || 'custom',
       primary: /^#[0-9a-f]{6}$/i.test(theme.primary) ? theme.primary : '#f43f5e',
       secondary: /^#[0-9a-f]{6}$/i.test(theme.secondary) ? theme.secondary : '#8b5cf6',
-      bg: /^#[0-9a-f]{6}$/i.test(theme.bg) ? theme.bg : '#fff5f7'
+      bg: /^#[0-9a-f]{6}$/i.test(theme.bg) ? theme.bg : '#fff5f7',
+      font: theme.font || 'rounded',
+      textColor: /^#[0-9a-f]{6}$/i.test(theme.textColor) ? theme.textColor : ''
     };
   } else {
     themeState = {
       preset: 'pink',
       primary: '#f43f5e',
       secondary: '#8b5cf6',
-      bg: '#fff5f7'
+      bg: '#fff5f7',
+      font: 'rounded',
+      textColor: ''
     };
   }
   syncThemeInputs();
@@ -447,7 +701,26 @@ function populateForm(data) {
   // Profile
   profileState = profile || {};
   document.getElementById('profile-name').value = profileState.name || '';
-  document.getElementById('profile-bio').value = profileState.bio || '';
+  const bioInput = document.getElementById('profile-bio');
+  bioInput.value = profileState.bio || '';
+  updateLiveRichPreview(bioInput);
+
+  const profFontSel = document.getElementById('profile-font-select');
+  if (profFontSel) profFontSel.value = profileState.font || '';
+
+  const profNameColorHex = document.getElementById('profile-name-color-hex');
+  const profNameColorPicker = document.getElementById('profile-name-color-picker');
+  if (profNameColorHex) profNameColorHex.value = profileState.nameColor || '';
+  if (profNameColorPicker && /^#[0-9a-f]{6}$/i.test(profileState.nameColor)) {
+    profNameColorPicker.value = profileState.nameColor;
+  }
+
+  const profBioColorHex = document.getElementById('profile-bio-color-hex');
+  const profBioColorPicker = document.getElementById('profile-bio-color-picker');
+  if (profBioColorHex) profBioColorHex.value = profileState.bioColor || '';
+  if (profBioColorPicker && /^#[0-9a-f]{6}$/i.test(profileState.bioColor)) {
+    profBioColorPicker.value = profileState.bioColor;
+  }
 
   currentAvatarUrl = profileState.avatar || '';
   if (currentAvatarUrl) {
@@ -469,7 +742,16 @@ function populateForm(data) {
     name: t.name,
     aboutTitle: t.aboutTitle || '',
     aboutSubtitle: t.aboutSubtitle || '',
-    items: Array.isArray(t.items) ? [...t.items] : []
+    font: t.font || '',
+    titleColor: t.titleColor || '',
+    textColor: t.textColor || '',
+    items: Array.isArray(t.items) ? t.items.map(it => ({
+      label: it.label || '',
+      value: it.value || '',
+      font: it.font || '',
+      labelColor: it.labelColor || '',
+      valueColor: it.valueColor || ''
+    })) : []
   })) : [];
 
   if (tabsState.length === 0) {
@@ -479,7 +761,10 @@ function populateForm(data) {
         name: 'リアル・日常 🌿',
         aboutTitle: 'About Me',
         aboutSubtitle: '',
-        items: [{ label: 'お名前', value: profileState.name || 'いち' }]
+        font: '',
+        titleColor: '',
+        textColor: '',
+        items: [{ label: 'お名前', value: profileState.name || 'いち', font: '', labelColor: '', valueColor: '' }]
       }
     ];
   }
@@ -493,8 +778,22 @@ function populateForm(data) {
   document.getElementById('links-title-input').value = data.linksTitle !== undefined ? data.linksTitle : (tabWithTitle ? tabWithTitle.linksTitle : 'Links');
   document.getElementById('links-subtitle-input').value = data.linksSubtitle !== undefined ? data.linksSubtitle : (tabWithSubtitle ? tabWithSubtitle.linksSubtitle : '関連リンク');
 
+  const linksFontSel = document.getElementById('links-font-select');
+  if (linksFontSel) linksFontSel.value = data.linksFont || '';
+  const linksTitleColorHex = document.getElementById('links-title-color-hex');
+  const linksTitleColorPicker = document.getElementById('links-title-color-picker');
+  if (linksTitleColorHex) linksTitleColorHex.value = data.linksTitleColor || '';
+  if (linksTitleColorPicker && /^#[0-9a-f]{6}$/i.test(data.linksTitleColor)) {
+    linksTitleColorPicker.value = data.linksTitleColor;
+  }
+
   if (Array.isArray(data.links)) {
-    linksState = [...data.links];
+    linksState = data.links.map(l => ({
+      ...l,
+      font: l.font || '',
+      titleColor: l.titleColor || '',
+      subColor: l.subColor || ''
+    }));
   } else if (Array.isArray(tabs)) {
     linksState = [];
     tabs.forEach(t => {
@@ -516,8 +815,8 @@ function renderAdminTabs() {
   switcher.innerHTML = tabsState.map(tab => `
     <button type="button" 
             class="admin-tab-pill ${tab.id === currentAdminTabId ? 'active' : ''}" 
-            onclick="selectAdminTab('${tab.id}')">
-      ${escapeHtml(tab.name)}
+            onclick="selectAdminTab('${escapeAttr(tab.id)}')">
+      ${escapeHtml(stripRichTagsAdmin(tab.name))}
     </button>
   `).join('');
 
@@ -537,8 +836,36 @@ function renderAdminTabs() {
 
     <div class="form-group">
       <label class="form-label">タブの表示名（絵文字もOK）</label>
-      <input type="text" class="form-input" value="${escapeAttr(tab.name)}" oninput="updateTabField(${tabIndex}, 'name', this.value)" placeholder="例: リアル・日常 🌿">
+      <input type="text" class="form-input rich-target" data-field-label="タブ名" value="${escapeAttr(tab.name)}" oninput="updateTabField(${tabIndex}, 'name', this.value)" placeholder="例: リアル・日常 🌿">
     </div>
+
+    <details class="box-style-details">
+      <summary>🎨 このタブ枠全体の文字色・フォント設定</summary>
+      <div class="box-style-grid">
+        <div class="box-style-field">
+          <label>このタブの基本フォント</label>
+          <select class="form-select form-select-sm" onchange="updateTabField(${tabIndex}, 'font', this.value)">
+            ${renderFontSelectOptions(tab.font)}
+          </select>
+        </div>
+        <div class="box-style-field">
+          <label>見出し・項目ラベルの基本色</label>
+          <div class="mini-color-row">
+            <input type="color" class="mini-color-swatch" value="${/^#[0-9a-f]{6}$/i.test(tab.titleColor) ? tab.titleColor : '#8b5cf6'}" oninput="updateTabColor(${tabIndex}, 'titleColor', this.value, 'tab-title-hex-${tabIndex}')">
+            <input type="text" id="tab-title-hex-${tabIndex}" class="form-input mini-color-hex" value="${escapeAttr(tab.titleColor || '')}" placeholder="自動（テーマ色）" oninput="updateTabField(${tabIndex}, 'titleColor', this.value.trim())">
+            <button type="button" class="mini-clear-btn" onclick="updateTabColor(${tabIndex}, 'titleColor', '', 'tab-title-hex-${tabIndex}')">自動</button>
+          </div>
+        </div>
+        <div class="box-style-field">
+          <label>本文の基本文字色</label>
+          <div class="mini-color-row">
+            <input type="color" class="mini-color-swatch" value="${/^#[0-9a-f]{6}$/i.test(tab.textColor) ? tab.textColor : '#1e293b'}" oninput="updateTabColor(${tabIndex}, 'textColor', this.value, 'tab-text-hex-${tabIndex}')">
+            <input type="text" id="tab-text-hex-${tabIndex}" class="form-input mini-color-hex" value="${escapeAttr(tab.textColor || '')}" placeholder="自動（未指定）" oninput="updateTabField(${tabIndex}, 'textColor', this.value.trim())">
+            <button type="button" class="mini-clear-btn" onclick="updateTabColor(${tabIndex}, 'textColor', '', 'tab-text-hex-${tabIndex}')">自動</button>
+          </div>
+        </div>
+      </div>
+    </details>
 
     <!-- About Section in Tab -->
     <div class="tab-sub-section">
@@ -548,29 +875,61 @@ function renderAdminTabs() {
       </div>
 
       <div class="form-group">
-        <label class="form-label" style="font-size: 0.78rem;">見出しタイトル</label>
-        <input type="text" class="form-input" value="${escapeAttr(tab.aboutTitle || '')}" oninput="updateTabField(${tabIndex}, 'aboutTitle', this.value)" placeholder="例: About Me（リアル）">
+        <label class="form-label" style="font-size: 0.78rem;">見出しタイトル（空欄なら非表示）</label>
+        <input type="text" class="form-input rich-target" data-field-label="タブ見出しタイトル" value="${escapeAttr(tab.aboutTitle || '')}" oninput="updateTabField(${tabIndex}, 'aboutTitle', this.value)" placeholder="例: About Me（リアル）">
       </div>
       <div class="form-group">
         <label class="form-label" style="font-size: 0.78rem;">サブ見出し（任意）</label>
-        <input type="text" class="form-input" value="${escapeAttr(tab.aboutSubtitle || '')}" oninput="updateTabField(${tabIndex}, 'aboutSubtitle', this.value)" placeholder="例: 日常やリアルの自己紹介">
+        <input type="text" class="form-input rich-target" data-field-label="タブサブ見出し" value="${escapeAttr(tab.aboutSubtitle || '')}" oninput="updateTabField(${tabIndex}, 'aboutSubtitle', this.value)" placeholder="例: 日常やリアルの自己紹介">
       </div>
 
       <div class="items-editor-list" id="tab-items-list">
-        ${(tab.items || []).map((item, itemIdx) => `
-          <div class="item-editor-row">
-            <div class="item-editor-header">
-              <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted);">項目 #${itemIdx + 1}</span>
-              <button type="button" class="btn-delete-link" onclick="deleteTabItem(${tabIndex}, ${itemIdx})">削除</button>
+        ${(tab.items || []).map((item, itemIdx) => {
+          const previewId = `item-rich-preview-${tabIndex}-${itemIdx}`;
+          const showPreview = hasRichTags(item.value);
+          return `
+            <div class="item-editor-row">
+              <div class="item-editor-header">
+                <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted);">項目 #${itemIdx + 1}</span>
+                <button type="button" class="btn-delete-link" onclick="deleteTabItem(${tabIndex}, ${itemIdx})">削除</button>
+              </div>
+              <div class="form-group">
+                <input type="text" class="form-input rich-target" data-field-label="項目 #${itemIdx + 1} の見出し" value="${escapeAttr(item.label)}" oninput="updateTabItem(${tabIndex}, ${itemIdx}, 'label', this.value)" placeholder="項目名（例: 最推し、趣味など）" style="font-weight: 700;">
+              </div>
+              <div class="form-group">
+                <textarea class="form-textarea rich-target" data-field-label="項目 #${itemIdx + 1} の内容" data-preview-id="${previewId}" rows="3" oninput="updateTabItem(${tabIndex}, ${itemIdx}, 'value', this.value)" placeholder="内容を入力（文字を選択して上のバーから一部分だけ色・フォント変更もできます）">${escapeHtml(item.value)}</textarea>
+                <div id="${previewId}" class="rich-live-preview ${showPreview ? 'has-content' : ''}">${showPreview ? `<div class="rich-live-preview-badge">👀 装飾プレビュー</div><div>${formatRichTextAdmin(item.value)}</div>` : ''}</div>
+              </div>
+              <details class="box-style-details">
+                <summary>🎨 この項目枠（#${itemIdx + 1}）の文字色・フォント</summary>
+                <div class="box-style-grid">
+                  <div class="box-style-field">
+                    <label>この項目のフォント</label>
+                    <select class="form-select form-select-sm" onchange="updateTabItem(${tabIndex}, ${itemIdx}, 'font', this.value)">
+                      ${renderFontSelectOptions(item.font)}
+                    </select>
+                  </div>
+                  <div class="box-style-field">
+                    <label>項目名の文字色</label>
+                    <div class="mini-color-row">
+                      <input type="color" class="mini-color-swatch" value="${/^#[0-9a-f]{6}$/i.test(item.labelColor) ? item.labelColor : '#8b5cf6'}" oninput="updateTabItemColor(${tabIndex}, ${itemIdx}, 'labelColor', this.value, 'item-label-hex-${tabIndex}-${itemIdx}')">
+                      <input type="text" id="item-label-hex-${tabIndex}-${itemIdx}" class="form-input mini-color-hex" value="${escapeAttr(item.labelColor || '')}" placeholder="自動（未指定）" oninput="updateTabItem(${tabIndex}, ${itemIdx}, 'labelColor', this.value.trim())">
+                      <button type="button" class="mini-clear-btn" onclick="updateTabItemColor(${tabIndex}, ${itemIdx}, 'labelColor', '', 'item-label-hex-${tabIndex}-${itemIdx}')">自動</button>
+                    </div>
+                  </div>
+                  <div class="box-style-field">
+                    <label>内容の文字色</label>
+                    <div class="mini-color-row">
+                      <input type="color" class="mini-color-swatch" value="${/^#[0-9a-f]{6}$/i.test(item.valueColor) ? item.valueColor : '#1e293b'}" oninput="updateTabItemColor(${tabIndex}, ${itemIdx}, 'valueColor', this.value, 'item-val-hex-${tabIndex}-${itemIdx}')">
+                      <input type="text" id="item-val-hex-${tabIndex}-${itemIdx}" class="form-input mini-color-hex" value="${escapeAttr(item.valueColor || '')}" placeholder="自動（未指定）" oninput="updateTabItem(${tabIndex}, ${itemIdx}, 'valueColor', this.value.trim())">
+                      <button type="button" class="mini-clear-btn" onclick="updateTabItemColor(${tabIndex}, ${itemIdx}, 'valueColor', '', 'item-val-hex-${tabIndex}-${itemIdx}')">自動</button>
+                    </div>
+                  </div>
+                </div>
+              </details>
             </div>
-            <div class="form-group">
-              <input type="text" class="form-input" value="${escapeAttr(item.label)}" oninput="updateTabItem(${tabIndex}, ${itemIdx}, 'label', this.value)" placeholder="項目名（例: 最推し、趣味など）" style="font-weight: 700;">
-            </div>
-            <div class="form-group">
-              <textarea class="form-textarea" rows="2" oninput="updateTabItem(${tabIndex}, ${itemIdx}, 'value', this.value)" placeholder="内容を入力">${escapeHtml(item.value)}</textarea>
-            </div>
-          </div>
-        `).join('')}
+          `;
+        }).join('')}
       </div>
     </div>
   `;
@@ -594,7 +953,7 @@ function renderAdminLinks() {
       <div class="link-editor-grid">
         <div class="form-group">
           <label class="form-label" style="font-size: 0.78rem;">タイトル</label>
-          <input type="text" class="form-input" value="${escapeAttr(link.title)}" oninput="updateLink(${linkIdx}, 'title', this.value)" placeholder="例: Twitter" required>
+          <input type="text" class="form-input rich-target" data-field-label="リンク #${linkIdx + 1} のタイトル" value="${escapeAttr(link.title)}" oninput="updateLink(${linkIdx}, 'title', this.value)" placeholder="例: Twitter" required>
         </div>
         <div class="form-group">
           <label class="form-label" style="font-size: 0.78rem;">アイコン種別</label>
@@ -614,8 +973,35 @@ function renderAdminLinks() {
       </div>
       <div class="form-group">
         <label class="form-label" style="font-size: 0.78rem;">サブテキスト（任意）</label>
-        <input type="text" class="form-input" value="${escapeAttr(link.sub || '')}" oninput="updateLink(${linkIdx}, 'sub', this.value)" placeholder="例: @ユーザー名 や メイン垢など">
+        <input type="text" class="form-input rich-target" data-field-label="リンク #${linkIdx + 1} のサブ文字" value="${escapeAttr(link.sub || '')}" oninput="updateLink(${linkIdx}, 'sub', this.value)" placeholder="例: @ユーザー名 や メイン垢など">
       </div>
+      <details class="box-style-details">
+        <summary>🎨 このリンク枠（#${linkIdx + 1}）の文字色・フォント</summary>
+        <div class="box-style-grid">
+          <div class="box-style-field">
+            <label>このリンクのフォント</label>
+            <select class="form-select form-select-sm" onchange="updateLink(${linkIdx}, 'font', this.value)">
+              ${renderFontSelectOptions(link.font)}
+            </select>
+          </div>
+          <div class="box-style-field">
+            <label>タイトルの文字色</label>
+            <div class="mini-color-row">
+              <input type="color" class="mini-color-swatch" value="${/^#[0-9a-f]{6}$/i.test(link.titleColor) ? link.titleColor : '#1e293b'}" oninput="updateLinkColor(${linkIdx}, 'titleColor', this.value, 'link-title-hex-${linkIdx}')">
+              <input type="text" id="link-title-hex-${linkIdx}" class="form-input mini-color-hex" value="${escapeAttr(link.titleColor || '')}" placeholder="自動（未指定）" oninput="updateLink(${linkIdx}, 'titleColor', this.value.trim())">
+              <button type="button" class="mini-clear-btn" onclick="updateLinkColor(${linkIdx}, 'titleColor', '', 'link-title-hex-${linkIdx}')">自動</button>
+            </div>
+          </div>
+          <div class="box-style-field">
+            <label>サブテキストの文字色</label>
+            <div class="mini-color-row">
+              <input type="color" class="mini-color-swatch" value="${/^#[0-9a-f]{6}$/i.test(link.subColor) ? link.subColor : '#64748b'}" oninput="updateLinkColor(${linkIdx}, 'subColor', this.value, 'link-sub-hex-${linkIdx}')">
+              <input type="text" id="link-sub-hex-${linkIdx}" class="form-input mini-color-hex" value="${escapeAttr(link.subColor || '')}" placeholder="自動（未指定）" oninput="updateLink(${linkIdx}, 'subColor', this.value.trim())">
+              <button type="button" class="mini-clear-btn" onclick="updateLinkColor(${linkIdx}, 'subColor', '', 'link-sub-hex-${linkIdx}')">自動</button>
+            </div>
+          </div>
+        </div>
+      </details>
     </div>
   `).join('');
 }
@@ -631,8 +1017,16 @@ window.updateTabField = function(tabIndex, field, value) {
     if (field === 'name') {
       const switcher = document.getElementById('admin-tab-switcher');
       const pill = switcher.querySelectorAll('.admin-tab-pill')[tabIndex];
-      if (pill) pill.textContent = value;
+      if (pill) pill.textContent = stripRichTagsAdmin(value);
     }
+  }
+};
+
+window.updateTabColor = function(tabIndex, field, value, hexInputId) {
+  if (tabsState[tabIndex]) {
+    tabsState[tabIndex][field] = value;
+    const hexEl = document.getElementById(hexInputId);
+    if (hexEl) hexEl.value = value;
   }
 };
 
@@ -650,7 +1044,7 @@ window.deleteTab = function(tabIndex) {
 window.addTabItem = function(tabIndex) {
   if (tabsState[tabIndex]) {
     if (!tabsState[tabIndex].items) tabsState[tabIndex].items = [];
-    tabsState[tabIndex].items.push({ label: '新しい項目', value: '' });
+    tabsState[tabIndex].items.push({ label: '新しい項目', value: '', font: '', labelColor: '', valueColor: '' });
     renderAdminTabs();
   }
 };
@@ -668,6 +1062,14 @@ window.updateTabItem = function(tabIndex, itemIdx, field, value) {
   }
 };
 
+window.updateTabItemColor = function(tabIndex, itemIdx, field, value, hexInputId) {
+  if (tabsState[tabIndex] && tabsState[tabIndex].items && tabsState[tabIndex].items[itemIdx]) {
+    tabsState[tabIndex].items[itemIdx][field] = value;
+    const hexEl = document.getElementById(hexInputId);
+    if (hexEl) hexEl.value = value;
+  }
+};
+
 window.deleteLink = function(linkIdx) {
   linksState.splice(linkIdx, 1);
   renderAdminLinks();
@@ -679,6 +1081,14 @@ window.updateLink = function(linkIdx, field, value) {
   }
 };
 
+window.updateLinkColor = function(linkIdx, field, value, hexInputId) {
+  if (linksState[linkIdx]) {
+    linksState[linkIdx][field] = value;
+    const hexEl = document.getElementById(hexInputId);
+    if (hexEl) hexEl.value = value;
+  }
+};
+
 // Build current JSON object
 function buildDataJson(avatarUrl) {
   const username = document.getElementById('twitter-username').value.trim();
@@ -687,22 +1097,36 @@ function buildDataJson(avatarUrl) {
   const primaryHex = document.getElementById('theme-primary-hex').value.trim();
   const secondaryHex = document.getElementById('theme-secondary-hex').value.trim();
   const bgHex = document.getElementById('theme-bg-hex').value.trim();
+  const textColorHex = (document.getElementById('theme-text-color-hex')?.value || '').trim();
+  const themeFont = document.getElementById('theme-font-select')?.value || 'rounded';
+
+  const profileFont = document.getElementById('profile-font-select')?.value || '';
+  const profileNameColor = (document.getElementById('profile-name-color-hex')?.value || '').trim();
+  const profileBioColor = (document.getElementById('profile-bio-color-hex')?.value || '').trim();
+
+  const linksFont = document.getElementById('links-font-select')?.value || '';
+  const linksTitleColor = (document.getElementById('links-title-color-hex')?.value || '').trim();
 
   return {
     site: {
-      title: document.getElementById('site-title-input').value.trim() || `${name}のホームページ`,
-      footerText: document.getElementById('footer-text-input').value.trim() || `© 2026 ${name}. All rights reserved.`
+      title: document.getElementById('site-title-input').value.trim() || `${stripRichTagsAdmin(name)}のホームページ`,
+      footerText: document.getElementById('footer-text-input').value.trim() || `© 2026 ${stripRichTagsAdmin(name)}. All rights reserved.`
     },
     theme: {
       preset: themeState.preset || 'pink',
       primary: /^#[0-9a-f]{6}$/i.test(primaryHex) ? primaryHex : themeState.primary,
       secondary: /^#[0-9a-f]{6}$/i.test(secondaryHex) ? secondaryHex : themeState.secondary,
-      bg: /^#[0-9a-f]{6}$/i.test(bgHex) ? bgHex : themeState.bg
+      bg: /^#[0-9a-f]{6}$/i.test(bgHex) ? bgHex : themeState.bg,
+      font: themeFont,
+      textColor: /^#[0-9a-f]{6}$/i.test(textColorHex) ? textColorHex : ''
     },
     profile: {
       name: name,
       avatar: avatarUrl,
-      bio: document.getElementById('profile-bio').value
+      bio: document.getElementById('profile-bio').value,
+      font: profileFont,
+      nameColor: /^#[0-9a-f]{6}$/i.test(profileNameColor) ? profileNameColor : '',
+      bioColor: /^#[0-9a-f]{6}$/i.test(profileBioColor) ? profileBioColor : ''
     },
     twitter: {
       username: username
@@ -710,6 +1134,8 @@ function buildDataJson(avatarUrl) {
     tabs: tabsState,
     linksTitle: document.getElementById('links-title-input').value.trim() || 'Links',
     linksSubtitle: document.getElementById('links-subtitle-input').value.trim(),
+    linksFont: linksFont,
+    linksTitleColor: /^#[0-9a-f]{6}$/i.test(linksTitleColor) ? linksTitleColor : '',
     links: linksState
   };
 }
