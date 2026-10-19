@@ -32,27 +32,35 @@
       "font": "",
       "titleColor": "#000000",
       "textColor": "#000000",
+      "isSensitive": false,
+      "sensitiveWarning": "",
       "items": [
         {
           "label": "名前。",
           "value": "本名はどっかから漁ってください。\nさっすがの俺でもネット上に書いたりはしないですねぇ。",
           "font": "",
           "labelColor": "",
-          "valueColor": ""
+          "valueColor": "",
+          "isSensitive": false,
+          "sensitiveWarning": ""
         },
         {
           "label": "なう所属。",
           "value": "ToyohashiUniversityofTechnologies/B2/2系\n総○文○部/喫茶部門",
           "font": "",
           "labelColor": "",
-          "valueColor": ""
+          "valueColor": "",
+          "isSensitive": false,
+          "sensitiveWarning": ""
         },
         {
           "label": "趣味",
           "value": "ネットに生きたり(詳細は別タブにて。)\n浦島坂田船を推したり(詳細は別タブにて。)\nこんな感じでウェブページを作ったり(詳細は以下略。)\nしてます。",
           "font": "",
           "labelColor": "",
-          "valueColor": ""
+          "valueColor": "",
+          "isSensitive": false,
+          "sensitiveWarning": ""
         }
       ]
     },
@@ -64,13 +72,17 @@
       "font": "",
       "titleColor": "#000000",
       "textColor": "#000000",
+      "isSensitive": false,
+      "sensitiveWarning": "",
       "items": [
         {
           "label": "①Twitter",
           "value": "日中はTwitterの陽当たりのいい部分によくいます。\n深夜は深淵に近しいところにこもっていたりします。\n深夜の陽当たりが良いところにいることもあります。\n生態についてはいまだ未知数な部分があります。",
           "font": "",
           "labelColor": "",
-          "valueColor": ""
+          "valueColor": "",
+          "isSensitive": false,
+          "sensitiveWarning": ""
         }
       ]
     },
@@ -82,34 +94,44 @@
       "font": "",
       "titleColor": "#000000",
       "textColor": "#000000",
+      "isSensitive": false,
+      "sensitiveWarning": "",
       "items": [
         {
           "label": "推し！！！！！！！",
           "value": "志麻さんを愛してます。\n志麻セン寄りの志麻リスのため、稀にセンワン行ったりもしてます...。\n2024のstar!で",
           "font": "",
           "labelColor": "",
-          "valueColor": ""
+          "valueColor": "",
+          "isSensitive": false,
+          "sensitiveWarning": ""
         },
         {
           "label": "参戦歴",
           "value": "【2024】\n《志麻ワン　star!》\n⭐︎0518/愛知/Zepp Nagoya\n《夏ツ　weddiing》\n💍0915/愛知/Aichi Sky Expo ホールA\n\n【2025】\n《志麻ワン　Shiki》\n🗓️0503/愛知/Zepp Nagoya\n《夏ツ　WARN12G》\n⚠︎0802/静岡/エコパ\n《センワン　brun》\n🍫1110/愛知/刈谷市総合文化センター\n\n【2026】\n《志麻ワン　Alice》\n♠️ 0508/愛知/Niterra日本特殊陶業\n《夏ツ　TA13OO》\n💋0718/兵庫/神戸国際記念ホール\n💋0822/大阪/大阪城ホール\n💋0823/大阪/大阪城ホール\n《ハロパ　魔法少年》\n🪄1010/東京/有明アリーナ",
           "font": "",
           "labelColor": "",
-          "valueColor": ""
+          "valueColor": "",
+          "isSensitive": false,
+          "sensitiveWarning": ""
         },
         {
           "label": "参戦予定",
           "value": "【2026】\n《しまさか　Present》\n🎁1216/愛知/刈谷市総合文化センター\n🎁1225/静岡/アクトシティ浜松",
           "font": "",
           "labelColor": "",
-          "valueColor": ""
+          "valueColor": "",
+          "isSensitive": false,
+          "sensitiveWarning": ""
         },
         {
           "label": "優勝話",
           "value": "①リリイベ\nあいう\n②サイン入りチェキ",
           "font": "",
           "labelColor": "",
-          "valueColor": ""
+          "valueColor": "",
+          "isSensitive": true,
+          "sensitiveWarning": "優勝話を含みます！！！気をつけて開いて！！！"
         }
       ]
     }
@@ -127,7 +149,9 @@
       "icon": "twitter",
       "font": "",
       "titleColor": "",
-      "subColor": ""
+      "subColor": "",
+      "isSensitive": false,
+      "sensitiveWarning": ""
     },
     {
       "id": "1792306918049",
@@ -137,7 +161,9 @@
       "icon": "twitter",
       "font": "",
       "titleColor": "",
-      "subColor": ""
+      "subColor": "",
+      "isSensitive": false,
+      "sensitiveWarning": ""
     }
   ]
 }
