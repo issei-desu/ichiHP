@@ -360,6 +360,56 @@ window.rehideInlineSensitive = function(uid) {
   window.cancelInlineSensitiveUnlock(uid);
 };
 
+function renderAboutItemsGrid(items, parentUid, defaultTitleColor, defaultTextColor) {
+  return `
+    <div class="about-grid">
+      ${(items || []).map((item, itemIdx) => {
+        const itemUid = `${parentUid}_item_${itemIdx}`;
+        const itemFontCss = getFontFamilyCss(item.font);
+        const itemStyle = itemFontCss ? `style="font-family: ${escapeAttr(itemFontCss)};"` : '';
+        const labelColor = item.labelColor || defaultTitleColor || '';
+        const valueColor = item.valueColor || defaultTextColor || '';
+        const labelStyle = labelColor ? `style="color: ${escapeAttr(labelColor)};"` : '';
+        const valueStyle = valueColor ? `style="color: ${escapeAttr(valueColor)};"` : '';
+
+        const hasSubItems = Array.isArray(item.subItems) && item.subItems.length > 0;
+        const mainValueHtml = (item.value || !hasSubItems)
+          ? `<p class="about-value" ${valueStyle}>${formatRichText(item.value)}</p>`
+          : '';
+
+        const subItemsHtml = hasSubItems ? `
+          <div class="about-subitems-stack">
+            ${item.subItems.map((sub, subIdx) => {
+              const subBody = `<p class="about-value" ${valueStyle}>${formatRichText(sub.value)}</p>`;
+              return `
+                <div class="about-subitem-box">
+                  ${sub.label ? `<span class="about-subitem-label" ${labelStyle}>${formatRichText(sub.label)}</span>` : ''}
+                  ${sub.isSensitive
+                    ? renderSensitiveGuard(`${itemUid}_sub_${subIdx}`, sub.sensitiveWarning, subBody)
+                    : subBody
+                  }
+                </div>
+              `;
+            }).join('')}
+          </div>
+        ` : '';
+
+        const combinedBodyHtml = `${mainValueHtml}${subItemsHtml}`;
+
+        return `
+          <div class="about-item" ${itemStyle}>
+            <span class="about-label" ${labelStyle}>${formatRichText(item.label)}</span>
+            ${item.isSensitive
+              ? renderSensitiveGuard(itemUid, item.sensitiveWarning, combinedBodyHtml)
+              : combinedBodyHtml
+            }
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
 function renderTabs(tabs) {
   const navContainer = document.getElementById('tabs-nav');
   const panesContainer = document.getElementById('tab-panes-container');
@@ -382,7 +432,7 @@ function renderTabs(tabs) {
     `;
   }).join('');
 
-  // 2. Render Tab Panes (About Section)
+  // 2. Render Tab Panes (Main Block + Any Vertically Stacked Blocks)
   panesContainer.innerHTML = tabs.map(tab => {
     const tabFontCss = getFontFamilyCss(tab.font);
     const paneStyleParts = [];
@@ -390,46 +440,56 @@ function renderTabs(tabs) {
     const paneStyleAttr = paneStyleParts.length ? `style="${escapeAttr(paneStyleParts.join('; '))}"` : '';
     const titleColorStyle = tab.titleColor ? `style="color: ${escapeAttr(tab.titleColor)};"` : '';
 
-    const itemsGridHtml = `
-      <div class="about-grid">
-        ${(tab.items || []).map((item, itemIdx) => {
-          const itemFontCss = getFontFamilyCss(item.font);
-          const itemStyle = itemFontCss ? `style="font-family: ${escapeAttr(itemFontCss)};"` : '';
-          const labelColor = item.labelColor || tab.titleColor || '';
-          const valueColor = item.valueColor || tab.textColor || '';
-          const labelStyle = labelColor ? `style="color: ${escapeAttr(labelColor)};"` : '';
-          const valueStyle = valueColor ? `style="color: ${escapeAttr(valueColor)};"` : '';
-          const valueHtml = `<p class="about-value" ${valueStyle}>${formatRichText(item.value)}</p>`;
+    const mainItemsGridHtml = renderAboutItemsGrid(tab.items, `tab_${tab.id}`, tab.titleColor, tab.textColor);
 
-          return `
-            <div class="about-item" ${itemStyle}>
-              <span class="about-label" ${labelStyle}>${formatRichText(item.label)}</span>
-              ${item.isSensitive
-                ? renderSensitiveGuard(`item_${tab.id}_${itemIdx}`, item.sensitiveWarning, valueHtml)
-                : valueHtml
-              }
+    const extraBlocksHtml = (tab.blocks || []).map((block, blockIdx) => {
+      const blockUid = `tab_${tab.id}_blk_${blockIdx}`;
+      const blkFontCss = getFontFamilyCss(block.font || tab.font);
+      const blkStyleAttr = blkFontCss ? `style="font-family: ${escapeAttr(blkFontCss)};"` : '';
+      const blkTitleColor = block.titleColor || tab.titleColor || '';
+      const blkTextColor = block.textColor || tab.textColor || '';
+      const blkTitleStyle = blkTitleColor ? `style="color: ${escapeAttr(blkTitleColor)};"` : '';
+      const blkItemsGridHtml = renderAboutItemsGrid(block.items, blockUid, blkTitleColor, blkTextColor);
+      const hasHeader = Boolean((block.tag && block.tag.trim()) || (block.aboutTitle && block.aboutTitle.trim()) || (block.aboutSubtitle && block.aboutSubtitle.trim()));
+
+      return `
+        <section class="section about-section tab-block-section" ${blkStyleAttr}>
+          ${hasHeader ? `
+            <div class="section-header">
+              ${block.tag ? `<span class="section-tag">${formatRichText(block.tag)}</span>` : ''}
+              ${block.aboutTitle ? `<h2 class="section-title" ${blkTitleStyle}>${formatRichText(block.aboutTitle)}</h2>` : ''}
+              ${block.aboutSubtitle ? `<p class="section-subtitle" ${blkTitleStyle}>${formatRichText(block.aboutSubtitle)}</p>` : ''}
             </div>
-          `;
-        }).join('')}
-      </div>
-    `;
-
-    return `
-      <div id="tab-pane-${escapeAttr(tab.id)}" class="tab-pane ${tab.id === currentActiveTabId ? 'active' : ''}" ${paneStyleAttr}>
-        <section class="section about-section" style="padding-top: 10px;">
-          <div class="section-header">
-            <span class="section-tag">${formatRichText(tab.name)}</span>
-            ${tab.aboutTitle ? `<h2 class="section-title" ${titleColorStyle}>${formatRichText(tab.aboutTitle)}</h2>` : ''}
-            ${tab.aboutSubtitle ? `<p class="section-subtitle" ${titleColorStyle}>${formatRichText(tab.aboutSubtitle)}</p>` : ''}
-          </div>
-
+          ` : ''}
           <div class="card about-card">
-            ${tab.isSensitive
-              ? renderSensitiveGuard(`tab_${tab.id}`, tab.sensitiveWarning, itemsGridHtml)
-              : itemsGridHtml
+            ${block.isSensitive
+              ? renderSensitiveGuard(blockUid, block.sensitiveWarning, blkItemsGridHtml)
+              : blkItemsGridHtml
             }
           </div>
         </section>
+      `;
+    }).join('');
+
+    return `
+      <div id="tab-pane-${escapeAttr(tab.id)}" class="tab-pane ${tab.id === currentActiveTabId ? 'active' : ''}" ${paneStyleAttr}>
+        <div class="tab-blocks-stack">
+          <section class="section about-section" style="padding-top: 10px;">
+            <div class="section-header">
+              <span class="section-tag">${formatRichText(tab.name)}</span>
+              ${tab.aboutTitle ? `<h2 class="section-title" ${titleColorStyle}>${formatRichText(tab.aboutTitle)}</h2>` : ''}
+              ${tab.aboutSubtitle ? `<p class="section-subtitle" ${titleColorStyle}>${formatRichText(tab.aboutSubtitle)}</p>` : ''}
+            </div>
+
+            <div class="card about-card">
+              ${tab.isSensitive
+                ? renderSensitiveGuard(`tab_${tab.id}`, tab.sensitiveWarning, mainItemsGridHtml)
+                : mainItemsGridHtml
+              }
+            </div>
+          </section>
+          ${extraBlocksHtml}
+        </div>
       </div>
     `;
   }).join('');

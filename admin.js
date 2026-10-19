@@ -401,8 +401,9 @@ function setupEventListeners() {
       isSensitive: false,
       sensitiveWarning: '',
       items: [
-        { label: '項目名', value: '内容を入力してください', font: '', labelColor: '', valueColor: '', isSensitive: false, sensitiveWarning: '' }
-      ]
+        { label: '項目名', value: '内容を入力してください', font: '', labelColor: '', valueColor: '', isSensitive: false, sensitiveWarning: '', subItems: [] }
+      ],
+      blocks: []
     });
     currentAdminTabId = newTabId;
     renderAdminTabs();
@@ -789,6 +790,23 @@ function populateForm(data) {
   twitterState = twitter || {};
   document.getElementById('twitter-username').value = (twitterState.username || '').replace(/^@/, '');
 
+  // Helper to normalize items & subItems
+  const normalizeItem = (it) => ({
+    label: it.label || '',
+    value: it.value || '',
+    font: it.font || '',
+    labelColor: it.labelColor || '',
+    valueColor: it.valueColor || '',
+    isSensitive: Boolean(it.isSensitive),
+    sensitiveWarning: it.sensitiveWarning || '',
+    subItems: Array.isArray(it.subItems) ? it.subItems.map(sub => ({
+      label: sub.label || '',
+      value: sub.value || '',
+      isSensitive: Boolean(sub.isSensitive),
+      sensitiveWarning: sub.sensitiveWarning || ''
+    })) : []
+  });
+
   // Tabs
   tabsState = Array.isArray(tabs) ? tabs.map(t => ({
     id: t.id,
@@ -800,14 +818,17 @@ function populateForm(data) {
     textColor: t.textColor || '',
     isSensitive: Boolean(t.isSensitive),
     sensitiveWarning: t.sensitiveWarning || '',
-    items: Array.isArray(t.items) ? t.items.map(it => ({
-      label: it.label || '',
-      value: it.value || '',
-      font: it.font || '',
-      labelColor: it.labelColor || '',
-      valueColor: it.valueColor || '',
-      isSensitive: Boolean(it.isSensitive),
-      sensitiveWarning: it.sensitiveWarning || ''
+    items: Array.isArray(t.items) ? t.items.map(normalizeItem) : [],
+    blocks: Array.isArray(t.blocks) ? t.blocks.map(b => ({
+      tag: b.tag || '',
+      aboutTitle: b.aboutTitle || '',
+      aboutSubtitle: b.aboutSubtitle || '',
+      font: b.font || '',
+      titleColor: b.titleColor || '',
+      textColor: b.textColor || '',
+      isSensitive: Boolean(b.isSensitive),
+      sensitiveWarning: b.sensitiveWarning || '',
+      items: Array.isArray(b.items) ? b.items.map(normalizeItem) : []
     })) : []
   })) : [];
 
@@ -823,7 +844,8 @@ function populateForm(data) {
         textColor: '',
         isSensitive: false,
         sensitiveWarning: '',
-        items: [{ label: 'お名前', value: profileState.name || 'いち', font: '', labelColor: '', valueColor: '', isSensitive: false, sensitiveWarning: '' }]
+        items: [{ label: 'お名前', value: profileState.name || 'いち', font: '', labelColor: '', valueColor: '', isSensitive: false, sensitiveWarning: '', subItems: [] }],
+        blocks: []
       }
     ];
   }
@@ -872,6 +894,96 @@ function populateForm(data) {
   renderAdminLinks();
 }
 
+function renderAdminItemsEditorList(items, tabIndex, blockIndex) {
+  return (items || []).map((item, itemIdx) => {
+    const keyPrefix = `${tabIndex}-${blockIndex}-${itemIdx}`;
+    const previewId = `item-rich-preview-${keyPrefix}`;
+    const showPreview = hasRichTags(item.value);
+    const subItems = Array.isArray(item.subItems) ? item.subItems : [];
+
+    return `
+      <div class="item-editor-row">
+        <div class="item-editor-header">
+          <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted);">項目 #${itemIdx + 1}</span>
+          <button type="button" class="btn-delete-link" onclick="deleteBlockOrTabItem(${tabIndex}, ${blockIndex}, ${itemIdx})">削除</button>
+        </div>
+        <div class="form-group">
+          <input type="text" class="form-input rich-target" data-field-label="項目 #${itemIdx + 1} の見出し" value="${escapeAttr(item.label)}" oninput="updateBlockOrTabItem(${tabIndex}, ${blockIndex}, ${itemIdx}, 'label', this.value)" placeholder="項目名（例: 最推し、趣味、優勝話など）" style="font-weight: 700;">
+        </div>
+        <div class="form-group">
+          <textarea class="form-textarea rich-target" data-field-label="項目 #${itemIdx + 1} の内容" data-preview-id="${previewId}" rows="3" oninput="updateBlockOrTabItem(${tabIndex}, ${blockIndex}, ${itemIdx}, 'value', this.value)" placeholder="内容を入力（下の「＋小枠を縦に追加」を使う場合は空欄でもOK）">${escapeHtml(item.value)}</textarea>
+          <div id="${previewId}" class="rich-live-preview ${showPreview ? 'has-content' : ''}">${showPreview ? `<div class="rich-live-preview-badge">👀 装飾プレビュー</div><div>${formatRichTextAdmin(item.value)}</div>` : ''}</div>
+        </div>
+
+        <!-- Vertically Stacked Sub-Items inside this Item -->
+        ${subItems.length > 0 ? `
+          <div style="display: flex; flex-direction: column; gap: 8px; padding: 8px 10px; background: #f8fafc; border-left: 3px solid var(--primary); border-radius: 8px;">
+            <strong style="font-size: 0.75rem; color: var(--primary);">📑 この項目の中の縦連ね小枠（${subItems.length}個）</strong>
+            ${subItems.map((sub, subIdx) => `
+              <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 0.74rem; font-weight: 700; color: var(--text-muted);">小枠 #${subIdx + 1}</span>
+                  <button type="button" class="btn-delete-link" onclick="deleteSubItem(${tabIndex}, ${blockIndex}, ${itemIdx}, ${subIdx})">削除</button>
+                </div>
+                <input type="text" class="form-input rich-target" data-field-label="小枠 #${subIdx + 1} の見出し" style="font-size: 0.82rem; font-weight: 700; padding: 6px 9px;" value="${escapeAttr(sub.label)}" oninput="updateSubItem(${tabIndex}, ${blockIndex}, ${itemIdx}, ${subIdx}, 'label', this.value)" placeholder="小見出し（例: ①リリイベ、②サイン入りチェキ など）">
+                <textarea class="form-textarea rich-target" data-field-label="小枠 #${subIdx + 1} の内容" rows="2" style="font-size: 0.82rem; padding: 6px 9px;" oninput="updateSubItem(${tabIndex}, ${blockIndex}, ${itemIdx}, ${subIdx}, 'value', this.value)" placeholder="小枠の内容を入力">${escapeHtml(sub.value)}</textarea>
+                <label style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 700; color: #be123c; cursor: pointer;">
+                  <input type="checkbox" style="width: 14px; height: 14px; accent-color: #f43f5e;" ${sub.isSensitive ? 'checked' : ''} onchange="updateSubItemSensitive(${tabIndex}, ${blockIndex}, ${itemIdx}, ${subIdx}, this.checked)">
+                  <span>🙈 この小枠（#${subIdx + 1}）を「表示する」ボタンを押すまで隠す</span>
+                </label>
+                <div id="sub-sens-warn-${keyPrefix}-${subIdx}" style="display: ${sub.isSensitive ? 'block' : 'none'};">
+                  <input type="text" class="form-input" style="font-size: 0.74rem; padding: 5px 8px;" value="${escapeAttr(sub.sensitiveWarning || '')}" oninput="updateSubItem(${tabIndex}, ${blockIndex}, ${itemIdx}, ${subIdx}, 'sensitiveWarning', this.value)" placeholder="ボタンの上に出すメッセージ（任意）">
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+
+        <div style="display: flex; justify-content: flex-end;">
+          <button type="button" class="mini-clear-btn" style="color: var(--primary); border-color: #ddd6fe; background: #faf5ff;" onclick="addSubItem(${tabIndex}, ${blockIndex}, ${itemIdx})">＋ この項目の中に小枠を縦に追加</button>
+        </div>
+
+        <div style="background: #fff1f2; border: 1px dashed #fda4af; border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px;">
+          <label style="display: flex; align-items: center; gap: 7px; font-size: 0.78rem; font-weight: 700; color: #be123c; cursor: pointer;">
+            <input type="checkbox" style="width: 15px; height: 15px; accent-color: #f43f5e;" ${item.isSensitive ? 'checked' : ''} onchange="updateBlockOrTabItemSensitive(${tabIndex}, ${blockIndex}, ${itemIdx}, this.checked)">
+            <span>🙈 この項目（#${itemIdx + 1}）全体を「表示する」ボタンを押すまで隠す</span>
+          </label>
+          <div id="item-sens-warn-wrap-${keyPrefix}" style="display: ${item.isSensitive ? 'block' : 'none'};">
+            <input type="text" class="form-input" style="font-size: 0.76rem; padding: 6px 8px; background: #fff;" value="${escapeAttr(item.sensitiveWarning || '')}" oninput="updateBlockOrTabItem(${tabIndex}, ${blockIndex}, ${itemIdx}, 'sensitiveWarning', this.value)" placeholder="ボタンの上に出すメッセージ（任意・空欄ならボタンのみ表示）">
+          </div>
+        </div>
+        <details class="box-style-details">
+          <summary>🎨 この項目枠（#${itemIdx + 1}）の文字色・フォント</summary>
+          <div class="box-style-grid">
+            <div class="box-style-field">
+              <label>この項目のフォント</label>
+              <select class="form-select form-select-sm" onchange="updateBlockOrTabItem(${tabIndex}, ${blockIndex}, ${itemIdx}, 'font', this.value)">
+                ${renderFontSelectOptions(item.font)}
+              </select>
+            </div>
+            <div class="box-style-field">
+              <label>項目名の文字色</label>
+              <div class="mini-color-row">
+                <input type="color" class="mini-color-swatch" value="${/^#[0-9a-f]{6}$/i.test(item.labelColor) ? item.labelColor : '#8b5cf6'}" oninput="updateBlockOrTabItemColor(${tabIndex}, ${blockIndex}, ${itemIdx}, 'labelColor', this.value, 'item-label-hex-${keyPrefix}')">
+                <input type="text" id="item-label-hex-${keyPrefix}" class="form-input mini-color-hex" value="${escapeAttr(item.labelColor || '')}" placeholder="自動（未指定）" oninput="updateBlockOrTabItem(${tabIndex}, ${blockIndex}, ${itemIdx}, 'labelColor', this.value.trim())">
+                <button type="button" class="mini-clear-btn" onclick="updateBlockOrTabItemColor(${tabIndex}, ${blockIndex}, ${itemIdx}, 'labelColor', '', 'item-label-hex-${keyPrefix}')">自動</button>
+              </div>
+            </div>
+            <div class="box-style-field">
+              <label>内容の文字色</label>
+              <div class="mini-color-row">
+                <input type="color" class="mini-color-swatch" value="${/^#[0-9a-f]{6}$/i.test(item.valueColor) ? item.valueColor : '#1e293b'}" oninput="updateBlockOrTabItemColor(${tabIndex}, ${blockIndex}, ${itemIdx}, 'valueColor', this.value, 'item-val-hex-${keyPrefix}')">
+                <input type="text" id="item-val-hex-${keyPrefix}" class="form-input mini-color-hex" value="${escapeAttr(item.valueColor || '')}" placeholder="自動（未指定）" oninput="updateBlockOrTabItem(${tabIndex}, ${blockIndex}, ${itemIdx}, 'valueColor', this.value.trim())">
+                <button type="button" class="mini-clear-btn" onclick="updateBlockOrTabItemColor(${tabIndex}, ${blockIndex}, ${itemIdx}, 'valueColor', '', 'item-val-hex-${keyPrefix}')">自動</button>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+    `;
+  }).join('');
+}
+
 function renderAdminTabs() {
   const switcher = document.getElementById('admin-tab-switcher');
   const editor = document.getElementById('active-tab-editor');
@@ -892,6 +1004,7 @@ function renderAdminTabs() {
   }
 
   const tabIndex = tabsState.findIndex(t => t.id === tab.id);
+  const extraBlocks = Array.isArray(tab.blocks) ? tab.blocks : [];
 
   editor.innerHTML = `
     <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
@@ -900,23 +1013,12 @@ function renderAdminTabs() {
     </div>
 
     <div class="form-group">
-      <label class="form-label">タブの表示名（絵文字もOK）</label>
+      <label class="form-label">タブの表示名（上部の切り替えボタン名）</label>
       <input type="text" class="form-input rich-target" data-field-label="タブ名" value="${escapeAttr(tab.name)}" oninput="updateTabField(${tabIndex}, 'name', this.value)" placeholder="例: リアル・日常 🌿">
     </div>
 
-    <!-- Tab-Level Sensitive Guard Toggle -->
-    <div style="background: #fff1f2; border: 1.5px dashed #fda4af; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px;">
-      <label style="display: flex; align-items: center; gap: 8px; font-size: 0.84rem; font-weight: 800; color: #be123c; cursor: pointer;">
-        <input type="checkbox" style="width: 17px; height: 17px; accent-color: #f43f5e;" ${tab.isSensitive ? 'checked' : ''} onchange="updateTabSensitive(${tabIndex}, this.checked)">
-        <span>🙈 このタブ全体を「表示する」ボタンを押すまで隠す</span>
-      </label>
-      <div id="tab-sens-warn-wrap-${tabIndex}" style="display: ${tab.isSensitive ? 'block' : 'none'};">
-        <input type="text" class="form-input" style="font-size: 0.8rem; background: #fff;" value="${escapeAttr(tab.sensitiveWarning || '')}" oninput="updateTabField(${tabIndex}, 'sensitiveWarning', this.value)" placeholder="ボタンの上に出すメッセージ（任意・空欄ならボタンのみ表示）">
-      </div>
-    </div>
-
     <details class="box-style-details">
-      <summary>🎨 このタブ枠全体の文字色・フォント設定</summary>
+      <summary>🎨 このタブ全体の基本文字色・フォント設定</summary>
       <div class="box-style-grid">
         <div class="box-style-field">
           <label>このタブの基本フォント</label>
@@ -943,80 +1045,81 @@ function renderAdminTabs() {
       </div>
     </details>
 
-    <!-- About Section in Tab -->
-    <div class="tab-sub-section">
+    <!-- Main Block #1 in Tab -->
+    <div class="tab-sub-section" style="border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 12px; background: #fff;">
       <div class="card-header-row">
-        <strong style="font-size: 0.92rem;">📝 自己紹介（プロフィール項目）</strong>
-        <button type="button" class="btn btn-subtle-primary btn-sm" onclick="addTabItem(${tabIndex})">＋ 項目追加</button>
+        <strong style="font-size: 0.92rem; color: var(--primary);">📦 枠 #1（1つ目のカード枠）</strong>
+        <button type="button" class="btn btn-subtle-primary btn-sm" onclick="addBlockOrTabItem(${tabIndex}, -1)">＋ 項目追加</button>
       </div>
 
       <div class="form-group">
         <label class="form-label" style="font-size: 0.78rem;">見出しタイトル（空欄なら非表示）</label>
-        <input type="text" class="form-input rich-target" data-field-label="タブ見出しタイトル" value="${escapeAttr(tab.aboutTitle || '')}" oninput="updateTabField(${tabIndex}, 'aboutTitle', this.value)" placeholder="例: About Me（リアル）">
+        <input type="text" class="form-input rich-target" data-field-label="枠 #1 見出しタイトル" value="${escapeAttr(tab.aboutTitle || '')}" oninput="updateTabField(${tabIndex}, 'aboutTitle', this.value)" placeholder="例: 生息地。 / About Me">
       </div>
       <div class="form-group">
         <label class="form-label" style="font-size: 0.78rem;">サブ見出し（任意）</label>
-        <input type="text" class="form-input rich-target" data-field-label="タブサブ見出し" value="${escapeAttr(tab.aboutSubtitle || '')}" oninput="updateTabField(${tabIndex}, 'aboutSubtitle', this.value)" placeholder="例: 日常やリアルの自己紹介">
+        <input type="text" class="form-input rich-target" data-field-label="枠 #1 サブ見出し" value="${escapeAttr(tab.aboutSubtitle || '')}" oninput="updateTabField(${tabIndex}, 'aboutSubtitle', this.value)" placeholder="例: 日常やリアルの自己紹介">
       </div>
 
-      <div class="items-editor-list" id="tab-items-list">
-        ${(tab.items || []).map((item, itemIdx) => {
-          const previewId = `item-rich-preview-${tabIndex}-${itemIdx}`;
-          const showPreview = hasRichTags(item.value);
-          return `
-            <div class="item-editor-row">
-              <div class="item-editor-header">
-                <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted);">項目 #${itemIdx + 1}</span>
-                <button type="button" class="btn-delete-link" onclick="deleteTabItem(${tabIndex}, ${itemIdx})">削除</button>
-              </div>
-              <div class="form-group">
-                <input type="text" class="form-input rich-target" data-field-label="項目 #${itemIdx + 1} の見出し" value="${escapeAttr(item.label)}" oninput="updateTabItem(${tabIndex}, ${itemIdx}, 'label', this.value)" placeholder="項目名（例: 最推し、趣味など）" style="font-weight: 700;">
-              </div>
-              <div class="form-group">
-                <textarea class="form-textarea rich-target" data-field-label="項目 #${itemIdx + 1} の内容" data-preview-id="${previewId}" rows="3" oninput="updateTabItem(${tabIndex}, ${itemIdx}, 'value', this.value)" placeholder="内容を入力（文字を選択して上のバーから一部分だけ色・フォント・表示ボタン隠し変更もできます）">${escapeHtml(item.value)}</textarea>
-                <div id="${previewId}" class="rich-live-preview ${showPreview ? 'has-content' : ''}">${showPreview ? `<div class="rich-live-preview-badge">👀 装飾プレビュー</div><div>${formatRichTextAdmin(item.value)}</div>` : ''}</div>
-              </div>
-              <div style="background: #fff1f2; border: 1px dashed #fda4af; border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px;">
-                <label style="display: flex; align-items: center; gap: 7px; font-size: 0.78rem; font-weight: 700; color: #be123c; cursor: pointer;">
-                  <input type="checkbox" style="width: 15px; height: 15px; accent-color: #f43f5e;" ${item.isSensitive ? 'checked' : ''} onchange="updateTabItemSensitive(${tabIndex}, ${itemIdx}, this.checked)">
-                  <span>🙈 この項目（#${itemIdx + 1}）を「表示する」ボタンを押すまで隠す</span>
-                </label>
-                <div id="item-sens-warn-wrap-${tabIndex}-${itemIdx}" style="display: ${item.isSensitive ? 'block' : 'none'};">
-                  <input type="text" class="form-input" style="font-size: 0.76rem; padding: 6px 8px; background: #fff;" value="${escapeAttr(item.sensitiveWarning || '')}" oninput="updateTabItem(${tabIndex}, ${itemIdx}, 'sensitiveWarning', this.value)" placeholder="ボタンの上に出すメッセージ（任意・空欄ならボタンのみ表示）">
-                </div>
-              </div>
-              <details class="box-style-details">
-                <summary>🎨 この項目枠（#${itemIdx + 1}）の文字色・フォント</summary>
-                <div class="box-style-grid">
-                  <div class="box-style-field">
-                    <label>この項目のフォント</label>
-                    <select class="form-select form-select-sm" onchange="updateTabItem(${tabIndex}, ${itemIdx}, 'font', this.value)">
-                      ${renderFontSelectOptions(item.font)}
-                    </select>
-                  </div>
-                  <div class="box-style-field">
-                    <label>項目名の文字色</label>
-                    <div class="mini-color-row">
-                      <input type="color" class="mini-color-swatch" value="${/^#[0-9a-f]{6}$/i.test(item.labelColor) ? item.labelColor : '#8b5cf6'}" oninput="updateTabItemColor(${tabIndex}, ${itemIdx}, 'labelColor', this.value, 'item-label-hex-${tabIndex}-${itemIdx}')">
-                      <input type="text" id="item-label-hex-${tabIndex}-${itemIdx}" class="form-input mini-color-hex" value="${escapeAttr(item.labelColor || '')}" placeholder="自動（未指定）" oninput="updateTabItem(${tabIndex}, ${itemIdx}, 'labelColor', this.value.trim())">
-                      <button type="button" class="mini-clear-btn" onclick="updateTabItemColor(${tabIndex}, ${itemIdx}, 'labelColor', '', 'item-label-hex-${tabIndex}-${itemIdx}')">自動</button>
-                    </div>
-                  </div>
-                  <div class="box-style-field">
-                    <label>内容の文字色</label>
-                    <div class="mini-color-row">
-                      <input type="color" class="mini-color-swatch" value="${/^#[0-9a-f]{6}$/i.test(item.valueColor) ? item.valueColor : '#1e293b'}" oninput="updateTabItemColor(${tabIndex}, ${itemIdx}, 'valueColor', this.value, 'item-val-hex-${tabIndex}-${itemIdx}')">
-                      <input type="text" id="item-val-hex-${tabIndex}-${itemIdx}" class="form-input mini-color-hex" value="${escapeAttr(item.valueColor || '')}" placeholder="自動（未指定）" oninput="updateTabItem(${tabIndex}, ${itemIdx}, 'valueColor', this.value.trim())">
-                      <button type="button" class="mini-clear-btn" onclick="updateTabItemColor(${tabIndex}, ${itemIdx}, 'valueColor', '', 'item-val-hex-${tabIndex}-${itemIdx}')">自動</button>
-                    </div>
-                  </div>
-                </div>
-              </details>
-            </div>
-          `;
-        }).join('')}
+      <div style="background: #fff1f2; border: 1.5px dashed #fda4af; border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px;">
+        <label style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; font-weight: 800; color: #be123c; cursor: pointer;">
+          <input type="checkbox" style="width: 16px; height: 16px; accent-color: #f43f5e;" ${tab.isSensitive ? 'checked' : ''} onchange="updateTabSensitive(${tabIndex}, this.checked)">
+          <span>🙈 この枠 #1 全体を「表示する」ボタンを押すまで隠す</span>
+        </label>
+        <div id="tab-sens-warn-wrap-${tabIndex}" style="display: ${tab.isSensitive ? 'block' : 'none'};">
+          <input type="text" class="form-input" style="font-size: 0.78rem; background: #fff;" value="${escapeAttr(tab.sensitiveWarning || '')}" oninput="updateTabField(${tabIndex}, 'sensitiveWarning', this.value)" placeholder="ボタンの上に出すメッセージ（任意・空欄ならボタンのみ表示）">
+        </div>
+      </div>
+
+      <div class="items-editor-list">
+        ${renderAdminItemsEditorList(tab.items || [], tabIndex, -1)}
       </div>
     </div>
+
+    <!-- Additional Vertically Stacked Blocks (#2, #3...) inside the same Tab -->
+    ${extraBlocks.map((block, blkIdx) => `
+      <div class="tab-sub-section" style="border: 2px solid #ddd6fe; border-radius: 12px; padding: 12px; background: #faf5ff;">
+        <div class="card-header-row">
+          <strong style="font-size: 0.92rem; color: #7c3aed;">📦 縦に連ねる枠 #${blkIdx + 2}（同じタブ内の${blkIdx + 2}つ目のカード枠）</strong>
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <button type="button" class="btn btn-subtle-primary btn-sm" onclick="addBlockOrTabItem(${tabIndex}, ${blkIdx})">＋ 項目追加</button>
+            <button type="button" class="btn-delete-link" onclick="deleteTabBlock(${tabIndex}, ${blkIdx})">この枠を削除</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" style="font-size: 0.78rem;">上の小タグ文字（任意・空欄なら非表示）</label>
+          <input type="text" class="form-input rich-target" data-field-label="枠 #${blkIdx + 2} 小タグ" value="${escapeAttr(block.tag || '')}" oninput="updateTabBlockField(${tabIndex}, ${blkIdx}, 'tag', this.value)" placeholder="例: 推し活 / サブ情報 など（空欄でもOK）">
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="font-size: 0.78rem;">見出しタイトル（任意・空欄なら非表示）</label>
+          <input type="text" class="form-input rich-target" data-field-label="枠 #${blkIdx + 2} 見出しタイトル" value="${escapeAttr(block.aboutTitle || '')}" oninput="updateTabBlockField(${tabIndex}, ${blkIdx}, 'aboutTitle', this.value)" placeholder="例: 優勝話 / 語りたいこと など">
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="font-size: 0.78rem;">サブ見出し（任意）</label>
+          <input type="text" class="form-input rich-target" data-field-label="枠 #${blkIdx + 2} サブ見出し" value="${escapeAttr(block.aboutSubtitle || '')}" oninput="updateTabBlockField(${tabIndex}, ${blkIdx}, 'aboutSubtitle', this.value)" placeholder="サブ見出し（空欄でもOK）">
+        </div>
+
+        <div style="background: #fff1f2; border: 1.5px dashed #fda4af; border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px;">
+          <label style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; font-weight: 800; color: #be123c; cursor: pointer;">
+            <input type="checkbox" style="width: 16px; height: 16px; accent-color: #f43f5e;" ${block.isSensitive ? 'checked' : ''} onchange="updateTabBlockSensitive(${tabIndex}, ${blkIdx}, this.checked)">
+            <span>🙈 この枠 #${blkIdx + 2} 全体を「表示する」ボタンを押すまで隠す</span>
+          </label>
+          <div id="blk-sens-warn-wrap-${tabIndex}-${blkIdx}" style="display: ${block.isSensitive ? 'block' : 'none'};">
+            <input type="text" class="form-input" style="font-size: 0.78rem; background: #fff;" value="${escapeAttr(block.sensitiveWarning || '')}" oninput="updateTabBlockField(${tabIndex}, ${blkIdx}, 'sensitiveWarning', this.value)" placeholder="ボタンの上に出すメッセージ（任意・空欄ならボタンのみ表示）">
+          </div>
+        </div>
+
+        <div class="items-editor-list">
+          ${renderAdminItemsEditorList(block.items || [], tabIndex, blkIdx)}
+        </div>
+      </div>
+    `).join('')}
+
+    <!-- Button to Stack Another Card Block Vertically inside this Tab -->
+    <button type="button" class="btn btn-secondary" style="width: 100%; border: 2px dashed var(--primary); color: var(--primary); background: #fdf4ff; font-weight: 800;" onclick="addTabBlock(${tabIndex})">
+      ➕ このタブの下にさらに枠（カード）を縦に追加する
+    </button>
   `;
 }
 
@@ -1105,6 +1208,20 @@ window.selectAdminTab = function(tabId) {
   renderAdminTabs();
 };
 
+function getTargetItemsArray(tabIndex, blockIndex) {
+  const tab = tabsState[tabIndex];
+  if (!tab) return null;
+  if (blockIndex === -1) {
+    if (!tab.items) tab.items = [];
+    return tab.items;
+  }
+  if (tab.blocks && tab.blocks[blockIndex]) {
+    if (!tab.blocks[blockIndex].items) tab.blocks[blockIndex].items = [];
+    return tab.blocks[blockIndex].items;
+  }
+  return null;
+}
+
 window.updateTabField = function(tabIndex, field, value) {
   if (tabsState[tabIndex]) {
     tabsState[tabIndex][field] = value;
@@ -1124,10 +1241,120 @@ window.updateTabSensitive = function(tabIndex, checked) {
   }
 };
 
-window.updateTabItemSensitive = function(tabIndex, itemIdx, checked) {
-  if (tabsState[tabIndex] && tabsState[tabIndex].items && tabsState[tabIndex].items[itemIdx]) {
-    tabsState[tabIndex].items[itemIdx].isSensitive = Boolean(checked);
-    const wrap = document.getElementById(`item-sens-warn-wrap-${tabIndex}-${itemIdx}`);
+window.addTabBlock = function(tabIndex) {
+  if (!tabsState[tabIndex]) return;
+  if (!Array.isArray(tabsState[tabIndex].blocks)) tabsState[tabIndex].blocks = [];
+  tabsState[tabIndex].blocks.push({
+    tag: '',
+    aboutTitle: '',
+    aboutSubtitle: '',
+    font: '',
+    titleColor: '',
+    textColor: '',
+    isSensitive: false,
+    sensitiveWarning: '',
+    items: [
+      { label: '項目名', value: '', font: '', labelColor: '', valueColor: '', isSensitive: false, sensitiveWarning: '', subItems: [] }
+    ]
+  });
+  renderAdminTabs();
+  showToast('タブ内に縦に連なる新しい枠を追加しました！', 'success');
+};
+
+window.deleteTabBlock = function(tabIndex, blockIndex) {
+  if (!tabsState[tabIndex] || !Array.isArray(tabsState[tabIndex].blocks)) return;
+  if (confirm(`枠 #${blockIndex + 2} を削除しますか？`)) {
+    tabsState[tabIndex].blocks.splice(blockIndex, 1);
+    renderAdminTabs();
+    showToast('枠を削除しました', 'info');
+  }
+};
+
+window.updateTabBlockField = function(tabIndex, blockIndex, field, value) {
+  if (tabsState[tabIndex] && tabsState[tabIndex].blocks && tabsState[tabIndex].blocks[blockIndex]) {
+    tabsState[tabIndex].blocks[blockIndex][field] = value;
+  }
+};
+
+window.updateTabBlockSensitive = function(tabIndex, blockIndex, checked) {
+  if (tabsState[tabIndex] && tabsState[tabIndex].blocks && tabsState[tabIndex].blocks[blockIndex]) {
+    tabsState[tabIndex].blocks[blockIndex].isSensitive = Boolean(checked);
+    const wrap = document.getElementById(`blk-sens-warn-wrap-${tabIndex}-${blockIndex}`);
+    if (wrap) wrap.style.display = checked ? 'block' : 'none';
+  }
+};
+
+window.addBlockOrTabItem = function(tabIndex, blockIndex) {
+  const arr = getTargetItemsArray(tabIndex, blockIndex);
+  if (arr) {
+    arr.push({ label: '新しい項目', value: '', font: '', labelColor: '', valueColor: '', isSensitive: false, sensitiveWarning: '', subItems: [] });
+    renderAdminTabs();
+  }
+};
+
+window.deleteBlockOrTabItem = function(tabIndex, blockIndex, itemIdx) {
+  const arr = getTargetItemsArray(tabIndex, blockIndex);
+  if (arr) {
+    arr.splice(itemIdx, 1);
+    renderAdminTabs();
+  }
+};
+
+window.updateBlockOrTabItem = function(tabIndex, blockIndex, itemIdx, field, value) {
+  const arr = getTargetItemsArray(tabIndex, blockIndex);
+  if (arr && arr[itemIdx]) {
+    arr[itemIdx][field] = value;
+  }
+};
+
+window.updateBlockOrTabItemColor = function(tabIndex, blockIndex, itemIdx, field, value, hexInputId) {
+  const arr = getTargetItemsArray(tabIndex, blockIndex);
+  if (arr && arr[itemIdx]) {
+    arr[itemIdx][field] = value;
+    const hexEl = document.getElementById(hexInputId);
+    if (hexEl) hexEl.value = value;
+  }
+};
+
+window.updateBlockOrTabItemSensitive = function(tabIndex, blockIndex, itemIdx, checked) {
+  const arr = getTargetItemsArray(tabIndex, blockIndex);
+  if (arr && arr[itemIdx]) {
+    arr[itemIdx].isSensitive = Boolean(checked);
+    const wrap = document.getElementById(`item-sens-warn-wrap-${tabIndex}-${blockIndex}-${itemIdx}`);
+    if (wrap) wrap.style.display = checked ? 'block' : 'none';
+  }
+};
+
+window.addSubItem = function(tabIndex, blockIndex, itemIdx) {
+  const arr = getTargetItemsArray(tabIndex, blockIndex);
+  if (arr && arr[itemIdx]) {
+    if (!Array.isArray(arr[itemIdx].subItems)) arr[itemIdx].subItems = [];
+    arr[itemIdx].subItems.push({ label: '', value: '', isSensitive: false, sensitiveWarning: '' });
+    renderAdminTabs();
+    showToast('項目の中に小枠を追加しました！', 'success');
+  }
+};
+
+window.deleteSubItem = function(tabIndex, blockIndex, itemIdx, subIdx) {
+  const arr = getTargetItemsArray(tabIndex, blockIndex);
+  if (arr && arr[itemIdx] && Array.isArray(arr[itemIdx].subItems)) {
+    arr[itemIdx].subItems.splice(subIdx, 1);
+    renderAdminTabs();
+  }
+};
+
+window.updateSubItem = function(tabIndex, blockIndex, itemIdx, subIdx, field, value) {
+  const arr = getTargetItemsArray(tabIndex, blockIndex);
+  if (arr && arr[itemIdx] && Array.isArray(arr[itemIdx].subItems) && arr[itemIdx].subItems[subIdx]) {
+    arr[itemIdx].subItems[subIdx][field] = value;
+  }
+};
+
+window.updateSubItemSensitive = function(tabIndex, blockIndex, itemIdx, subIdx, checked) {
+  const arr = getTargetItemsArray(tabIndex, blockIndex);
+  if (arr && arr[itemIdx] && Array.isArray(arr[itemIdx].subItems) && arr[itemIdx].subItems[subIdx]) {
+    arr[itemIdx].subItems[subIdx].isSensitive = Boolean(checked);
+    const wrap = document.getElementById(`sub-sens-warn-${tabIndex}-${blockIndex}-${itemIdx}-${subIdx}`);
     if (wrap) wrap.style.display = checked ? 'block' : 'none';
   }
 };
@@ -1156,35 +1383,6 @@ window.deleteTab = function(tabIndex) {
     }
     renderAdminTabs();
     showToast('タブを削除しました', 'info');
-  }
-};
-
-window.addTabItem = function(tabIndex) {
-  if (tabsState[tabIndex]) {
-    if (!tabsState[tabIndex].items) tabsState[tabIndex].items = [];
-    tabsState[tabIndex].items.push({ label: '新しい項目', value: '', font: '', labelColor: '', valueColor: '', isSensitive: false, sensitiveWarning: '' });
-    renderAdminTabs();
-  }
-};
-
-window.deleteTabItem = function(tabIndex, itemIdx) {
-  if (tabsState[tabIndex] && tabsState[tabIndex].items) {
-    tabsState[tabIndex].items.splice(itemIdx, 1);
-    renderAdminTabs();
-  }
-};
-
-window.updateTabItem = function(tabIndex, itemIdx, field, value) {
-  if (tabsState[tabIndex] && tabsState[tabIndex].items && tabsState[tabIndex].items[itemIdx]) {
-    tabsState[tabIndex].items[itemIdx][field] = value;
-  }
-};
-
-window.updateTabItemColor = function(tabIndex, itemIdx, field, value, hexInputId) {
-  if (tabsState[tabIndex] && tabsState[tabIndex].items && tabsState[tabIndex].items[itemIdx]) {
-    tabsState[tabIndex].items[itemIdx][field] = value;
-    const hexEl = document.getElementById(hexInputId);
-    if (hexEl) hexEl.value = value;
   }
 };
 
