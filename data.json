@@ -42,7 +42,8 @@
           "labelColor": "",
           "valueColor": "",
           "isSensitive": false,
-          "sensitiveWarning": ""
+          "sensitiveWarning": "",
+          "subItems": []
         },
         {
           "label": "なう所属。",
@@ -51,7 +52,8 @@
           "labelColor": "",
           "valueColor": "",
           "isSensitive": false,
-          "sensitiveWarning": ""
+          "sensitiveWarning": "",
+          "subItems": []
         },
         {
           "label": "趣味",
@@ -60,9 +62,11 @@
           "labelColor": "",
           "valueColor": "",
           "isSensitive": false,
-          "sensitiveWarning": ""
+          "sensitiveWarning": "",
+          "subItems": []
         }
-      ]
+      ],
+      "blocks": []
     },
     {
       "id": "oshi",
@@ -82,9 +86,11 @@
           "labelColor": "",
           "valueColor": "",
           "isSensitive": false,
-          "sensitiveWarning": ""
+          "sensitiveWarning": "",
+          "subItems": []
         }
-      ]
+      ],
+      "blocks": []
     },
     {
       "id": "tab_1792206528579",
@@ -104,7 +110,8 @@
           "labelColor": "",
           "valueColor": "",
           "isSensitive": false,
-          "sensitiveWarning": ""
+          "sensitiveWarning": "",
+          "subItems": []
         },
         {
           "label": "参戦歴",
@@ -113,7 +120,8 @@
           "labelColor": "",
           "valueColor": "",
           "isSensitive": false,
-          "sensitiveWarning": ""
+          "sensitiveWarning": "",
+          "subItems": []
         },
         {
           "label": "参戦予定",
@@ -122,7 +130,8 @@
           "labelColor": "",
           "valueColor": "",
           "isSensitive": false,
-          "sensitiveWarning": ""
+          "sensitiveWarning": "",
+          "subItems": []
         },
         {
           "label": "優勝話",
@@ -131,7 +140,32 @@
           "labelColor": "",
           "valueColor": "",
           "isSensitive": true,
-          "sensitiveWarning": "優勝話を含みます！！！気をつけて開いて！！！"
+          "sensitiveWarning": "優勝話を含みます！！！気をつけて開いて！！！",
+          "subItems": []
+        }
+      ],
+      "blocks": [
+        {
+          "tag": "",
+          "aboutTitle": "優勝話&ハイタ会レポ！",
+          "aboutSubtitle": "表示するを選ぶと、各項目名だけ表示されるよーん。",
+          "font": "",
+          "titleColor": "",
+          "textColor": "",
+          "isSensitive": false,
+          "sensitiveWarning": "",
+          "items": [
+            {
+              "label": "項目名",
+              "value": "",
+              "font": "",
+              "labelColor": "",
+              "valueColor": "",
+              "isSensitive": false,
+              "sensitiveWarning": "",
+              "subItems": []
+            }
+          ]
         }
       ]
     }
