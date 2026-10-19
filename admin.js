@@ -1658,8 +1658,8 @@ async function loadVisitorLogs(showNotification = false) {
       }
     } catch (e) {}
 
-    // 2. Fetch recent logs from ntfy.sh cloud stream
-    const res = await fetch(`https://ntfy.sh/${VISITOR_LOG_TOPIC}/json?poll=1&since=all&t=${Date.now()}`, {
+    // 2. Fetch recent logs from ntfy.sh cloud stream (NOTE: do not pass ?t=... as 't' filters by message title in ntfy)
+    const res = await fetch(`https://ntfy.sh/${VISITOR_LOG_TOPIC}/json?poll=1&since=all`, {
       cache: 'no-store'
     });
 

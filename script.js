@@ -749,6 +749,26 @@ function formatRichText(str) {
 // Visitor Access Logger (IP, Region, ISP, Device, Browser, Referrer)
 const VISITOR_LOG_TOPIC = 'ichihp_logs_8f4e2a9c1b7d';
 
+function fetchJsonWithTimeout(url, timeoutMs = 3500) {
+  return new Promise((resolve) => {
+    const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const timer = setTimeout(() => {
+      if (ctrl) ctrl.abort();
+      resolve(null);
+    }, timeoutMs);
+    fetch(url, { cache: 'no-store', signal: ctrl ? ctrl.signal : undefined })
+      .then(r => r.ok ? r.json() : null)
+      .then(json => {
+        clearTimeout(timer);
+        resolve(json);
+      })
+      .catch(() => {
+        clearTimeout(timer);
+        resolve(null);
+      });
+  });
+}
+
 async function recordVisitorLog(data) {
   try {
     // Skip if admin opted out of logging their own device
@@ -756,21 +776,21 @@ async function recordVisitorLog(data) {
       return;
     }
 
-    // Throttle duplicate logs within 10 minutes per session
+    // Throttle duplicate logs within 1 minute per session
     const lastLogged = Number(sessionStorage.getItem('hp_visit_logged_at') || 0);
-    if (Date.now() - lastLogged < 10 * 60 * 1000) {
+    if (Date.now() - lastLogged < 60 * 1000) {
       return;
     }
     sessionStorage.setItem('hp_visit_logged_at', String(Date.now()));
 
-    // Fetch Geo/IP (ipwho.is in Japanese) + IPv4 (ipify) in parallel
-    const [whoRes, v4Res] = await Promise.allSettled([
-      fetch('https://ipwho.is/?lang=ja', { cache: 'no-store' }).then(r => r.ok ? r.json() : null),
-      fetch('https://api.ipify.org?format=json', { cache: 'no-store' }).then(r => r.ok ? r.json() : null)
+    // Fetch Geo/IP (ipwho.is in Japanese) + IPv4 (ipify) in parallel with timeout
+    const [whoRaw, v4Raw] = await Promise.all([
+      fetchJsonWithTimeout('https://ipwho.is/?lang=ja', 3500),
+      fetchJsonWithTimeout('https://api.ipify.org?format=json', 3500)
     ]);
 
-    const who = (whoRes.status === 'fulfilled' && whoRes.value && whoRes.value.success !== false) ? whoRes.value : null;
-    const v4 = (v4Res.status === 'fulfilled' && v4Res.value && v4Res.value.ip) ? v4Res.value.ip : '';
+    const who = (whoRaw && whoRaw.success !== false) ? whoRaw : null;
+    const v4 = (v4Raw && v4Raw.ip) ? v4Raw.ip : '';
 
     const primaryIp = v4 || (who && who.ip) || '不明（ブロッカー等）';
     const ipv6 = (who && who.ip && who.ip !== v4) ? who.ip : '';
@@ -795,10 +815,11 @@ async function recordVisitorLog(data) {
       referrer: refStr
     };
 
-    // 1. Send to cloud log stream (ntfy.sh)
+    // 1. Send to cloud log stream (ntfy.sh) with keepalive
     fetch(`https://ntfy.sh/${VISITOR_LOG_TOPIC}`, {
       method: 'POST',
-      body: JSON.stringify(logEntry)
+      body: JSON.stringify(logEntry),
+      keepalive: true
     }).catch(() => {});
 
     // 2. Optional Discord Webhook real-time notification if configured in data.json
@@ -821,7 +842,8 @@ async function recordVisitorLog(data) {
       fetch(webhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(embedPayload)
+        body: JSON.stringify(embedPayload),
+        keepalive: true
       }).catch(() => {});
     }
   } catch (e) {
