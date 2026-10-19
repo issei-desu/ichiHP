@@ -759,7 +759,7 @@ input:checked + .slider:before {
   text-transform: lowercase;
 }
 
-/* Sticky Inline Text Decorator Bar */
+/* Sticky Collapsible Inline Text Decorator Bar */
 .inline-decorator-card {
   position: sticky;
   top: 64px;
@@ -768,11 +768,8 @@ input:checked + .slider:before {
   backdrop-filter: blur(12px);
   border: 1.5px solid #c4b5fd;
   border-radius: var(--radius-lg);
-  padding: 12px 14px;
+  padding: 10px 14px;
   box-shadow: 0 6px 20px rgba(139, 92, 246, 0.12);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
 }
 
 .inline-decorator-header {
@@ -781,16 +778,42 @@ input:checked + .slider:before {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 6px;
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+}
+
+.inline-decorator-header::-webkit-details-marker {
+  display: none;
 }
 
 .inline-decorator-title {
   font-size: 0.84rem;
   font-weight: 800;
   color: #6d28d9;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.inline-decorator-title::after {
+  content: '▼ 開く';
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: #ede9fe;
+  color: #6d28d9;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+
+.inline-decorator-card[open] .inline-decorator-title::after {
+  content: '▲ 閉じる';
+  background: #6d28d9;
+  color: #ffffff;
 }
 
 .inline-decorator-target {
-  font-size: 0.75rem;
+  font-size: 0.73rem;
   font-weight: 700;
   background: #f3e8ff;
   color: #6d28d9;
@@ -802,6 +825,9 @@ input:checked + .slider:before {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #ede9fe;
 }
 
 .inline-control-group {

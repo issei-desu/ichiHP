@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>HP管理画面 - Admin Dashboard</title>
-  <link rel="stylesheet" href="style.css?v=20261019_3">
-  <link rel="stylesheet" href="admin.css?v=20261019_3">
+  <link rel="stylesheet" href="style.css?v=20261019_4">
+  <link rel="stylesheet" href="admin.css?v=20261019_4">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Hachi+Maru+Pop&family=M+PLUS+Rounded+1c:wght@400;500;700;800&family=Mochiy+Pop+One&family=Noto+Sans+JP:wght@400;500;700&family=Outfit:wght@400;600;700&family=Shippori+Mincho:wght@500;700&family=Yomogi&display=swap" rel="stylesheet">
@@ -75,12 +75,12 @@
         </div>
       </div>
 
-      <!-- Sticky Inline Text Decorator Bar (Works on any focused input/textarea) -->
-      <div class="inline-decorator-card" id="inline-decorator-bar">
-        <div class="inline-decorator-header">
-          <span class="inline-decorator-title">🖍️ 枠の中の文字（選択した部分）の色・フォントを変える</span>
-          <span class="inline-decorator-target" id="inline-decorator-target-label">入力欄の文字を選択してボタンを押してください</span>
-        </div>
+      <!-- Sticky Collapsible Inline Text Decorator Bar (Works on any focused input/textarea) -->
+      <details class="inline-decorator-card" id="inline-decorator-bar">
+        <summary class="inline-decorator-header">
+          <span class="inline-decorator-title">🖍️ 選択部分の文字装飾ツール（タップで開閉）</span>
+          <span class="inline-decorator-target" id="inline-decorator-target-label">文字を選択して装飾</span>
+        </summary>
         <div class="inline-decorator-controls">
           <!-- Quick Color Swatches + Custom Color -->
           <div class="inline-control-group">
@@ -122,7 +122,7 @@
             <button type="button" class="inline-action-btn danger" onclick="clearInlineTagsFromTarget()">装飾を解除</button>
           </div>
         </div>
-      </div>
+      </details>
 
       <!-- Main Edit Form -->
       <form id="admin-form">
