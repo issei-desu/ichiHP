@@ -61,8 +61,8 @@
       "aboutTitle": "生息地。",
       "aboutSubtitle": "",
       "font": "",
-      "titleColor": "",
-      "textColor": "",
+      "titleColor": "#000000",
+      "textColor": "#000000",
       "items": [
         {
           "label": "①Twitter",
