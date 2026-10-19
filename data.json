@@ -184,7 +184,7 @@
         },
         {
           "tag": "",
-          "aboutTitle": "",
+          "aboutTitle": "ライブ中ファンサ！",
           "aboutSubtitle": "",
           "font": "",
           "titleColor": "",
@@ -193,12 +193,12 @@
           "sensitiveWarning": "",
           "items": [
             {
-              "label": "項目名",
-              "value": "",
+              "label": "志麻ワン(star!)",
+              "value": "最後のファンサタイム中にて。\n[bg=#f3e8ff]💜男の子もありがとう！[/bg]\n俺:(自分のことだと思ってなかった)\n[bg=#f3e8ff]💜ありがとう！！(再度)[/bg]\n俺:ありがとう！！！",
               "font": "",
               "labelColor": "",
               "valueColor": "",
-              "isSensitive": false,
+              "isSensitive": true,
               "sensitiveWarning": "",
               "subItems": []
             }
