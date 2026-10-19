@@ -137,7 +137,7 @@
       "blocks": [
         {
           "tag": "",
-          "aboutTitle": "優勝話&ハイタ会レポ！",
+          "aboutTitle": "ハイタ会レポ！",
           "aboutSubtitle": "表示するを選ぶと、各項目名だけ表示されるよーん。",
           "font": "",
           "titleColor": "",
@@ -146,8 +146,8 @@
           "sensitiveWarning": "",
           "items": [
             {
-              "label": "ハイタ会レポ",
-              "value": "志麻ワンとセンワンのハイタレポ。",
+              "label": "志麻ワンとセンワンのハイタ会レポ",
+              "value": "",
               "font": "",
               "labelColor": "",
               "valueColor": "",
