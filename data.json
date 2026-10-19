@@ -79,8 +79,8 @@
       "aboutTitle": "",
       "aboutSubtitle": "",
       "font": "",
-      "titleColor": "",
-      "textColor": "",
+      "titleColor": "#000000",
+      "textColor": "#000000",
       "items": [
         {
           "label": "推し！！！！！！！",
