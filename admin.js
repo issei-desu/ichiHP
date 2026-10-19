@@ -11,10 +11,29 @@ let tabsState = [];
 let linksState = [];
 let currentAdminTabId = null;
 
+const THEME_PRESETS = [
+  { id: 'pink', name: '🌸 ピンク（初期）', primary: '#f43f5e', secondary: '#8b5cf6', bg: '#fff5f7' },
+  { id: 'purple', name: '💜 パープル（紫）', primary: '#9333ea', secondary: '#ec4899', bg: '#faf5ff' },
+  { id: 'yellow', name: '💛 イエロー（黄）', primary: '#eab308', secondary: '#f97316', bg: '#fefce8' },
+  { id: 'green', name: '💚 グリーン（緑）', primary: '#10b981', secondary: '#06b6d4', bg: '#ecfdf5' },
+  { id: 'red', name: '❤️ レッド（赤）', primary: '#ef4444', secondary: '#f43f5e', bg: '#fef2f2' },
+  { id: 'blue', name: '💙 ブルー（青）', primary: '#3b82f6', secondary: '#6366f1', bg: '#eff6ff' },
+  { id: 'white', name: '🤍 ホワイト / モノトーン', primary: '#475569', secondary: '#94a3b8', bg: '#f8fafc' },
+  { id: 'dark', name: '🖤 ダーク（黒背景）', primary: '#c084fc', secondary: '#f472b6', bg: '#0f172a' }
+];
+
+let themeState = {
+  preset: 'pink',
+  primary: '#f43f5e',
+  secondary: '#8b5cf6',
+  bg: '#fff5f7'
+};
+
 let currentAvatarUrl = '';
 let newAvatarBase64 = null;
 
 document.addEventListener('DOMContentLoaded', () => {
+  renderThemePresets();
   setupEventListeners();
   checkAuthAndInitialize();
 });
@@ -172,6 +191,37 @@ function setupEventListeners() {
     showToast('新しいリンクを追加しました', 'success');
   });
 
+  // Color Picker & Hex Input Sync
+  const colorFields = [
+    { key: 'primary', pickerId: 'theme-primary-input', hexId: 'theme-primary-hex' },
+    { key: 'secondary', pickerId: 'theme-secondary-input', hexId: 'theme-secondary-hex' },
+    { key: 'bg', pickerId: 'theme-bg-input', hexId: 'theme-bg-hex' }
+  ];
+
+  colorFields.forEach(({ key, pickerId, hexId }) => {
+    const picker = document.getElementById(pickerId);
+    const hexInput = document.getElementById(hexId);
+    if (picker && hexInput) {
+      picker.addEventListener('input', (e) => {
+        const val = e.target.value.toLowerCase();
+        hexInput.value = val;
+        themeState[key] = val;
+        themeState.preset = 'custom';
+        renderThemePresets();
+      });
+
+      hexInput.addEventListener('input', (e) => {
+        const val = e.target.value.trim().toLowerCase();
+        if (/^#[0-9a-f]{6}$/i.test(val)) {
+          picker.value = val;
+          themeState[key] = val;
+          themeState.preset = 'custom';
+          renderThemePresets();
+        }
+      });
+    }
+  });
+
   // Form submit
   document.getElementById('admin-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -203,6 +253,57 @@ function setupEventListeners() {
     }
   });
 }
+
+function renderThemePresets() {
+  const grid = document.getElementById('theme-presets-grid');
+  if (!grid) return;
+
+  grid.innerHTML = THEME_PRESETS.map(p => {
+    const isActive = themeState.preset === p.id || (
+      themeState.primary.toLowerCase() === p.primary.toLowerCase() &&
+      themeState.secondary.toLowerCase() === p.secondary.toLowerCase() &&
+      themeState.bg.toLowerCase() === p.bg.toLowerCase()
+    );
+    return `
+      <button type="button" class="theme-preset-btn ${isActive ? 'active' : ''}" onclick="selectThemePreset('${p.id}')">
+        <span class="preset-swatch-dots">
+          <span class="preset-dot" style="background: ${p.primary};"></span>
+          <span class="preset-dot" style="background: ${p.secondary};"></span>
+          <span class="preset-dot" style="background: ${p.bg};"></span>
+        </span>
+        <span>${escapeHtml(p.name)}</span>
+      </button>
+    `;
+  }).join('');
+}
+
+function syncThemeInputs() {
+  const fields = [
+    { key: 'primary', pickerId: 'theme-primary-input', hexId: 'theme-primary-hex' },
+    { key: 'secondary', pickerId: 'theme-secondary-input', hexId: 'theme-secondary-hex' },
+    { key: 'bg', pickerId: 'theme-bg-input', hexId: 'theme-bg-hex' }
+  ];
+  fields.forEach(({ key, pickerId, hexId }) => {
+    const picker = document.getElementById(pickerId);
+    const hexInput = document.getElementById(hexId);
+    if (picker && themeState[key]) picker.value = themeState[key];
+    if (hexInput && themeState[key]) hexInput.value = themeState[key];
+  });
+}
+
+window.selectThemePreset = function(presetId) {
+  const found = THEME_PRESETS.find(p => p.id === presetId);
+  if (!found) return;
+  themeState = {
+    preset: found.id,
+    primary: found.primary,
+    secondary: found.secondary,
+    bg: found.bg
+  };
+  syncThemeInputs();
+  renderThemePresets();
+  showToast(`テーマ「${found.name}」を選択しました`, 'info');
+};
 
 function setAvatarPreview(src) {
   const img = document.getElementById('admin-avatar-preview');
@@ -317,7 +418,26 @@ async function loadData() {
 function populateForm(data) {
   if (!data) return;
 
-  const { site, profile, twitter, tabs } = data;
+  const { site, theme, profile, twitter, tabs } = data;
+
+  // Theme
+  if (theme && typeof theme === 'object') {
+    themeState = {
+      preset: theme.preset || 'custom',
+      primary: /^#[0-9a-f]{6}$/i.test(theme.primary) ? theme.primary : '#f43f5e',
+      secondary: /^#[0-9a-f]{6}$/i.test(theme.secondary) ? theme.secondary : '#8b5cf6',
+      bg: /^#[0-9a-f]{6}$/i.test(theme.bg) ? theme.bg : '#fff5f7'
+    };
+  } else {
+    themeState = {
+      preset: 'pink',
+      primary: '#f43f5e',
+      secondary: '#8b5cf6',
+      bg: '#fff5f7'
+    };
+  }
+  syncThemeInputs();
+  renderThemePresets();
 
   // Site Meta
   siteState = site || {};
@@ -564,10 +684,20 @@ function buildDataJson(avatarUrl) {
   const username = document.getElementById('twitter-username').value.trim();
   const name = document.getElementById('profile-name').value.trim();
 
+  const primaryHex = document.getElementById('theme-primary-hex').value.trim();
+  const secondaryHex = document.getElementById('theme-secondary-hex').value.trim();
+  const bgHex = document.getElementById('theme-bg-hex').value.trim();
+
   return {
     site: {
       title: document.getElementById('site-title-input').value.trim() || `${name}のホームページ`,
       footerText: document.getElementById('footer-text-input').value.trim() || `© 2026 ${name}. All rights reserved.`
+    },
+    theme: {
+      preset: themeState.preset || 'pink',
+      primary: /^#[0-9a-f]{6}$/i.test(primaryHex) ? primaryHex : themeState.primary,
+      secondary: /^#[0-9a-f]{6}$/i.test(secondaryHex) ? secondaryHex : themeState.secondary,
+      bg: /^#[0-9a-f]{6}$/i.test(bgHex) ? bgHex : themeState.bg
     },
     profile: {
       name: name,

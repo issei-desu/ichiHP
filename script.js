@@ -69,7 +69,12 @@ async function loadPageData() {
 function applyData(data) {
   if (!data) return;
 
-  const { site, profile, twitter, tabs } = data;
+  const { site, profile, twitter, tabs, theme } = data;
+
+  // Apply Color Theme
+  if (theme) {
+    applyTheme(theme);
+  }
 
   // Site Title / Footer texts
   if (site) {
@@ -292,6 +297,97 @@ function getIconSvg(type) {
     default:
       return '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>';
   }
+}
+
+function applyTheme(theme) {
+  const root = document.documentElement;
+  const primary = theme.primary || '#f43f5e';
+  const secondary = theme.secondary || '#8b5cf6';
+  const bg = theme.bg || '#fff5f7';
+
+  const pRgb = hexToRgb(primary) || { r: 244, g: 63, b: 94 };
+  const sRgb = hexToRgb(secondary) || { r: 139, g: 92, b: 246 };
+  const bgRgb = hexToRgb(bg) || { r: 255, g: 245, b: 247 };
+
+  const luminance = (0.299 * bgRgb.r + 0.587 * bgRgb.g + 0.114 * bgRgb.b) / 255;
+  const isDark = luminance < 0.45;
+
+  root.style.setProperty('--primary', primary);
+  root.style.setProperty('--primary-hover', mixHex(primary, '#000000', 0.12));
+  root.style.setProperty('--primary-glow', `rgba(${pRgb.r}, ${pRgb.g}, ${pRgb.b}, 0.25)`);
+  root.style.setProperty('--primary-gradient-end', mixHex(primary, secondary, 0.35));
+  root.style.setProperty('--secondary', secondary);
+  root.style.setProperty('--avatar-ring-gradient', `linear-gradient(135deg, ${primary}, ${secondary}, ${mixHex(primary, '#ffffff', 0.25)})`);
+  root.style.setProperty('--shadow-lg', `0 12px 32px rgba(${pRgb.r}, ${pRgb.g}, ${pRgb.b}, ${isDark ? 0.28 : 0.15})`);
+
+  if (isDark) {
+    const cardBg = mixHex(bg, '#ffffff', 0.08);
+    const cardSubtle = mixHex(bg, '#ffffff', 0.04);
+    const midBg = mixHex(bg, primary, 0.12);
+    root.style.setProperty('--bg-base', bg);
+    root.style.setProperty('--bg-gradient', `linear-gradient(180deg, ${bg} 0%, ${midBg} 50%, ${bg} 100%)`);
+    root.style.setProperty('--bg-card', cardBg);
+    root.style.setProperty('--bg-card-subtle', cardSubtle);
+    root.style.setProperty('--border-color', 'rgba(255, 255, 255, 0.12)');
+    root.style.setProperty('--item-divider', 'rgba(255, 255, 255, 0.08)');
+    root.style.setProperty('--text-main', '#f8fafc');
+    root.style.setProperty('--text-muted', '#cbd5e1');
+    root.style.setProperty('--text-light', '#64748b');
+    root.style.setProperty('--primary-light', `rgba(${pRgb.r}, ${pRgb.g}, ${pRgb.b}, 0.2)`);
+    root.style.setProperty('--secondary-light', `rgba(${sRgb.r}, ${sRgb.g}, ${sRgb.b}, 0.2)`);
+    root.style.setProperty('--blob-1', `rgba(${pRgb.r}, ${pRgb.g}, ${pRgb.b}, 0.28)`);
+    root.style.setProperty('--blob-2', `rgba(${sRgb.r}, ${sRgb.g}, ${sRgb.b}, 0.28)`);
+    root.style.setProperty('--tabs-nav-bg', 'rgba(255, 255, 255, 0.08)');
+    root.style.setProperty('--tabs-nav-border', 'rgba(255, 255, 255, 0.14)');
+  } else {
+    const midBg = mixHex(bg, '#ffffff', 0.35);
+    const endBg = mixHex(bg, '#f8fafc', 0.75);
+    root.style.setProperty('--bg-base', endBg);
+    root.style.setProperty('--bg-gradient', `linear-gradient(180deg, ${bg} 0%, ${midBg} 40%, ${endBg} 100%)`);
+    root.style.setProperty('--bg-card', '#ffffff');
+    root.style.setProperty('--bg-card-subtle', '#f9fafb');
+    root.style.setProperty('--border-color', 'rgba(226, 232, 240, 0.85)');
+    root.style.setProperty('--item-divider', '#f1f5f9');
+    root.style.setProperty('--text-main', '#1e293b');
+    root.style.setProperty('--text-muted', '#64748b');
+    root.style.setProperty('--text-light', '#94a3b8');
+    root.style.setProperty('--primary-light', mixHex(primary, '#ffffff', 0.9));
+    root.style.setProperty('--secondary-light', mixHex(secondary, '#ffffff', 0.9));
+    root.style.setProperty('--blob-1', mixHex(primary, '#ffffff', 0.72));
+    root.style.setProperty('--blob-2', mixHex(secondary, '#ffffff', 0.75));
+    root.style.setProperty('--tabs-nav-bg', 'rgba(226, 232, 240, 0.6)');
+    root.style.setProperty('--tabs-nav-border', 'rgba(255, 255, 255, 0.6)');
+  }
+}
+
+function hexToRgb(hex) {
+  const clean = String(hex || '').replace('#', '').trim();
+  if (clean.length === 3) {
+    return {
+      r: parseInt(clean[0] + clean[0], 16),
+      g: parseInt(clean[1] + clean[1], 16),
+      b: parseInt(clean[2] + clean[2], 16)
+    };
+  }
+  if (clean.length === 6) {
+    return {
+      r: parseInt(clean.substring(0, 2), 16),
+      g: parseInt(clean.substring(2, 4), 16),
+      b: parseInt(clean.substring(4, 6), 16)
+    };
+  }
+  return null;
+}
+
+function mixHex(hex1, hex2, weight2) {
+  const c1 = hexToRgb(hex1);
+  const c2 = hexToRgb(hex2);
+  if (!c1 || !c2) return hex1;
+  const w1 = 1 - weight2;
+  const r = Math.round(c1.r * w1 + c2.r * weight2);
+  const g = Math.round(c1.g * w1 + c2.g * weight2);
+  const b = Math.round(c1.b * w1 + c2.b * weight2);
+  return '#' + [r, g, b].map(x => Math.max(0, Math.min(255, x)).toString(16).padStart(2, '0')).join('');
 }
 
 function escapeHtml(str) {

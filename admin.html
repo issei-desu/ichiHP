@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>HP管理画面 - Admin Dashboard</title>
-  <link rel="stylesheet" href="style.css?v=20261017_2">
-  <link rel="stylesheet" href="admin.css?v=20261017_2">
+  <link rel="stylesheet" href="style.css?v=20261019_1">
+  <link rel="stylesheet" href="admin.css?v=20261019_1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
@@ -162,6 +162,48 @@
           </div>
         </section>
 
+        <!-- Color Theme Section -->
+        <section class="card admin-card">
+          <h2 class="card-title">🎨 配色・カラーテーマ設定</h2>
+          <p class="card-desc">プリセット（推しカラーなど）から選ぶか、カラーピッカーで好きな色に自由に変更できます。</p>
+
+          <div class="form-group">
+            <label class="form-label">プリセットから選ぶ</label>
+            <div class="theme-presets-grid" id="theme-presets-grid">
+              <!-- Dynamically populated preset buttons -->
+            </div>
+          </div>
+
+          <div class="color-pickers-box">
+            <span class="form-label" style="font-size: 0.82rem;">カラーピッカーで微調整・自由指定</span>
+            <div class="color-pickers-grid">
+              <div class="color-picker-item">
+                <label for="theme-primary-input" class="color-picker-label">メインカラー（ボタン・強調）</label>
+                <div class="color-input-row">
+                  <input type="color" id="theme-primary-input" class="color-swatch-input" value="#f43f5e">
+                  <input type="text" id="theme-primary-hex" class="form-input color-hex-input" value="#f43f5e" maxlength="7">
+                </div>
+              </div>
+
+              <div class="color-picker-item">
+                <label for="theme-secondary-input" class="color-picker-label">サブカラー（カード枠・見出し）</label>
+                <div class="color-input-row">
+                  <input type="color" id="theme-secondary-input" class="color-swatch-input" value="#8b5cf6">
+                  <input type="text" id="theme-secondary-hex" class="form-input color-hex-input" value="#8b5cf6" maxlength="7">
+                </div>
+              </div>
+
+              <div class="color-picker-item">
+                <label for="theme-bg-input" class="color-picker-label">背景ベースカラー</label>
+                <div class="color-input-row">
+                  <input type="color" id="theme-bg-input" class="color-swatch-input" value="#fff5f7">
+                  <input type="text" id="theme-bg-hex" class="form-input color-hex-input" value="#fff5f7" maxlength="7">
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <!-- Site Meta Section -->
         <section class="card admin-card">
           <details>
@@ -209,6 +251,6 @@
     </div>
   </div>
 
-  <script src="admin.js?v=20261017_7"></script>
+  <script src="admin.js?v=20261019_1"></script>
 </body>
 </html>
