@@ -1,7 +1,8 @@
 {
   "site": {
     "title": "いちのホームページ",
-    "footerText": "©︎いち。2006"
+    "footerText": "©︎いち。2006",
+    "discordWebhook": ""
   },
   "theme": {
     "preset": "custom",
