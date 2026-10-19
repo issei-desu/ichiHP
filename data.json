@@ -156,8 +156,8 @@
           "sensitiveWarning": "",
           "items": [
             {
-              "label": "志麻さんハイタ会レポ",
-              "value": "志麻さんのハイタ会のレポです\n\n💜star!　愛知\n💜shiki　愛知\n💛brun　愛知\n💜Alice　愛知",
+              "label": "ハイタ会レポ",
+              "value": "💜star!　愛知\n💜shiki　愛知\n💛brun　愛知\n💜Alice　愛知",
               "font": "",
               "labelColor": "",
               "valueColor": "",
@@ -172,19 +172,19 @@
                 },
                 {
                   "label": "💜shiki愛知",
-                  "value": "",
+                  "value": "大学いろいろ大変だけどライブのために頑張ってる！\n[bg=#f3e8ff]💜お疲れ様や！頑張ってな！[/bg]",
                   "isSensitive": true,
                   "sensitiveWarning": ""
                 },
                 {
                   "label": "💛brun愛知",
-                  "value": "れぽ。",
+                  "value": "今日大学頑張ってきた！\n[bg=#fef08a]💛おつかれおつかれ[/bg]\n初参戦男単番で来たよ！\n[bg=#fef08a]💛ありがとうありがとうまた来て！[/bg]",
                   "isSensitive": true,
                   "sensitiveWarning": ""
                 },
                 {
-                  "label": "💜",
-                  "value": "れぽ。",
+                  "label": "💜Alice愛知",
+                  "value": "[bg=#f3e8ff]💜アリスやぁ！[/bg]\n可愛くしてきたよ！\n[bg=#f3e8ff]💜ありがとう！アリスバイバイ！👋[/bg]\nバイバイ！👋",
                   "isSensitive": true,
                   "sensitiveWarning": ""
                 }
