@@ -30,7 +30,7 @@
       "aboutSubtitle": "",
       "font": "",
       "titleColor": "#000000",
-      "textColor": "",
+      "textColor": "#000000",
       "items": [
         {
           "label": "名前。",
