@@ -162,19 +162,19 @@
                 },
                 {
                   "label": "💜shiki愛知",
-                  "value": "大学いろいろ大変だけどライブのために頑張ってる！\n[bg=#f3e8ff]💜お疲れ様や！頑張ってな！[/bg]",
+                  "value": "俺:大学大変だけどライブのために頑張ってる！\n[bg=#f3e8ff]💜お疲れ様や！頑張ってな！[/bg]",
                   "isSensitive": true,
                   "sensitiveWarning": ""
                 },
                 {
                   "label": "💛brun愛知",
-                  "value": "今日大学頑張ってきた！\n[bg=#fef08a]💛おつかれおつかれ[/bg]\n初参戦男単番で来たよ！\n[bg=#fef08a]💛ありがとうありがとうまた来て！[/bg]",
+                  "value": "俺:今日大学頑張ってきた！\n[bg=#fef08a]💛ｵﾂｶﾚｵﾂｶﾚ[/bg]\n俺:初参戦男単番で来たよ！\n[bg=#fef08a]💛ｱﾘｶﾞﾄｱﾘｶﾞﾄﾏﾀｷﾃ![/bg]",
                   "isSensitive": true,
                   "sensitiveWarning": ""
                 },
                 {
                   "label": "💜Alice愛知",
-                  "value": "[bg=#f3e8ff]💜アリスやぁ！[/bg]\n可愛くしてきたよ！\n[bg=#f3e8ff]💜ありがとう！アリスバイバイ！👋[/bg]\nバイバイ！👋",
+                  "value": "[bg=#f3e8ff]💜アリスやぁ！[/bg]\n俺:可愛くしてきたよ！\n[bg=#f3e8ff]💜ありがとう！アリスバイバイ！👋[/bg]\n俺:バイバイ！👋",
                   "isSensitive": true,
                   "sensitiveWarning": ""
                 }
@@ -189,7 +189,7 @@
           "font": "",
           "titleColor": "",
           "textColor": "",
-          "isSensitive": false,
+          "isSensitive": true,
           "sensitiveWarning": "",
           "items": [
             {
@@ -199,6 +199,26 @@
               "labelColor": "",
               "valueColor": "",
               "isSensitive": true,
+              "sensitiveWarning": "",
+              "subItems": []
+            },
+            {
+              "label": "wedding　愛知　day2",
+              "value": "(席がゴンドラの動線から2列目で)\n\n曲中、ゴンドラ上から\n俺:(片手ハート)\n💜(同じ片手ハートで返してくれた)",
+              "font": "",
+              "labelColor": "",
+              "valueColor": "",
+              "isSensitive": true,
+              "sensitiveWarning": "",
+              "subItems": []
+            },
+            {
+              "label": "新しい項目",
+              "value": "",
+              "font": "",
+              "labelColor": "",
+              "valueColor": "",
+              "isSensitive": false,
               "sensitiveWarning": "",
               "subItems": []
             }
