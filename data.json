@@ -146,7 +146,7 @@
       ],
       "blocks": [
         {
-          "tag": "小さいタグ文字",
+          "tag": "",
           "aboutTitle": "優勝話&ハイタ会レポ！",
           "aboutSubtitle": "表示するを選ぶと、各項目名だけ表示されるよーん。",
           "font": "",
@@ -157,7 +157,7 @@
           "items": [
             {
               "label": "ハイタ会レポ",
-              "value": "💜star!　愛知\n💜shiki　愛知\n💛brun　愛知\n💜Alice　愛知",
+              "value": "志麻ワンとセンワンのハイタレポ。",
               "font": "",
               "labelColor": "",
               "valueColor": "",
