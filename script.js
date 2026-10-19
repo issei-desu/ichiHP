@@ -227,31 +227,27 @@ let inlineSensitiveCounter = 0;
 
 function renderSensitiveGuard(uid, warningText, innerHtml) {
   const safeUid = escapeAttr(uid);
-  const note = warningText && warningText.trim()
-    ? warningText.trim()
-    : 'センシティブな内容（またはネタバレ等）が含まれています。閲覧注意・自衛お願いします。';
+  const note = warningText && warningText.trim() ? warningText.trim() : '';
   return `
     <div class="sensitive-container" id="sens-wrap-${safeUid}">
       <div class="sensitive-guard-box" id="sens-guard-${safeUid}">
-        <div class="sensitive-guard-icon">🔞</div>
-        <div class="sensitive-guard-title">センシティブ設定（非表示中）</div>
-        <div class="sensitive-guard-note">${escapeHtml(note)}</div>
+        ${note ? `<div class="sensitive-guard-note">${escapeHtml(note)}</div>` : ''}
         <div id="sens-step1-${safeUid}">
-          <button type="button" class="sensitive-btn-step1" onclick="requestSensitiveUnlock('${safeUid}')">🔒 表示する（確認へ）</button>
+          <button type="button" class="sensitive-btn-step1" onclick="requestSensitiveUnlock('${safeUid}')">表示する</button>
         </div>
         <div id="sens-step2-${safeUid}" style="display: none !important;">
           <div class="sensitive-guard-note" style="color: var(--primary); font-weight: 800; margin-top: 4px;">
-            ⚠️ 誤タップ防止確認：本当に表示しますか？
+            本当に表示しますか？
           </div>
           <div class="sensitive-confirm-row">
             <button type="button" class="sensitive-btn-cancel" onclick="cancelSensitiveUnlock('${safeUid}')">キャンセル</button>
-            <button type="button" class="sensitive-btn-confirm" id="sens-confirm-btn-${safeUid}" disabled onclick="confirmSensitiveUnlock('${safeUid}')">⏳ 準備中...</button>
+            <button type="button" class="sensitive-btn-confirm" id="sens-confirm-btn-${safeUid}" disabled onclick="confirmSensitiveUnlock('${safeUid}')">準備中...</button>
           </div>
         </div>
       </div>
       <div id="sens-unlocked-${safeUid}" style="display: none !important;">
         <div class="sensitive-rehide-bar">
-          <button type="button" class="sensitive-btn-rehide" onclick="rehideSensitiveContent('${safeUid}')">🙈 もう一度隠す</button>
+          <button type="button" class="sensitive-btn-rehide" onclick="rehideSensitiveContent('${safeUid}')">隠す</button>
         </div>
         <div id="sens-body-${safeUid}"></div>
       </div>
@@ -269,13 +265,13 @@ window.requestSensitiveUnlock = function(uid) {
   step1.style.setProperty('display', 'none', 'important');
   step2.style.setProperty('display', 'block', 'important');
   confirmBtn.disabled = true;
-  confirmBtn.textContent = '⏳ 確認中...';
+  confirmBtn.textContent = '確認中...';
 
   // 500ms anti-lag / anti-double-tap guard so buffered taps or scroll lag can NEVER trigger unlock
   setTimeout(() => {
     if (document.body.contains(confirmBtn)) {
       confirmBtn.disabled = false;
-      confirmBtn.textContent = '🔓 はい、表示する';
+      confirmBtn.textContent = 'はい、表示する';
     }
   }, 500);
 };
@@ -323,12 +319,12 @@ window.requestInlineSensitiveUnlock = function(uid) {
   step1Btn.style.setProperty('display', 'none', 'important');
   step2Span.style.setProperty('display', 'inline-flex', 'important');
   confirmBtn.disabled = true;
-  confirmBtn.textContent = '⏳ 確認...';
+  confirmBtn.textContent = '確認...';
 
   setTimeout(() => {
     if (document.body.contains(confirmBtn)) {
       confirmBtn.disabled = false;
-      confirmBtn.textContent = '🔓 本当に見る';
+      confirmBtn.textContent = 'はい、表示する';
     }
   }, 450);
 };
@@ -376,13 +372,12 @@ function renderTabs(tabs) {
   // 1. Render Tab Buttons
   navContainer.innerHTML = tabs.map(tab => {
     const tabFontCss = getFontFamilyCss(tab.font);
-    const sensBadge = tab.isSensitive ? '🔞 ' : '';
     return `
       <button type="button" 
               class="tab-btn ${tab.id === currentActiveTabId ? 'active' : ''}" 
               style="${tabFontCss ? `font-family: ${escapeAttr(tabFontCss)};` : ''}"
               onclick="switchTab('${escapeAttr(tab.id)}')">
-        ${sensBadge}${formatRichText(tab.name)}
+        ${formatRichText(tab.name)}
       </button>
     `;
   }).join('');
@@ -408,7 +403,7 @@ function renderTabs(tabs) {
 
           return `
             <div class="about-item" ${itemStyle}>
-              <span class="about-label" ${labelStyle}>${item.isSensitive ? '🔞 ' : ''}${formatRichText(item.label)}</span>
+              <span class="about-label" ${labelStyle}>${formatRichText(item.label)}</span>
               ${item.isSensitive
                 ? renderSensitiveGuard(`item_${tab.id}_${itemIdx}`, item.sensitiveWarning, valueHtml)
                 : valueHtml
@@ -423,7 +418,7 @@ function renderTabs(tabs) {
       <div id="tab-pane-${escapeAttr(tab.id)}" class="tab-pane ${tab.id === currentActiveTabId ? 'active' : ''}" ${paneStyleAttr}>
         <section class="section about-section" style="padding-top: 10px;">
           <div class="section-header">
-            <span class="section-tag">${tab.isSensitive ? '🔞 ' : ''}${formatRichText(tab.name)}</span>
+            <span class="section-tag">${formatRichText(tab.name)}</span>
             ${tab.aboutTitle ? `<h2 class="section-title" ${titleColorStyle}>${formatRichText(tab.aboutTitle)}</h2>` : ''}
             ${tab.aboutSubtitle ? `<p class="section-subtitle" ${titleColorStyle}>${formatRichText(tab.aboutSubtitle)}</p>` : ''}
           </div>
@@ -485,7 +480,7 @@ function renderLinks(title, subtitle, links, linksStyle = {}) {
         return `
           <div class="card" style="padding: 14px;" ${itemStyle}>
             <div style="font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;" ${titleStyle}>
-              🔞 ${formatRichText(link.title)}
+              ${formatRichText(link.title)}
             </div>
             ${renderSensitiveGuard(`link_${linkIdx}`, link.sensitiveWarning, anchorHtml)}
           </div>
@@ -663,7 +658,7 @@ function escapeAttr(str) {
 function stripRichTags(str) {
   if (!str) return '';
   return String(str)
-    .replace(/\[hide\][\s\S]*?\[\/hide\]/gi, '🔞[非表示]')
+    .replace(/\[hide\][\s\S]*?\[\/hide\]/gi, '[非表示]')
     .replace(/\[(?:color|bg|font|size)=[^\]]+\]/gi, '')
     .replace(/\[\/(?:color|bg|font|size|b|hide)\]/gi, '')
     .replace(/\[(?:b|hide)\]/gi, '');
@@ -683,7 +678,7 @@ function formatRichText(str) {
       .replace(/\[b\]([\s\S]*?)\[\/b\]/gi, '<strong>$1</strong>')
       .replace(/\[hide\]([\s\S]*?)\[\/hide\]/gi, (_, inner) => {
         const uid = `inl_${++inlineSensitiveCounter}`;
-        return `<span class="sensitive-inline-wrapper" id="inl-sens-wrap-${uid}"><button type="button" class="sensitive-inline-pill" id="inl-sens-s1-${uid}" onclick="event.preventDefault();event.stopPropagation();requestInlineSensitiveUnlock('${uid}')">🔞 センシティブ表示（確認へ）</button><span class="sensitive-inline-confirm" id="inl-sens-s2-${uid}" style="display: none !important;"><button type="button" class="sensitive-inline-btn-cancel" onclick="event.preventDefault();event.stopPropagation();cancelInlineSensitiveUnlock('${uid}')">✕</button><button type="button" class="sensitive-inline-btn-ok" id="inl-sens-confirm-${uid}" disabled onclick="event.preventDefault();event.stopPropagation();confirmInlineSensitiveUnlock('${uid}')">⏳ 確認...</button></span><span class="sensitive-inline-revealed" id="inl-sens-open-${uid}" style="display: none !important;"><span id="inl-sens-body-${uid}"></span><button type="button" class="sensitive-inline-btn-rehide" onclick="event.preventDefault();event.stopPropagation();rehideInlineSensitive('${uid}')">🙈 隠す</button></span><template id="inl-sens-tpl-${uid}">${inner}</template></span>`;
+        return `<span class="sensitive-inline-wrapper" id="inl-sens-wrap-${uid}"><button type="button" class="sensitive-inline-pill" id="inl-sens-s1-${uid}" onclick="event.preventDefault();event.stopPropagation();requestInlineSensitiveUnlock('${uid}')">表示する</button><span class="sensitive-inline-confirm" id="inl-sens-s2-${uid}" style="display: none !important;"><button type="button" class="sensitive-inline-btn-cancel" onclick="event.preventDefault();event.stopPropagation();cancelInlineSensitiveUnlock('${uid}')">✕</button><button type="button" class="sensitive-inline-btn-ok" id="inl-sens-confirm-${uid}" disabled onclick="event.preventDefault();event.stopPropagation();confirmInlineSensitiveUnlock('${uid}')">確認...</button></span><span class="sensitive-inline-revealed" id="inl-sens-open-${uid}" style="display: none !important;"><span id="inl-sens-body-${uid}"></span><button type="button" class="sensitive-inline-btn-rehide" onclick="event.preventDefault();event.stopPropagation();rehideInlineSensitive('${uid}')">隠す</button></span><template id="inl-sens-tpl-${uid}">${inner}</template></span>`;
       });
     if (html === prev) break;
   }

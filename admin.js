@@ -187,7 +187,7 @@ window.applyInlineTag = function(tagType, tagValue) {
     lastRichSelection = { start: newStart, end: newEnd };
   } catch (e) {}
 
-  showToast(tagType === 'hide' ? '🔞 選択部分をセンシティブ隠しに設定しました！' : '✨ 文字の装飾を適用しました！', 'success');
+  showToast(tagType === 'hide' ? '🙈 選択部分を「表示ボタンで隠す」に設定しました！' : '✨ 文字の装飾を適用しました！', 'success');
 };
 
 window.clearInlineTagsFromTarget = function() {
@@ -230,7 +230,7 @@ function formatRichTextAdmin(str) {
       .replace(/\[font=(rounded|sans|serif|handwriting|pop|marupop|pixel)\]([\s\S]*?)\[\/font\]/gi, '<span class="font-$1">$2</span>')
       .replace(/\[size=(sm|lg|xl)\]([\s\S]*?)\[\/size\]/gi, '<span class="text-size-$1">$2</span>')
       .replace(/\[b\]([\s\S]*?)\[\/b\]/gi, '<strong>$1</strong>')
-      .replace(/\[hide\]([\s\S]*?)\[\/hide\]/gi, '<span style="background:#1e293b; color:#fff; padding:2px 8px; border-radius:999px; font-size:0.78em; border:1px dashed #f43f5e;">🔞 隠し文字: $1</span>');
+      .replace(/\[hide\]([\s\S]*?)\[\/hide\]/gi, '<span style="background:#1e293b; color:#fff; padding:2px 8px; border-radius:999px; font-size:0.78em; border:1px dashed #f43f5e;">[表示ボタンで隠す: $1]</span>');
     if (html === prev) break;
   }
   return html.replace(/\n/g, '<br>');
@@ -881,7 +881,7 @@ function renderAdminTabs() {
     <button type="button" 
             class="admin-tab-pill ${tab.id === currentAdminTabId ? 'active' : ''}" 
             onclick="selectAdminTab('${escapeAttr(tab.id)}')">
-      ${tab.isSensitive ? '🔞 ' : ''}${escapeHtml(stripRichTagsAdmin(tab.name))}
+      ${escapeHtml(stripRichTagsAdmin(tab.name))}
     </button>
   `).join('');
 
@@ -908,10 +908,10 @@ function renderAdminTabs() {
     <div style="background: #fff1f2; border: 1.5px dashed #fda4af; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px;">
       <label style="display: flex; align-items: center; gap: 8px; font-size: 0.84rem; font-weight: 800; color: #be123c; cursor: pointer;">
         <input type="checkbox" style="width: 17px; height: 17px; accent-color: #f43f5e;" ${tab.isSensitive ? 'checked' : ''} onchange="updateTabSensitive(${tabIndex}, this.checked)">
-        <span>🔞 このタブ全体をセンシティブ設定にする（2段階確認ボタンを押すまで非表示）</span>
+        <span>🙈 このタブ全体を「表示する」ボタンを押すまで隠す</span>
       </label>
       <div id="tab-sens-warn-wrap-${tabIndex}" style="display: ${tab.isSensitive ? 'block' : 'none'};">
-        <input type="text" class="form-input" style="font-size: 0.8rem; background: #fff;" value="${escapeAttr(tab.sensitiveWarning || '')}" oninput="updateTabField(${tabIndex}, 'sensitiveWarning', this.value)" placeholder="注意書きメッセージ（空欄なら「センシティブな内容が含まれています…」を表示）">
+        <input type="text" class="form-input" style="font-size: 0.8rem; background: #fff;" value="${escapeAttr(tab.sensitiveWarning || '')}" oninput="updateTabField(${tabIndex}, 'sensitiveWarning', this.value)" placeholder="ボタンの上に出すメッセージ（任意・空欄ならボタンのみ表示）">
       </div>
     </div>
 
@@ -973,16 +973,16 @@ function renderAdminTabs() {
                 <input type="text" class="form-input rich-target" data-field-label="項目 #${itemIdx + 1} の見出し" value="${escapeAttr(item.label)}" oninput="updateTabItem(${tabIndex}, ${itemIdx}, 'label', this.value)" placeholder="項目名（例: 最推し、趣味など）" style="font-weight: 700;">
               </div>
               <div class="form-group">
-                <textarea class="form-textarea rich-target" data-field-label="項目 #${itemIdx + 1} の内容" data-preview-id="${previewId}" rows="3" oninput="updateTabItem(${tabIndex}, ${itemIdx}, 'value', this.value)" placeholder="内容を入力（文字を選択して上のバーから一部分だけ色・フォント・センシティブ変更もできます）">${escapeHtml(item.value)}</textarea>
+                <textarea class="form-textarea rich-target" data-field-label="項目 #${itemIdx + 1} の内容" data-preview-id="${previewId}" rows="3" oninput="updateTabItem(${tabIndex}, ${itemIdx}, 'value', this.value)" placeholder="内容を入力（文字を選択して上のバーから一部分だけ色・フォント・表示ボタン隠し変更もできます）">${escapeHtml(item.value)}</textarea>
                 <div id="${previewId}" class="rich-live-preview ${showPreview ? 'has-content' : ''}">${showPreview ? `<div class="rich-live-preview-badge">👀 装飾プレビュー</div><div>${formatRichTextAdmin(item.value)}</div>` : ''}</div>
               </div>
               <div style="background: #fff1f2; border: 1px dashed #fda4af; border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px;">
                 <label style="display: flex; align-items: center; gap: 7px; font-size: 0.78rem; font-weight: 700; color: #be123c; cursor: pointer;">
                   <input type="checkbox" style="width: 15px; height: 15px; accent-color: #f43f5e;" ${item.isSensitive ? 'checked' : ''} onchange="updateTabItemSensitive(${tabIndex}, ${itemIdx}, this.checked)">
-                  <span>🔞 この項目（#${itemIdx + 1}）をセンシティブ設定にする（ボタンで表示）</span>
+                  <span>🙈 この項目（#${itemIdx + 1}）を「表示する」ボタンを押すまで隠す</span>
                 </label>
                 <div id="item-sens-warn-wrap-${tabIndex}-${itemIdx}" style="display: ${item.isSensitive ? 'block' : 'none'};">
-                  <input type="text" class="form-input" style="font-size: 0.76rem; padding: 6px 8px; background: #fff;" value="${escapeAttr(item.sensitiveWarning || '')}" oninput="updateTabItem(${tabIndex}, ${itemIdx}, 'sensitiveWarning', this.value)" placeholder="注意書きメッセージ（任意・空欄なら標準の注意書きを表示）">
+                  <input type="text" class="form-input" style="font-size: 0.76rem; padding: 6px 8px; background: #fff;" value="${escapeAttr(item.sensitiveWarning || '')}" oninput="updateTabItem(${tabIndex}, ${itemIdx}, 'sensitiveWarning', this.value)" placeholder="ボタンの上に出すメッセージ（任意・空欄ならボタンのみ表示）">
                 </div>
               </div>
               <details class="box-style-details">
@@ -1063,10 +1063,10 @@ function renderAdminLinks() {
       <div style="background: #fff1f2; border: 1px dashed #fda4af; border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px;">
         <label style="display: flex; align-items: center; gap: 7px; font-size: 0.78rem; font-weight: 700; color: #be123c; cursor: pointer;">
           <input type="checkbox" style="width: 15px; height: 15px; accent-color: #f43f5e;" ${link.isSensitive ? 'checked' : ''} onchange="updateLinkSensitive(${linkIdx}, this.checked)">
-          <span>🔞 このリンク（#${linkIdx + 1}）をセンシティブ設定にする（ボタンで表示）</span>
+          <span>🙈 このリンク（#${linkIdx + 1}）を「表示する」ボタンを押すまで隠す</span>
         </label>
         <div id="link-sens-warn-wrap-${linkIdx}" style="display: ${link.isSensitive ? 'block' : 'none'};">
-          <input type="text" class="form-input" style="font-size: 0.76rem; padding: 6px 8px; background: #fff;" value="${escapeAttr(link.sensitiveWarning || '')}" oninput="updateLink(${linkIdx}, 'sensitiveWarning', this.value)" placeholder="注意書きメッセージ（例: 鍵垢・R18・ネタバレ含むため注意 など）">
+          <input type="text" class="form-input" style="font-size: 0.76rem; padding: 6px 8px; background: #fff;" value="${escapeAttr(link.sensitiveWarning || '')}" oninput="updateLink(${linkIdx}, 'sensitiveWarning', this.value)" placeholder="ボタンの上に出すメッセージ（任意・空欄ならボタンのみ表示）">
         </div>
       </div>
       <details class="box-style-details">
@@ -1111,7 +1111,7 @@ window.updateTabField = function(tabIndex, field, value) {
     if (field === 'name') {
       const switcher = document.getElementById('admin-tab-switcher');
       const pill = switcher.querySelectorAll('.admin-tab-pill')[tabIndex];
-      if (pill) pill.textContent = (tabsState[tabIndex].isSensitive ? '🔞 ' : '') + stripRichTagsAdmin(value);
+      if (pill) pill.textContent = stripRichTagsAdmin(value);
     }
   }
 };
@@ -1121,9 +1121,6 @@ window.updateTabSensitive = function(tabIndex, checked) {
     tabsState[tabIndex].isSensitive = Boolean(checked);
     const wrap = document.getElementById(`tab-sens-warn-wrap-${tabIndex}`);
     if (wrap) wrap.style.display = checked ? 'block' : 'none';
-    const switcher = document.getElementById('admin-tab-switcher');
-    const pill = switcher?.querySelectorAll('.admin-tab-pill')[tabIndex];
-    if (pill) pill.textContent = (checked ? '🔞 ' : '') + stripRichTagsAdmin(tabsState[tabIndex].name);
   }
 };
 
