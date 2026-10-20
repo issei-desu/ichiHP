@@ -1020,6 +1020,26 @@ function populateForm(data) {
     linksTitleColorPicker.value = data.linksTitleColor;
   }
 
+  // Comments Settings
+  const commentSettings = data.comments || {};
+  const commentTitleInput = document.getElementById('comments-title-input');
+  if (commentTitleInput) commentTitleInput.value = commentSettings.title !== undefined ? commentSettings.title : 'Message / コメント 💌';
+  const commentSubInput = document.getElementById('comments-subtitle-input');
+  if (commentSubInput) commentSubInput.value = commentSettings.subtitle !== undefined ? commentSettings.subtitle : 'サイトを見に来た感想やひとこと、メッセージを気軽にどうぞ！';
+  const commentBtnInput = document.getElementById('comments-button-text-input');
+  if (commentBtnInput) commentBtnInput.value = commentSettings.buttonText !== undefined ? commentSettings.buttonText : '📨 メッセージを送る';
+  const commentPlaceInput = document.getElementById('comments-placeholder-input');
+  if (commentPlaceInput) commentPlaceInput.value = commentSettings.placeholder !== undefined ? commentSettings.placeholder : 'HP見に来たよ！ / 応援してます✨ などお気軽にどうぞ';
+
+  const commentFontSel = document.getElementById('comments-font-select');
+  if (commentFontSel) commentFontSel.value = commentSettings.font || '';
+  const commentTitleColorHex = document.getElementById('comments-title-color-hex');
+  const commentTitleColorPicker = document.getElementById('comments-title-color-picker');
+  if (commentTitleColorHex) commentTitleColorHex.value = commentSettings.titleColor || '';
+  if (commentTitleColorPicker && /^#[0-9a-f]{6}$/i.test(commentSettings.titleColor)) {
+    commentTitleColorPicker.value = commentSettings.titleColor;
+  }
+
   if (Array.isArray(data.links)) {
     linksState = data.links.map(l => ({
       ...l,
@@ -1588,6 +1608,9 @@ function buildDataJson(avatarUrl) {
   const discordWebhook = (document.getElementById('discord-webhook-input')?.value || '').trim();
   const discordCommentWebhook = (document.getElementById('discord-comment-webhook-input')?.value || '').trim();
 
+  const commentsFont = document.getElementById('comments-font-select')?.value || '';
+  const commentsTitleColor = (document.getElementById('comments-title-color-hex')?.value || '').trim();
+
   return {
     site: {
       title: document.getElementById('site-title-input').value.trim() || `${stripRichTagsAdmin(name)}のホームページ`,
@@ -1619,7 +1642,15 @@ function buildDataJson(avatarUrl) {
     linksSubtitle: document.getElementById('links-subtitle-input').value.trim(),
     linksFont: linksFont,
     linksTitleColor: /^#[0-9a-f]{6}$/i.test(linksTitleColor) ? linksTitleColor : '',
-    links: linksState
+    links: linksState,
+    comments: {
+      title: document.getElementById('comments-title-input')?.value.trim() || 'Message / コメント 💌',
+      subtitle: document.getElementById('comments-subtitle-input')?.value.trim() || '',
+      buttonText: document.getElementById('comments-button-text-input')?.value.trim() || '📨 メッセージを送る',
+      placeholder: document.getElementById('comments-placeholder-input')?.value.trim() || '',
+      font: commentsFont,
+      titleColor: /^#[0-9a-f]{6}$/i.test(commentsTitleColor) ? commentsTitleColor : ''
+    }
   };
 }
 

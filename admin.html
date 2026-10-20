@@ -293,6 +293,63 @@
           </div>
         </section>
 
+        <!-- Comments / Messages Customization Section -->
+        <section class="card admin-card">
+          <div class="card-header-row">
+            <h2 class="card-title">💌 訪問者コメント欄の文言・見た目設定</h2>
+          </div>
+          <p class="card-desc">ホームページ一番下に設置された「メッセージ・コメント欄」の見出し、説明文、ボタン文字などを自由にカスタマイズできます。</p>
+
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div class="form-group">
+              <label for="comments-title-input" class="form-label" style="font-size: 0.78rem;">セクション大見出し</label>
+              <input type="text" id="comments-title-input" class="form-input rich-target" data-field-label="コメント大見出し" placeholder="Message / コメント 💌">
+            </div>
+
+            <div class="form-group">
+              <label for="comments-subtitle-input" class="form-label" style="font-size: 0.78rem;">説明文・サブテキスト</label>
+              <input type="text" id="comments-subtitle-input" class="form-input rich-target" data-field-label="コメント説明文" placeholder="サイトを見に来た感想やひとこと、メッセージを気軽にどうぞ！">
+            </div>
+
+            <div class="form-group">
+              <label for="comments-button-text-input" class="form-label" style="font-size: 0.78rem;">送信ボタンの文字</label>
+              <input type="text" id="comments-button-text-input" class="form-input rich-target" data-field-label="送信ボタン文字" placeholder="📨 メッセージを送る">
+            </div>
+
+            <div class="form-group">
+              <label for="comments-placeholder-input" class="form-label" style="font-size: 0.78rem;">入力欄の薄い案内文字（プレースホルダー）</label>
+              <input type="text" id="comments-placeholder-input" class="form-input" placeholder="HP見に来たよ！ / 応援してます✨ などお気軽にどうぞ">
+            </div>
+
+            <details class="box-style-details">
+              <summary>🎨 コメント欄のフォント・見出し文字色</summary>
+              <div class="box-style-grid">
+                <div class="box-style-field">
+                  <label>コメント枠のフォント</label>
+                  <select id="comments-font-select" class="form-select form-select-sm">
+                    <option value="">サイト全体と同じ</option>
+                    <option value="rounded">丸ゴシック</option>
+                    <option value="sans">すっきりゴシック</option>
+                    <option value="serif">明朝体</option>
+                    <option value="handwriting">手書き風</option>
+                    <option value="pop">太めポップ体</option>
+                    <option value="marupop">ゆる丸ポップ体</option>
+                    <option value="pixel">ドット・レトロ文字</option>
+                  </select>
+                </div>
+                <div class="box-style-field">
+                  <label>見出しの文字色</label>
+                  <div class="mini-color-row">
+                    <input type="color" id="comments-title-color-picker" class="mini-color-swatch" value="#1e293b">
+                    <input type="text" id="comments-title-color-hex" class="form-input mini-color-hex" placeholder="自動（未指定）">
+                    <button type="button" class="mini-clear-btn" onclick="clearColorPair('comments-title-color-picker', 'comments-title-color-hex')">自動</button>
+                  </div>
+                </div>
+              </div>
+            </details>
+          </div>
+        </section>
+
         <!-- Color Theme Section -->
         <section class="card admin-card">
           <h2 class="card-title">🎨 配色・全体フォント設定</h2>

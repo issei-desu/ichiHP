@@ -223,6 +223,9 @@ function applyData(data) {
     font: data.linksFont || '',
     titleColor: data.linksTitleColor || ''
   });
+
+  // Apply Comments Section Customization
+  renderCommentsSection(data.comments || {});
 }
 
 let inlineSensitiveCounter = 0;
@@ -554,6 +557,45 @@ function renderLinks(title, subtitle, links, linksStyle = {}) {
     listEl.innerHTML = '<div class="link-placeholder"><span>リンクがまだありません</span></div>';
   }
 }
+
+function renderCommentsSection(commentsConfig = {}) {
+  const sectionEl = document.getElementById('comments-section');
+  const titleEl = document.getElementById('comments-title');
+  const subtitleEl = document.getElementById('comments-subtitle');
+  const btnTextEl = document.getElementById('comment-btn-text');
+  const bodyTextarea = document.getElementById('comment-body');
+
+  if (!sectionEl) return;
+
+  if (commentsConfig.font) {
+    sectionEl.style.fontFamily = getFontFamilyCss(commentsConfig.font);
+  } else {
+    sectionEl.style.fontFamily = '';
+  }
+
+  if (titleEl) {
+    const rawTitle = commentsConfig.title !== undefined && commentsConfig.title !== '' ? commentsConfig.title : 'Message / コメント 💌';
+    titleEl.innerHTML = formatRichText(rawTitle);
+    titleEl.style.color = commentsConfig.titleColor || '';
+  }
+
+  if (subtitleEl) {
+    const rawSub = commentsConfig.subtitle !== undefined ? commentsConfig.subtitle : 'サイトを見に来た感想やひとこと、メッセージを気軽にどうぞ！';
+    subtitleEl.innerHTML = formatRichText(rawSub);
+    subtitleEl.style.color = commentsConfig.titleColor || '';
+    subtitleEl.style.display = rawSub ? 'block' : 'none';
+  }
+
+  if (btnTextEl) {
+    const rawBtn = commentsConfig.buttonText || '📨 メッセージを送る';
+    btnTextEl.innerHTML = formatRichText(rawBtn);
+  }
+
+  if (bodyTextarea && commentsConfig.placeholder !== undefined) {
+    bodyTextarea.placeholder = commentsConfig.placeholder;
+  }
+}
+
 
 window.switchTab = function(tabId) {
   currentActiveTabId = tabId;
