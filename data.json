@@ -311,6 +311,18 @@
       "subColor": "",
       "isSensitive": false,
       "sensitiveWarning": ""
+    },
+    {
+      "id": "1792470334617",
+      "title": "note。",
+      "url": "https://note.com/jk_na_ri_ta_i",
+      "sub": "@jk_na_ri_ta_i",
+      "icon": "other",
+      "font": "",
+      "titleColor": "",
+      "subColor": "",
+      "isSensitive": false,
+      "sensitiveWarning": ""
     }
   ]
 }
