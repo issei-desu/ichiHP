@@ -301,7 +301,17 @@
       "items": [
         {
           "label": "このHP",
-          "value": "閲覧用画面と、自分用編集画面が存在してるよー。\n",
+          "value": "閲覧用ページ、自分用編集ページ、ログ確認ページが存在してるよー。",
+          "font": "",
+          "labelColor": "",
+          "valueColor": "",
+          "isSensitive": false,
+          "sensitiveWarning": "",
+          "subItems": []
+        },
+        {
+          "label": "編集アプリ。",
+          "value": "まだデバグとか全然してないし、\nAIが作った感じがモロ見えで...。",
           "font": "",
           "labelColor": "",
           "valueColor": "",
