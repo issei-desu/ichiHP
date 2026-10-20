@@ -1064,14 +1064,9 @@ async function submitVisitorComment(e) {
     return;
   }
 
-  // Throttle duplicate comments (15 seconds)
+  // Optional short debounce (1 second) to prevent accidental double-clicks
   const lastSubmitted = Number(sessionStorage.getItem('hp_last_comment_time') || 0);
-  if (Date.now() - lastSubmitted < 15000) {
-    if (statusEl) {
-      statusEl.className = 'comment-status-msg error';
-      statusEl.textContent = '⏳ 送信直後です。少し時間を置いてから送ってください';
-      statusEl.style.display = 'block';
-    }
+  if (Date.now() - lastSubmitted < 1000) {
     return;
   }
 
