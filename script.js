@@ -23,6 +23,8 @@ document.addEventListener('DOMContentLoaded', () => {
   loadPageData();
 });
 
+let activeSiteData = null;
+
 async function loadPageData() {
   // 1. If opened inside Admin Preview Modal, use live preview state
   const urlParams = new URLSearchParams(window.location.search);
@@ -30,7 +32,8 @@ async function loadPageData() {
     try {
       const previewRaw = localStorage.getItem('hp_preview_data');
       if (previewRaw) {
-        applyData(JSON.parse(previewRaw));
+        activeSiteData = JSON.parse(previewRaw);
+        applyData(activeSiteData);
         return;
       }
     } catch (e) {
@@ -40,13 +43,12 @@ async function loadPageData() {
 
   // 2. Check if admin recently saved data (within 3 minutes) to bypass GitHub Pages CDN delay
   let appliedRecentCache = false;
-  let activeData = null;
   try {
     const cachedRaw = localStorage.getItem('hp_latest_data');
     if (cachedRaw) {
       const cached = JSON.parse(cachedRaw);
       if (cached && cached.savedAt && (Date.now() - cached.savedAt < 180000) && cached.data) {
-        activeData = cached.data;
+        activeSiteData = cached.data;
         applyData(cached.data);
         appliedRecentCache = true;
       }
@@ -60,7 +62,7 @@ async function loadPageData() {
     const res = await fetch(`data.json?t=${Date.now()}`, { cache: 'no-store' });
     if (res.ok) {
       const data = await res.json();
-      activeData = data;
+      activeSiteData = data;
       if (!appliedRecentCache) {
         applyData(data);
       }
@@ -70,7 +72,7 @@ async function loadPageData() {
   }
 
   // 4. Record visitor access log asynchronously
-  recordVisitorLog(activeData);
+  recordVisitorLog(activeSiteData);
 }
 
 const FONT_FAMILY_MAP = {
@@ -978,5 +980,109 @@ function formatVisitorReferrer(ref) {
   }
   return '直接アクセス / ブックマーク';
 }
+
+// ==========================================
+// Visitor Message / Comment Submission
+// ==========================================
+async function submitVisitorComment(e) {
+  if (e) e.preventDefault();
+
+  const nameInput = document.getElementById('comment-name');
+  const bodyInput = document.getElementById('comment-body');
+  const submitBtn = document.getElementById('comment-submit-btn');
+  const btnText = document.getElementById('comment-btn-text');
+  const spinner = document.getElementById('comment-btn-spinner');
+  const statusEl = document.getElementById('comment-status-msg');
+
+  const senderName = (nameInput?.value || '').trim() || '名無しさん';
+  const commentText = (bodyInput?.value || '').trim();
+
+  if (!commentText) {
+    if (statusEl) {
+      statusEl.className = 'comment-status-msg error';
+      statusEl.textContent = '⚠️ メッセージを入力してください';
+      statusEl.style.display = 'block';
+    }
+    return;
+  }
+
+  // Throttle duplicate comments (15 seconds)
+  const lastSubmitted = Number(sessionStorage.getItem('hp_last_comment_time') || 0);
+  if (Date.now() - lastSubmitted < 15000) {
+    if (statusEl) {
+      statusEl.className = 'comment-status-msg error';
+      statusEl.textContent = '⏳ 送信直後です。少し時間を置いてから送ってください';
+      statusEl.style.display = 'block';
+    }
+    return;
+  }
+
+  // Determine webhook URL: prioritize discordCommentWebhook, fallback to discordWebhook
+  const site = activeSiteData?.site || {};
+  const commentWebhook = site.discordCommentWebhook || site.discordWebhook;
+
+  if (!commentWebhook || !commentWebhook.startsWith('https://discord.com/api/webhooks/')) {
+    if (statusEl) {
+      statusEl.className = 'comment-status-msg error';
+      statusEl.textContent = '⚠️ コメント通知先のDiscord Webhookがまだ設定されていません（管理画面で設定してください）';
+      statusEl.style.display = 'block';
+    }
+    return;
+  }
+
+  if (submitBtn) submitBtn.disabled = true;
+  if (btnText) btnText.textContent = '送信中...';
+  if (spinner) spinner.style.display = 'inline-block';
+  if (statusEl) statusEl.style.display = 'none';
+
+  try {
+    const uaInfo = parseVisitorAgent(navigator.userAgent || '');
+    const refStr = formatVisitorReferrer(document.referrer || '');
+
+    const discordPayload = {
+      username: 'HP訪問者メッセージ 💌',
+      embeds: [{
+        title: `💬 ${senderName} さんからメッセージが届きました！`,
+        description: commentText,
+        color: 0xec4899,
+        fields: [
+          { name: '👤 送信者名', value: senderName, inline: true },
+          { name: '📱 端末・環境', value: `${uaInfo.device} / ${uaInfo.browser}`, inline: true },
+          { name: '🔗 アクセス元', value: refStr, inline: false }
+        ],
+        timestamp: new Date().toISOString()
+      }]
+    };
+
+    const res = await fetch(commentWebhook, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(discordPayload)
+    });
+
+    if (res.ok || res.status === 204) {
+      sessionStorage.setItem('hp_last_comment_time', String(Date.now()));
+      if (bodyInput) bodyInput.value = '';
+      if (statusEl) {
+        statusEl.className = 'comment-status-msg success';
+        statusEl.innerHTML = '✨ メッセージを送信しました！ありがとうございます🥰';
+        statusEl.style.display = 'block';
+      }
+    } else {
+      throw new Error(`送信エラー: ${res.status}`);
+    }
+  } catch (err) {
+    if (statusEl) {
+      statusEl.className = 'comment-status-msg error';
+      statusEl.textContent = '❌ 送信に失敗しました。時間をおいて再度お試しください';
+      statusEl.style.display = 'block';
+    }
+  } finally {
+    if (submitBtn) submitBtn.disabled = false;
+    if (btnText) btnText.textContent = '📨 メッセージを送る';
+    if (spinner) spinner.style.display = 'none';
+  }
+}
+
 
 

@@ -899,6 +899,10 @@ function populateForm(data) {
   if (discordWebhookInput) {
     discordWebhookInput.value = siteState.discordWebhook || '';
   }
+  const discordCommentWebhookInput = document.getElementById('discord-comment-webhook-input');
+  if (discordCommentWebhookInput) {
+    discordCommentWebhookInput.value = siteState.discordCommentWebhook || '';
+  }
 
   // Profile
   profileState = profile || {};
@@ -1582,12 +1586,14 @@ function buildDataJson(avatarUrl) {
   const linksFont = document.getElementById('links-font-select')?.value || '';
   const linksTitleColor = (document.getElementById('links-title-color-hex')?.value || '').trim();
   const discordWebhook = (document.getElementById('discord-webhook-input')?.value || '').trim();
+  const discordCommentWebhook = (document.getElementById('discord-comment-webhook-input')?.value || '').trim();
 
   return {
     site: {
       title: document.getElementById('site-title-input').value.trim() || `${stripRichTagsAdmin(name)}のホームページ`,
       footerText: document.getElementById('footer-text-input').value.trim() || `© 2026 ${stripRichTagsAdmin(name)}. All rights reserved.`,
-      discordWebhook: discordWebhook
+      discordWebhook: discordWebhook,
+      discordCommentWebhook: discordCommentWebhook
     },
     theme: {
       preset: themeState.preset || 'pink',

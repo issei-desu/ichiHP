@@ -136,6 +136,35 @@
         </div>
       </div>
     </section>
+
+    <!-- Visitor Message & Comment Section -->
+    <section id="comments-section" class="section comments-section">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">Message</span>
+          <h2 class="section-title">Message / コメント 💌</h2>
+          <p class="section-subtitle">サイトを見に来た感想やひとこと、メッセージを気軽にどうぞ！</p>
+        </div>
+
+        <div class="card comment-card">
+          <form id="comment-form" class="comment-form" onsubmit="submitVisitorComment(event)">
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label for="comment-name" class="comment-label">お名前・ニックネーム（任意）</label>
+              <input type="text" id="comment-name" class="comment-input" placeholder="名無しさん（空欄でもOK）" maxlength="30">
+            </div>
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label for="comment-body" class="comment-label">メッセージ・ひとこと <span style="color: #ef4444;">*</span></label>
+              <textarea id="comment-body" class="comment-textarea" placeholder="HP見に来たよ！ / 応援してます✨ などお気軽にどうぞ" rows="3" maxlength="500" required></textarea>
+            </div>
+            <button type="submit" id="comment-submit-btn" class="comment-submit-btn">
+              <span id="comment-btn-text">📨 メッセージを送る</span>
+              <span id="comment-btn-spinner" class="spinner" style="display: none; width: 14px; height: 14px; border-width: 2px;"></span>
+            </button>
+            <div id="comment-status-msg" class="comment-status-msg" style="display: none;"></div>
+          </form>
+        </div>
+      </div>
+    </section>
   </main>
 
   <footer class="footer">

@@ -2,7 +2,8 @@
   "site": {
     "title": "いちのホームページ",
     "footerText": "©︎いち。2006",
-    "discordWebhook": "https://discord.com/api/webhooks/1561962076379807834/yYCP1nXKHRcg2vweJ9IYlZQ4nLX6thT9FKSZRjfp6xlrfryHegSv8MqfFLSDbZEK7dKD"
+    "discordWebhook": "https://discord.com/api/webhooks/1561962076379807834/yYCP1nXKHRcg2vweJ9IYlZQ4nLX6thT9FKSZRjfp6xlrfryHegSv8MqfFLSDbZEK7dKD",
+    "discordCommentWebhook": ""
   },
   "theme": {
     "preset": "custom",

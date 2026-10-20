@@ -375,12 +375,22 @@
 
           <!-- Optional Discord Real-time Notification Settings -->
           <details class="box-style-details" style="margin-top: 14px;">
-            <summary>🔔 Discordへのリアルタイム通知連携（任意）</summary>
-            <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
-              <p style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.5;">
-                Discordサーバーの「ウェブフックURL」を入力して保存すると、誰かがHPを見に来た瞬間にDiscordへIP・地域・端末をリアルタイム通知できます（空欄なら管理画面のみで確認）。
-              </p>
-              <input type="url" id="discord-webhook-input" class="form-input" placeholder="https://discord.com/api/webhooks/..." style="font-size: 0.82rem;">
+            <summary>🔔 Discordへの通知連携（アクセス通知 & コメント通知）</summary>
+            <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 12px;">
+              <div>
+                <label for="discord-webhook-input" class="form-label" style="font-size: 0.82rem; font-weight: 600;">👀 アクセスログ通知用 Webhook URL</label>
+                <p style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 4px;">
+                  誰かがHPを見に来た瞬間にDiscordへIP・地域・端末・参照元を通知します（空欄なら無効）。
+                </p>
+                <input type="url" id="discord-webhook-input" class="form-input" placeholder="https://discord.com/api/webhooks/..." style="font-size: 0.82rem;">
+              </div>
+              <div style="border-top: 1px dashed var(--border-color); padding-top: 10px;">
+                <label for="discord-comment-webhook-input" class="form-label" style="font-size: 0.82rem; font-weight: 600;">💬 コメント・メッセージ通知用 Webhook URL</label>
+                <p style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 4px;">
+                  訪問者がホームページ下部のコメント欄からメッセージを送信した時に通知します（アクセス通知とは別のチャンネルURLを指定可能）。
+                </p>
+                <input type="url" id="discord-comment-webhook-input" class="form-input" placeholder="https://discord.com/api/webhooks/..." style="font-size: 0.82rem;">
+              </div>
             </div>
           </details>
         </section>
