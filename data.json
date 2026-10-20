@@ -279,6 +279,16 @@
           "isSensitive": false,
           "sensitiveWarning": "",
           "subItems": []
+        },
+        {
+          "label": "そのうち加筆していくよーーん",
+          "value": "",
+          "font": "",
+          "labelColor": "",
+          "valueColor": "",
+          "isSensitive": false,
+          "sensitiveWarning": "",
+          "subItems": []
         }
       ],
       "blocks": []
