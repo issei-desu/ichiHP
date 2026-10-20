@@ -923,12 +923,60 @@ function parseVisitorAgent(ua) {
 }
 
 function formatVisitorReferrer(ref) {
-  if (!ref) return '直接アクセス / ブックマーク';
-  if (/t\.co|twitter\.com|x\.com/i.test(ref)) return `🐦 Twitter / X (${ref})`;
-  if (/instagram\.com/i.test(ref)) return `📸 Instagram (${ref})`;
-  if (/google\./i.test(ref)) return `🔍 Google検索 (${ref})`;
-  if (/yahoo\./i.test(ref)) return `🔍 Yahoo!検索 (${ref})`;
-  return ref;
+  // 1. Check URL parameters for explicit campaign / source tracking
+  let paramTag = '';
+  try {
+    const params = new URLSearchParams(window.location.search);
+    paramTag = (params.get('from') || params.get('src') || params.get('ref') || params.get('utm_source') || '').trim();
+  } catch (e) {}
+
+  let labelFromParam = '';
+  if (paramTag) {
+    const lower = paramTag.toLowerCase();
+    if (lower === 'x' || lower === 'twitter' || lower.includes('tweet') || lower.includes('bio')) {
+      labelFromParam = `🐦 X / Twitter (?from=${paramTag})`;
+    } else if (lower.includes('insta') || lower === 'ig') {
+      labelFromParam = `📸 Instagram (?from=${paramTag})`;
+    } else if (lower.includes('line')) {
+      labelFromParam = `💬 LINE (?from=${paramTag})`;
+    } else if (lower.includes('discord') || lower === 'dc') {
+      labelFromParam = `🎮 Discord (?from=${paramTag})`;
+    } else if (lower.includes('qr')) {
+      labelFromParam = `📱 QRコード (?from=${paramTag})`;
+    } else if (lower.includes('youtube') || lower === 'yt') {
+      labelFromParam = `▶️ YouTube (?from=${paramTag})`;
+    } else if (lower.includes('tiktok') || lower === 'tt') {
+      labelFromParam = `🎵 TikTok (?from=${paramTag})`;
+    } else if (lower.includes('github') || lower === 'gh') {
+      labelFromParam = `🐙 GitHub (?from=${paramTag})`;
+    } else {
+      labelFromParam = `🏷️ URLタグ (?from=${paramTag})`;
+    }
+  }
+
+  // 2. Format browser document.referrer if available
+  let labelFromRef = '';
+  if (ref) {
+    if (/t\.co|twitter\.com|x\.com/i.test(ref)) labelFromRef = `🐦 Twitter / X (${ref})`;
+    else if (/instagram\.com/i.test(ref)) labelFromRef = `📸 Instagram (${ref})`;
+    else if (/google\./i.test(ref)) labelFromRef = `🔍 Google検索 (${ref})`;
+    else if (/yahoo\./i.test(ref)) labelFromRef = `🔍 Yahoo!検索 (${ref})`;
+    else if (/line\./i.test(ref)) labelFromRef = `💬 LINE (${ref})`;
+    else if (/discord/i.test(ref)) labelFromRef = `🎮 Discord (${ref})`;
+    else labelFromRef = ref;
+  }
+
+  // 3. Combine both signals
+  if (labelFromParam && labelFromRef) {
+    return `${labelFromParam} 【参照元: ${labelFromRef}】`;
+  }
+  if (labelFromParam) {
+    return labelFromParam;
+  }
+  if (labelFromRef) {
+    return labelFromRef;
+  }
+  return '直接アクセス / ブックマーク';
 }
 
 

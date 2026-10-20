@@ -86,6 +86,43 @@
           <input type="text" id="logs-search-input" class="form-input" placeholder="🔍 IP・地域・端末・参照元を絞り込み検索..." style="font-size: 0.85rem; flex: 1; min-width: 200px;">
         </div>
 
+        <!-- URL Tracking Tag Helper Guide -->
+        <details class="box-style-details" style="margin-bottom: 14px;">
+          <summary>🏷️ アクセス元（Twitter/インスタ/Discord等）を確実に判別するURL一覧</summary>
+          <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px; font-size: 0.82rem; color: var(--text-muted); line-height: 1.6;">
+            <p style="margin: 0;">
+              アプリ経由のアクセスはブラウザの仕様で「直接アクセス」になりやすいため、各SNSや投稿ごとに以下のタグ付きURLを貼り付けると100%確実にアクセス元が記録・通知されます。
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px;">
+              <div style="background: #ffffff; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                <span>🐦 <strong>X (Twitter) プロフ用:</strong> <code>https://issei-desu.github.io/ichiHP/?from=x_bio</code></span>
+                <button type="button" class="mini-clear-btn" onclick="navigator.clipboard.writeText('https://issei-desu.github.io/ichiHP/?from=x_bio').then(() => showToast('コピーしました', 'info'))">📋 コピー</button>
+              </div>
+              <div style="background: #ffffff; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                <span>🐦 <strong>X (Twitter) ツイート用:</strong> <code>https://issei-desu.github.io/ichiHP/?from=tweet</code></span>
+                <button type="button" class="mini-clear-btn" onclick="navigator.clipboard.writeText('https://issei-desu.github.io/ichiHP/?from=tweet').then(() => showToast('コピーしました', 'info'))">📋 コピー</button>
+              </div>
+              <div style="background: #ffffff; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                <span>📸 <strong>Instagram プロフ用:</strong> <code>https://issei-desu.github.io/ichiHP/?from=insta</code></span>
+                <button type="button" class="mini-clear-btn" onclick="navigator.clipboard.writeText('https://issei-desu.github.io/ichiHP/?from=insta').then(() => showToast('コピーしました', 'info'))">📋 コピー</button>
+              </div>
+              <div style="background: #ffffff; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                <span>🎮 <strong>Discord 送信用:</strong> <code>https://issei-desu.github.io/ichiHP/?from=discord</code></span>
+                <button type="button" class="mini-clear-btn" onclick="navigator.clipboard.writeText('https://issei-desu.github.io/ichiHP/?from=discord').then(() => showToast('コピーしました', 'info'))">📋 コピー</button>
+              </div>
+              <div style="background: #ffffff; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                <span>💬 <strong>LINE 送信用:</strong> <code>https://issei-desu.github.io/ichiHP/?from=line</code></span>
+                <button type="button" class="mini-clear-btn" onclick="navigator.clipboard.writeText('https://issei-desu.github.io/ichiHP/?from=line').then(() => showToast('コピーしました', 'info'))">📋 コピー</button>
+              </div>
+              <div style="background: #ffffff; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                <span>📱 <strong>リアルの名刺 / QRコード用:</strong> <code>https://issei-desu.github.io/ichiHP/?from=qr</code></span>
+                <button type="button" class="mini-clear-btn" onclick="navigator.clipboard.writeText('https://issei-desu.github.io/ichiHP/?from=qr').then(() => showToast('コピーしました', 'info'))">📋 コピー</button>
+              </div>
+            </div>
+            <span style="font-size: 0.75rem; margin-top: 4px;">※ 末尾の <code>?from=任意の文字</code> を自由に変えて好きなタグをつけることもできます。</span>
+          </div>
+        </details>
+
         <!-- Ignore My Visits Toggle & Actions -->
         <div class="logs-toolbar-row">
           <label class="ignore-self-label">
