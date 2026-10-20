@@ -563,6 +563,9 @@ function renderCommentsSection(commentsConfig = {}) {
   const subtitleEl = document.getElementById('comments-subtitle');
   const btnTextEl = document.getElementById('comment-btn-text');
   const bodyTextarea = document.getElementById('comment-body');
+  const nameLabelEl = document.getElementById('comment-name-label');
+  const nameInput = document.getElementById('comment-name');
+  const bodyLabelEl = document.getElementById('comment-body-label');
 
   if (!sectionEl) return;
 
@@ -592,6 +595,20 @@ function renderCommentsSection(commentsConfig = {}) {
 
   if (bodyTextarea && commentsConfig.placeholder !== undefined) {
     bodyTextarea.placeholder = commentsConfig.placeholder;
+  }
+
+  if (nameLabelEl) {
+    const rawNameLabel = commentsConfig.nameLabel !== undefined && commentsConfig.nameLabel !== '' ? commentsConfig.nameLabel : 'お名前・ニックネーム（任意）';
+    nameLabelEl.innerHTML = formatRichText(rawNameLabel);
+  }
+
+  if (nameInput && commentsConfig.namePlaceholder !== undefined) {
+    nameInput.placeholder = commentsConfig.namePlaceholder;
+  }
+
+  if (bodyLabelEl) {
+    const rawBodyLabel = commentsConfig.bodyLabel !== undefined && commentsConfig.bodyLabel !== '' ? commentsConfig.bodyLabel : 'メッセージ・ひとこと';
+    bodyLabelEl.innerHTML = `${formatRichText(rawBodyLabel)} <span style="color: #ef4444;">*</span>`;
   }
 }
 
@@ -1106,7 +1123,10 @@ async function submitVisitorComment(e) {
       if (bodyInput) bodyInput.value = '';
       if (statusEl) {
         statusEl.className = 'comment-status-msg success';
-        statusEl.innerHTML = '✨ メッセージを送信しました！ありがとうございます🥰';
+        const rawSuccess = activeSiteData?.comments?.successMessage !== undefined && activeSiteData?.comments?.successMessage !== ''
+          ? activeSiteData.comments.successMessage
+          : '✨ メッセージを送信しました！ありがとうございます🥰';
+        statusEl.innerHTML = formatRichText(rawSuccess);
         statusEl.style.display = 'block';
       }
     } else {

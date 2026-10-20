@@ -1030,6 +1030,14 @@ function populateForm(data) {
   if (commentBtnInput) commentBtnInput.value = commentSettings.buttonText !== undefined ? commentSettings.buttonText : '📨 メッセージを送る';
   const commentPlaceInput = document.getElementById('comments-placeholder-input');
   if (commentPlaceInput) commentPlaceInput.value = commentSettings.placeholder !== undefined ? commentSettings.placeholder : 'HP見に来たよ！ / 応援してます✨ などお気軽にどうぞ';
+  const commentNameLabelInput = document.getElementById('comments-name-label-input');
+  if (commentNameLabelInput) commentNameLabelInput.value = commentSettings.nameLabel !== undefined ? commentSettings.nameLabel : 'お名前・ニックネーム（任意）';
+  const commentNamePlaceInput = document.getElementById('comments-name-placeholder-input');
+  if (commentNamePlaceInput) commentNamePlaceInput.value = commentSettings.namePlaceholder !== undefined ? commentSettings.namePlaceholder : '名無しさん（空欄でもOK）';
+  const commentBodyLabelInput = document.getElementById('comments-body-label-input');
+  if (commentBodyLabelInput) commentBodyLabelInput.value = commentSettings.bodyLabel !== undefined ? commentSettings.bodyLabel : 'メッセージ・ひとこと';
+  const commentSuccessMsgInput = document.getElementById('comments-success-msg-input');
+  if (commentSuccessMsgInput) commentSuccessMsgInput.value = commentSettings.successMessage !== undefined ? commentSettings.successMessage : '✨ メッセージを送信しました！ありがとうございます🥰';
 
   const commentFontSel = document.getElementById('comments-font-select');
   if (commentFontSel) commentFontSel.value = commentSettings.font || '';
@@ -1648,6 +1656,10 @@ function buildDataJson(avatarUrl) {
       subtitle: document.getElementById('comments-subtitle-input')?.value.trim() || '',
       buttonText: document.getElementById('comments-button-text-input')?.value.trim() || '📨 メッセージを送る',
       placeholder: document.getElementById('comments-placeholder-input')?.value.trim() || '',
+      nameLabel: document.getElementById('comments-name-label-input')?.value.trim() || 'お名前・ニックネーム（任意）',
+      namePlaceholder: document.getElementById('comments-name-placeholder-input')?.value.trim() || '',
+      bodyLabel: document.getElementById('comments-body-label-input')?.value.trim() || 'メッセージ・ひとこと',
+      successMessage: document.getElementById('comments-success-msg-input')?.value.trim() || '✨ メッセージを送信しました！ありがとうございます🥰',
       font: commentsFont,
       titleColor: /^#[0-9a-f]{6}$/i.test(commentsTitleColor) ? commentsTitleColor : ''
     }
