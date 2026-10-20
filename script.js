@@ -63,9 +63,8 @@ async function loadPageData() {
     if (res.ok) {
       const data = await res.json();
       activeSiteData = data;
-      if (!appliedRecentCache) {
-        applyData(data);
-      }
+      // Always apply fetched data to ensure fresh updates override stale localStorage cache
+      applyData(data);
     }
   } catch (err) {
     console.log('Using default HTML data:', err);
