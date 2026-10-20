@@ -368,6 +368,7 @@
     "nameLabel": "ニックネーム。",
     "namePlaceholder": "なまーえ。",
     "bodyLabel": "コメントォ。",
+    "requiredError": "なんか書けよぉ。",
     "successMessage": "送信完了！！！！さんくす！！",
     "font": "",
     "titleColor": ""
