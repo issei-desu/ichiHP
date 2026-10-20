@@ -349,5 +349,13 @@
       "isSensitive": false,
       "sensitiveWarning": ""
     }
-  ]
+  ],
+  "comments": {
+    "title": "コメントとか、なんか、どうぞ！",
+    "subtitle": "サイトを見に来た感想やひとこと、メッセージを気軽にどうぞ！",
+    "buttonText": "📨 メッセージを送る",
+    "placeholder": "HP見に来たよ！ / 応援してます✨ などお気軽にどうぞ",
+    "font": "",
+    "titleColor": ""
+  }
 }
