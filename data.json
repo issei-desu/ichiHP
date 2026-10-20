@@ -65,6 +65,16 @@
           "isSensitive": false,
           "sensitiveWarning": "",
           "subItems": []
+        },
+        {
+          "label": "わず所属。",
+          "value": "愛〇教〇大学附〇岡〇中\n↓\nASUmkw high school\nElectric\n↓",
+          "font": "",
+          "labelColor": "",
+          "valueColor": "",
+          "isSensitive": false,
+          "sensitiveWarning": "",
+          "subItems": []
         }
       ],
       "blocks": []
