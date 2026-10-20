@@ -257,6 +257,30 @@
           ]
         }
       ]
+    },
+    {
+      "id": "tab_1792470406664",
+      "name": "作ったwebページとか,,,",
+      "aboutTitle": "",
+      "aboutSubtitle": "",
+      "font": "",
+      "titleColor": "",
+      "textColor": "",
+      "isSensitive": false,
+      "sensitiveWarning": "",
+      "items": [
+        {
+          "label": "このHP",
+          "value": "閲覧用画面と、自分用編集画面が存在してるよー。\n",
+          "font": "",
+          "labelColor": "",
+          "valueColor": "",
+          "isSensitive": false,
+          "sensitiveWarning": "",
+          "subItems": []
+        }
+      ],
+      "blocks": []
     }
   ],
   "linksTitle": "ネット上でのいろいろ垢。",
