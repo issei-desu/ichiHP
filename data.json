@@ -213,7 +213,7 @@
               "subItems": []
             },
             {
-              "label": "新しい項目",
+              "label": "",
               "value": "",
               "font": "",
               "labelColor": "",
@@ -231,7 +231,7 @@
           "font": "",
           "titleColor": "",
           "textColor": "",
-          "isSensitive": false,
+          "isSensitive": true,
           "sensitiveWarning": "",
           "items": [
             {
