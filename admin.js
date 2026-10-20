@@ -1036,6 +1036,8 @@ function populateForm(data) {
   if (commentNamePlaceInput) commentNamePlaceInput.value = commentSettings.namePlaceholder !== undefined ? commentSettings.namePlaceholder : '名無しさん（空欄でもOK）';
   const commentBodyLabelInput = document.getElementById('comments-body-label-input');
   if (commentBodyLabelInput) commentBodyLabelInput.value = commentSettings.bodyLabel !== undefined ? commentSettings.bodyLabel : 'メッセージ・ひとこと';
+  const commentRequiredErrInput = document.getElementById('comments-required-error-input');
+  if (commentRequiredErrInput) commentRequiredErrInput.value = commentSettings.requiredError !== undefined ? commentSettings.requiredError : '⚠️ メッセージを入力してください';
   const commentSuccessMsgInput = document.getElementById('comments-success-msg-input');
   if (commentSuccessMsgInput) commentSuccessMsgInput.value = commentSettings.successMessage !== undefined ? commentSettings.successMessage : '✨ メッセージを送信しました！ありがとうございます🥰';
 
@@ -1659,6 +1661,7 @@ function buildDataJson(avatarUrl) {
       nameLabel: document.getElementById('comments-name-label-input')?.value.trim() || 'お名前・ニックネーム（任意）',
       namePlaceholder: document.getElementById('comments-name-placeholder-input')?.value.trim() || '',
       bodyLabel: document.getElementById('comments-body-label-input')?.value.trim() || 'メッセージ・ひとこと',
+      requiredError: document.getElementById('comments-required-error-input')?.value.trim() || '⚠️ メッセージを入力してください',
       successMessage: document.getElementById('comments-success-msg-input')?.value.trim() || '✨ メッセージを送信しました！ありがとうございます🥰',
       font: commentsFont,
       titleColor: /^#[0-9a-f]{6}$/i.test(commentsTitleColor) ? commentsTitleColor : ''

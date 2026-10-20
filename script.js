@@ -1058,9 +1058,13 @@ async function submitVisitorComment(e) {
   if (!commentText) {
     if (statusEl) {
       statusEl.className = 'comment-status-msg error';
-      statusEl.textContent = '⚠️ メッセージを入力してください';
+      const rawRequiredErr = activeSiteData?.comments?.requiredError !== undefined && activeSiteData?.comments?.requiredError !== ''
+        ? activeSiteData.comments.requiredError
+        : '⚠️ メッセージを入力してください';
+      statusEl.innerHTML = formatRichText(rawRequiredErr);
       statusEl.style.display = 'block';
     }
+    if (bodyInput) bodyInput.focus();
     return;
   }
 

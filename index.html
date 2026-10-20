@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title id="page-title">いちのホームページ</title>
-  <link rel="stylesheet" href="style.css?v=20261020_6">
+  <link rel="stylesheet" href="style.css?v=20261020_7">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Hachi+Maru+Pop&family=M+PLUS+Rounded+1c:wght@400;500;700;800&family=Mochiy+Pop+One&family=Noto+Sans+JP:wght@400;500;700&family=Outfit:wght@400;600;700&family=Shippori+Mincho:wght@500;700&family=Yomogi&display=swap" rel="stylesheet">
@@ -146,14 +146,14 @@
         </div>
 
         <div class="card comment-card">
-          <form id="comment-form" class="comment-form" onsubmit="submitVisitorComment(event)">
+          <form id="comment-form" class="comment-form" novalidate onsubmit="submitVisitorComment(event)">
             <div class="form-group" style="margin-bottom: 12px;">
               <label for="comment-name" class="comment-label" id="comment-name-label">お名前・ニックネーム（任意）</label>
               <input type="text" id="comment-name" class="comment-input" placeholder="名無しさん（空欄でもOK）" maxlength="30">
             </div>
             <div class="form-group" style="margin-bottom: 14px;">
               <label for="comment-body" class="comment-label" id="comment-body-label">メッセージ・ひとこと <span style="color: #ef4444;">*</span></label>
-              <textarea id="comment-body" class="comment-textarea" placeholder="HP見に来たよ！ / 応援してます✨ などお気軽にどうぞ" rows="3" maxlength="500" required></textarea>
+              <textarea id="comment-body" class="comment-textarea" placeholder="HP見に来たよ！ / 応援してます✨ などお気軽にどうぞ" rows="3" maxlength="500"></textarea>
             </div>
             <button type="submit" id="comment-submit-btn" class="comment-submit-btn">
               <span id="comment-btn-text">📨 メッセージを送る</span>
@@ -179,6 +179,6 @@
     <button type="button" class="lightbox-close-btn" aria-label="閉じる">&times;</button>
   </div>
 
-  <script src="script.js?v=20261020_6"></script>
+  <script src="script.js?v=20261020_7"></script>
 </body>
 </html>
