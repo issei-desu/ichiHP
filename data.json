@@ -353,7 +353,7 @@
   "comments": {
     "title": "コメントとか、なんか、どうぞ！",
     "subtitle": "UIで気に食わないところとか、バグがあれば教えてください。。",
-    "buttonText": "これは送信ボタン。",
+    "buttonText": "これは送信ボタン。です。",
     "placeholder": "windowで開いたら○○の表示がバグってた。などなど...",
     "font": "",
     "titleColor": ""
