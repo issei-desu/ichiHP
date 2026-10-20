@@ -98,7 +98,26 @@
           "valueColor": "",
           "isSensitive": false,
           "sensitiveWarning": "",
-          "subItems": []
+          "subItems": [
+            {
+              "label": "メイン垢(jk_na_ri_ta_i)",
+              "value": "よくいます。いつでもいます。",
+              "isSensitive": false,
+              "sensitiveWarning": ""
+            },
+            {
+              "label": "サブ垢（isseisandayon）",
+              "value": "あんまりいないです、\n頻繁に生息したいなって思ってます。",
+              "isSensitive": false,
+              "sensitiveWarning": ""
+            },
+            {
+              "label": "サブ垢(xaxaDA_xxSEI)",
+              "value": "ちょくちょくいます。\n人を選んでフォロリク通してます。\n暗いこと言ったり下なことが多かったりしてます。\n内輪も多かったりしますよね。",
+              "isSensitive": false,
+              "sensitiveWarning": ""
+            }
+          ]
         }
       ],
       "blocks": []
