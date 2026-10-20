@@ -19,6 +19,7 @@
         <span class="logo-text">HP管理画面</span>
       </div>
       <div class="nav-links">
+        <a href="logs.html" class="btn-subtle" style="font-weight: 600; color: #2563eb;">📊 ログを見る</a>
         <button type="button" id="header-logout-btn" class="btn-subtle" style="display: none; border: none; cursor: pointer;">🔒 ログアウト</button>
         <a href="index.html" class="btn-subtle">← HPを見る</a>
       </div>
@@ -356,45 +357,24 @@
           </div>
         </section>
 
-        <!-- Visitor Access Logs Section -->
+        <!-- Visitor Access Logs Shortcut & Discord Settings Section -->
         <section class="card admin-card" id="visitor-logs-section">
           <div class="card-header-row">
-            <h2 class="card-title">📊 アクセスログ・足跡（IP・地域・端末）</h2>
-            <button type="button" id="refresh-logs-btn" class="btn btn-subtle-primary btn-sm">🔄 最新取得</button>
+            <h2 class="card-title">📊 訪問者アクセスログ・足跡</h2>
+            <a href="logs.html" class="btn btn-primary btn-sm">ログ専用ページを開く ↗</a>
           </div>
-          <p class="card-desc">HPを見に来た人のIPアドレス・都道府県・回線・スマホ機種・どこから来たか（Twitterなど）を確認できます。</p>
+          <p class="card-desc">HPを見に来た人のIPアドレス・都道府県・回線・端末機種・参照元などのアクセスログは専用ページで閲覧・管理できます。</p>
 
-          <!-- Stats Summary Row -->
-          <div class="logs-stats-row">
-            <div class="log-stat-box">
-              <span class="log-stat-label">記録アクセス数</span>
-              <strong class="log-stat-value" id="logs-total-count">0</strong>
+          <div style="background: var(--bg-main, #f8fafc); border: 1px solid var(--border-color, #e2e8f0); border-radius: 12px; padding: 14px; margin-top: 10px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+            <div>
+              <strong style="font-size: 0.92rem; display: block;">📊 専用ログビューア</strong>
+              <span style="font-size: 0.8rem; color: var(--text-muted);">キーワード検索、詳細フィルタ、IPコピー、履歴クリアに対応しています。</span>
             </div>
-            <div class="log-stat-box">
-              <span class="log-stat-label">ユニークIP数</span>
-              <strong class="log-stat-value" id="logs-unique-count">0</strong>
-            </div>
-          </div>
-
-          <!-- Ignore My Visits Toggle & Actions -->
-          <div class="logs-toolbar-row">
-            <label class="ignore-self-label">
-              <input type="checkbox" id="ignore-my-visits-checkbox" checked>
-              <span>🚫 このスマホ（自分）のアクセスは記録しない</span>
-            </label>
-            <div class="logs-toolbar-actions">
-              <button type="button" id="copy-logs-btn" class="mini-clear-btn">📋 コピー</button>
-              <button type="button" id="clear-logs-btn" class="mini-clear-btn" style="color: #dc2626; border-color: #fecaca;">🗑️ 履歴クリア</button>
-            </div>
-          </div>
-
-          <!-- Logs List Container -->
-          <div class="visitor-logs-list" id="visitor-logs-list">
-            <div class="logs-empty-state">読み込み中...</div>
+            <a href="logs.html" class="btn btn-secondary btn-sm" style="text-decoration: none;">📊 ログ画面へ</a>
           </div>
 
           <!-- Optional Discord Real-time Notification Settings -->
-          <details class="box-style-details">
+          <details class="box-style-details" style="margin-top: 14px;">
             <summary>🔔 Discordへのリアルタイム通知連携（任意）</summary>
             <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
               <p style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.5;">

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>アクセスログ - HP管理</title>
+  <link rel="stylesheet" href="style.css?v=20261020_4">
+  <link rel="stylesheet" href="admin.css?v=20261020_4">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&family=Noto+Sans+JP:wght@400;500;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="admin-body">
+  <!-- Header -->
+  <header class="header">
+    <div class="container nav-container">
+      <div class="logo">
+        <span class="logo-badge" style="background: linear-gradient(135deg, #0ea5e9, #3b82f6);">Logs</span>
+        <span class="logo-text">アクセスログ</span>
+      </div>
+      <div class="nav-links">
+        <a href="admin.html" class="btn-subtle">⚙️ HP設定</a>
+        <button type="button" id="header-logout-btn" class="btn-subtle" style="display: none; border: none; cursor: pointer;">🔒 ログアウト</button>
+        <a href="index.html" class="btn-subtle">← HPを見る</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container admin-container">
+    <!-- 1. Lock Screen (Displayed when not authenticated) -->
+    <section id="auth-lock-screen" class="lock-screen-wrapper">
+      <div class="card lock-card">
+        <div class="lock-icon-circle">
+          <span>🔒</span>
+        </div>
+        <h2 class="lock-title">管理者認証</h2>
+        <p class="lock-desc">
+          このページは管理者専用です。<br>
+          認証コード（GitHubトークン）を入力してロックを解除してください。
+        </p>
+
+        <form id="lock-form" class="lock-form">
+          <div class="form-group">
+            <label for="lock-token-input" class="form-label">認証コード</label>
+            <input type="password" id="lock-token-input" class="form-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="current-password" required>
+          </div>
+          <button type="submit" id="unlock-btn" class="btn btn-primary" style="margin-top: 10px;">
+            <span id="unlock-btn-text">🔓 ロック解除してログイン</span>
+            <span id="unlock-btn-spinner" class="spinner" style="display: none;"></span>
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- 2. Logs Dashboard (Displayed when authenticated) -->
+    <div id="admin-content" class="admin-layout" style="display: none;">
+      <!-- Page Navigation Banner -->
+      <section class="card admin-card" style="padding: 14px 18px; margin-bottom: 0;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <h1 style="font-size: 1.15rem; font-weight: 700; margin: 0 0 4px 0;">📊 訪問者アクセスログ・足跡</h1>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0;">HPを見に来た人のIPアドレス・地域・回線・端末機種・参照元を確認できます。</p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" id="refresh-logs-btn" class="btn btn-primary btn-sm">🔄 最新ログ取得</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Visitor Access Logs Section -->
+      <section class="card admin-card" id="visitor-logs-section">
+        <!-- Stats Summary Row -->
+        <div class="logs-stats-row">
+          <div class="log-stat-box">
+            <span class="log-stat-label">記録アクセス数</span>
+            <strong class="log-stat-value" id="logs-total-count">0</strong>
+          </div>
+          <div class="log-stat-box">
+            <span class="log-stat-label">ユニークIP数</span>
+            <strong class="log-stat-value" id="logs-unique-count">0</strong>
+          </div>
+        </div>
+
+        <!-- Filter & Search Bar -->
+        <div style="display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap;">
+          <input type="text" id="logs-search-input" class="form-input" placeholder="🔍 IP・地域・端末・参照元を絞り込み検索..." style="font-size: 0.85rem; flex: 1; min-width: 200px;">
+        </div>
+
+        <!-- Ignore My Visits Toggle & Actions -->
+        <div class="logs-toolbar-row">
+          <label class="ignore-self-label">
+            <input type="checkbox" id="ignore-my-visits-checkbox" checked>
+            <span>🚫 このスマホ（自分）のアクセスは記録しない</span>
+          </label>
+          <div class="logs-toolbar-actions">
+            <button type="button" id="copy-logs-btn" class="mini-clear-btn">📋 コピー</button>
+            <button type="button" id="clear-logs-btn" class="mini-clear-btn" style="color: #dc2626; border-color: #fecaca;">🗑️ 履歴クリア</button>
+          </div>
+        </div>
+
+        <!-- Logs List Container -->
+        <div class="visitor-logs-list" id="visitor-logs-list">
+          <div class="logs-empty-state">読み込み中...</div>
+        </div>
+      </section>
+
+      <!-- Back Link Section -->
+      <div style="text-align: center; margin-top: 10px; margin-bottom: 24px;">
+        <a href="admin.html" class="btn btn-secondary">⚙️ HP通常管理画面（プロフィール・タブ編集）に戻る</a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Status Toast -->
+  <div id="toast" class="toast"></div>
+
+  <script src="logs.js?v=20261020_1"></script>
+</body>
+</html>
