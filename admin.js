@@ -1023,7 +1023,7 @@ function populateForm(data) {
   // Comments Settings
   const commentSettings = data.comments || {};
   const commentTitleInput = document.getElementById('comments-title-input');
-  if (commentTitleInput) commentTitleInput.value = commentSettings.title !== undefined ? commentSettings.title : 'Message / コメント 💌';
+  if (commentTitleInput) commentTitleInput.value = commentSettings.title !== undefined ? commentSettings.title : 'コメント 💌';
   const commentSubInput = document.getElementById('comments-subtitle-input');
   if (commentSubInput) commentSubInput.value = commentSettings.subtitle !== undefined ? commentSettings.subtitle : 'サイトを見に来た感想やひとこと、メッセージを気軽にどうぞ！';
   const commentBtnInput = document.getElementById('comments-button-text-input');
@@ -1644,7 +1644,7 @@ function buildDataJson(avatarUrl) {
     linksTitleColor: /^#[0-9a-f]{6}$/i.test(linksTitleColor) ? linksTitleColor : '',
     links: linksState,
     comments: {
-      title: document.getElementById('comments-title-input')?.value.trim() || 'Message / コメント 💌',
+      title: document.getElementById('comments-title-input')?.value.trim() || 'コメント 💌',
       subtitle: document.getElementById('comments-subtitle-input')?.value.trim() || '',
       buttonText: document.getElementById('comments-button-text-input')?.value.trim() || '📨 メッセージを送る',
       placeholder: document.getElementById('comments-placeholder-input')?.value.trim() || '',

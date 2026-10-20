@@ -573,7 +573,7 @@ function renderCommentsSection(commentsConfig = {}) {
   }
 
   if (titleEl) {
-    const rawTitle = commentsConfig.title !== undefined && commentsConfig.title !== '' ? commentsConfig.title : 'Message / コメント 💌';
+    const rawTitle = commentsConfig.title !== undefined && commentsConfig.title !== '' ? commentsConfig.title : 'コメント 💌';
     titleEl.innerHTML = formatRichText(rawTitle);
     titleEl.style.color = commentsConfig.titleColor || '';
   }
