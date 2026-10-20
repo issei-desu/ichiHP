@@ -406,6 +406,48 @@ input:checked + .slider:before {
   margin-top: 4px;
 }
 
+.order-btn {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  color: #475569;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 7px;
+  cursor: pointer;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.order-btn:hover:not(:disabled) {
+  background: #f1f5f9;
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.order-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  border-color: #e2e8f0;
+}
+
+.order-btn-group {
+  display: inline-flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.tab-nav-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
 .admin-tab-pill {
   background: #f1f5f9;
   border: 1px solid #cbd5e1;

@@ -1077,6 +1077,7 @@ function populateForm(data) {
 }
 
 function renderAdminItemsEditorList(items, tabIndex, blockIndex) {
+  const totalItems = (items || []).length;
   return (items || []).map((item, itemIdx) => {
     const keyPrefix = `${tabIndex}-${blockIndex}-${itemIdx}`;
     const previewId = `item-rich-preview-${keyPrefix}`;
@@ -1086,7 +1087,13 @@ function renderAdminItemsEditorList(items, tabIndex, blockIndex) {
     return `
       <div class="item-editor-row">
         <div class="item-editor-header">
-          <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted);">項目 #${itemIdx + 1}</span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted);">項目 #${itemIdx + 1}</span>
+            <div class="order-btn-group">
+              <button type="button" class="order-btn" title="上へ移動" ${itemIdx === 0 ? 'disabled' : ''} onclick="moveBlockOrTabItem(${tabIndex}, ${blockIndex}, ${itemIdx}, -1)">▲</button>
+              <button type="button" class="order-btn" title="下へ移動" ${itemIdx === totalItems - 1 ? 'disabled' : ''} onclick="moveBlockOrTabItem(${tabIndex}, ${blockIndex}, ${itemIdx}, 1)">▼</button>
+            </div>
+          </div>
           <button type="button" class="btn-delete-link" onclick="deleteBlockOrTabItem(${tabIndex}, ${blockIndex}, ${itemIdx})">削除</button>
         </div>
         <div class="form-group">
@@ -1107,10 +1114,17 @@ function renderAdminItemsEditorList(items, tabIndex, blockIndex) {
             ${subItems.map((sub, subIdx) => {
               const subPreviewId = `sub-rich-preview-${keyPrefix}-${subIdx}`;
               const showSubPreview = hasRichTags(sub.value);
+              const totalSubs = subItems.length;
               return `
               <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                  <span style="font-size: 0.74rem; font-weight: 700; color: var(--text-muted);">小枠 #${subIdx + 1}</span>
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <span style="font-size: 0.74rem; font-weight: 700; color: var(--text-muted);">小枠 #${subIdx + 1}</span>
+                    <div class="order-btn-group">
+                      <button type="button" class="order-btn" title="上へ移動" ${subIdx === 0 ? 'disabled' : ''} onclick="moveSubItem(${tabIndex}, ${blockIndex}, ${itemIdx}, ${subIdx}, -1)">▲</button>
+                      <button type="button" class="order-btn" title="下へ移動" ${subIdx === totalSubs - 1 ? 'disabled' : ''} onclick="moveSubItem(${tabIndex}, ${blockIndex}, ${itemIdx}, ${subIdx}, 1)">▼</button>
+                    </div>
+                  </div>
                   <button type="button" class="btn-delete-link" onclick="deleteSubItem(${tabIndex}, ${blockIndex}, ${itemIdx}, ${subIdx})">削除</button>
                 </div>
                 <input type="text" class="form-input rich-target" data-field-label="小枠 #${subIdx + 1} の見出し" style="font-size: 0.82rem; font-weight: 700; padding: 6px 9px;" value="${escapeAttr(sub.label)}" oninput="updateSubItem(${tabIndex}, ${blockIndex}, ${itemIdx}, ${subIdx}, 'label', this.value)" placeholder="小見出し（例: ①リリイベ、②サイン入りチェキ など）">
@@ -1198,10 +1212,17 @@ function renderAdminTabs() {
 
   const tabIndex = tabsState.findIndex(t => t.id === tab.id);
   const extraBlocks = Array.isArray(tab.blocks) ? tab.blocks : [];
+  const totalTabs = tabsState.length;
 
   editor.innerHTML = `
     <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
-      <strong style="color: var(--primary); font-size: 0.95rem;">タブの基本設定</strong>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <strong style="color: var(--primary); font-size: 0.95rem;">タブの基本設定（タブ #${tabIndex + 1}）</strong>
+        <div class="order-btn-group">
+          <button type="button" class="order-btn" title="タブを左へ移動" ${tabIndex === 0 ? 'disabled' : ''} onclick="moveTab(${tabIndex}, -1)">◀ タブを左へ</button>
+          <button type="button" class="order-btn" title="タブを右へ移動" ${tabIndex === totalTabs - 1 ? 'disabled' : ''} onclick="moveTab(${tabIndex}, 1)">タブを右へ ▶</button>
+        </div>
+      </div>
       ${tabsState.length > 1 ? `<button type="button" class="btn-delete-link" onclick="deleteTab(${tabIndex})">このタブを削除</button>` : ''}
     </div>
 
@@ -1270,10 +1291,18 @@ function renderAdminTabs() {
     </div>
 
     <!-- Additional Vertically Stacked Blocks (#2, #3...) inside the same Tab -->
-    ${extraBlocks.map((block, blkIdx) => `
+    ${extraBlocks.map((block, blkIdx) => {
+      const totalBlocks = extraBlocks.length;
+      return `
       <div class="tab-sub-section" style="border: 2px solid #ddd6fe; border-radius: 12px; padding: 12px; background: #faf5ff;">
         <div class="card-header-row">
-          <strong style="font-size: 0.92rem; color: #7c3aed;">📦 縦に連ねる枠 #${blkIdx + 2}（同じタブ内の${blkIdx + 2}つ目のカード枠）</strong>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <strong style="font-size: 0.92rem; color: #7c3aed;">📦 縦に連ねる枠 #${blkIdx + 2}</strong>
+            <div class="order-btn-group">
+              <button type="button" class="order-btn" title="枠を上へ移動" ${blkIdx === 0 ? 'disabled' : ''} onclick="moveTabBlock(${tabIndex}, ${blkIdx}, -1)">▲</button>
+              <button type="button" class="order-btn" title="枠を下へ移動" ${blkIdx === totalBlocks - 1 ? 'disabled' : ''} onclick="moveTabBlock(${tabIndex}, ${blkIdx}, 1)">▼</button>
+            </div>
+          </div>
           <div style="display: flex; gap: 6px; align-items: center;">
             <button type="button" class="btn btn-subtle-primary btn-sm" onclick="addBlockOrTabItem(${tabIndex}, ${blkIdx})">＋ 項目追加</button>
             <button type="button" class="btn-delete-link" onclick="deleteTabBlock(${tabIndex}, ${blkIdx})">この枠を削除</button>
@@ -1307,7 +1336,8 @@ function renderAdminTabs() {
           ${renderAdminItemsEditorList(block.items || [], tabIndex, blkIdx)}
         </div>
       </div>
-    `).join('')}
+    `;
+    }).join('')}
 
     <!-- Button to Stack Another Card Block Vertically inside this Tab -->
     <button type="button" class="btn btn-secondary" style="width: 100%; border: 2px dashed var(--primary); color: var(--primary); background: #fdf4ff; font-weight: 800;" onclick="addTabBlock(${tabIndex})">
@@ -1325,10 +1355,17 @@ function renderAdminLinks() {
     return;
   }
 
+  const totalLinks = linksState.length;
   container.innerHTML = linksState.map((link, linkIdx) => `
     <div class="link-editor-card">
       <div class="link-editor-top">
-        <strong style="font-size: 0.85rem;">リンク #${linkIdx + 1}</strong>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <strong style="font-size: 0.85rem;">リンク #${linkIdx + 1}</strong>
+          <div class="order-btn-group">
+            <button type="button" class="order-btn" title="上へ移動" ${linkIdx === 0 ? 'disabled' : ''} onclick="moveLink(${linkIdx}, -1)">▲</button>
+            <button type="button" class="order-btn" title="下へ移動" ${linkIdx === totalLinks - 1 ? 'disabled' : ''} onclick="moveLink(${linkIdx}, 1)">▼</button>
+          </div>
+        </div>
         <button type="button" class="btn-delete-link" onclick="deleteLink(${linkIdx})">削除</button>
       </div>
       <div class="link-editor-grid">
@@ -1566,6 +1603,59 @@ window.updateTabColor = function(tabIndex, field, value, hexInputId) {
     const hexEl = document.getElementById(hexInputId);
     if (hexEl) hexEl.value = value;
   }
+};
+
+window.moveTab = function(tabIndex, direction) {
+  const newIndex = tabIndex + direction;
+  if (newIndex < 0 || newIndex >= tabsState.length) return;
+  const [targetTab] = tabsState.splice(tabIndex, 1);
+  tabsState.splice(newIndex, 0, targetTab);
+  currentAdminTabId = targetTab.id;
+  renderAdminTabs();
+  showToast('タブの並び順を変更しました', 'info');
+};
+
+window.moveTabBlock = function(tabIndex, blockIndex, direction) {
+  const blocks = tabsState[tabIndex]?.blocks;
+  if (!blocks) return;
+  const newIndex = blockIndex + direction;
+  if (newIndex < 0 || newIndex >= blocks.length) return;
+  const [targetBlock] = blocks.splice(blockIndex, 1);
+  blocks.splice(newIndex, 0, targetBlock);
+  renderAdminTabs();
+  showToast('枠の並び順を変更しました', 'info');
+};
+
+window.moveBlockOrTabItem = function(tabIndex, blockIndex, itemIdx, direction) {
+  const arr = getTargetItemsArray(tabIndex, blockIndex);
+  if (!arr) return;
+  const newIndex = itemIdx + direction;
+  if (newIndex < 0 || newIndex >= arr.length) return;
+  const [targetItem] = arr.splice(itemIdx, 1);
+  arr.splice(newIndex, 0, targetItem);
+  renderAdminTabs();
+  showToast('項目の並び順を変更しました', 'info');
+};
+
+window.moveSubItem = function(tabIndex, blockIndex, itemIdx, subIdx, direction) {
+  const arr = getTargetItemsArray(tabIndex, blockIndex);
+  if (!arr || !arr[itemIdx] || !Array.isArray(arr[itemIdx].subItems)) return;
+  const subItems = arr[itemIdx].subItems;
+  const newIndex = subIdx + direction;
+  if (newIndex < 0 || newIndex >= subItems.length) return;
+  const [targetSub] = subItems.splice(subIdx, 1);
+  subItems.splice(newIndex, 0, targetSub);
+  renderAdminTabs();
+  showToast('小枠の並び順を変更しました', 'info');
+};
+
+window.moveLink = function(linkIdx, direction) {
+  const newIndex = linkIdx + direction;
+  if (newIndex < 0 || newIndex >= linksState.length) return;
+  const [targetLink] = linksState.splice(linkIdx, 1);
+  linksState.splice(newIndex, 0, targetLink);
+  renderAdminLinks();
+  showToast('リンクの並び順を変更しました', 'info');
 };
 
 window.deleteTab = function(tabIndex) {
