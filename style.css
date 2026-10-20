@@ -289,8 +289,15 @@ body {
 }
 
 .x-icon {
-  width: 18px;
-  height: 18px;
+  width: 26px;
+  height: 26px;
+  padding: 4px;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #1DA1F2;
+  fill: #1DA1F2;
+  flex-shrink: 0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
 }
 
 /* Sections */
@@ -523,8 +530,9 @@ body {
   width: 42px;
   height: 42px;
   border-radius: 12px;
-  background: var(--primary-light);
-  color: var(--primary);
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -532,8 +540,8 @@ body {
 }
 
 .link-icon svg {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
 }
 
 .link-text {
