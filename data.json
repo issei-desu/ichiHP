@@ -365,9 +365,9 @@
     "subtitle": "UIで気に食わないところとか、バグがあれば教えてください。。",
     "buttonText": "これは送信ボタン。です。",
     "placeholder": "windowで開いたら○○の表示がバグってた。などなど...",
-    "nameLabel": "ニックネーム",
+    "nameLabel": "ニックネーム。",
     "namePlaceholder": "なまーえ。",
-    "bodyLabel": "メッセージ・ひとこと",
+    "bodyLabel": "コメントォ。",
     "successMessage": "送信完了！！！！さんくす！！",
     "font": "",
     "titleColor": ""
