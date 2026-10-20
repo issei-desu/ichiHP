@@ -1147,5 +1147,63 @@ input:checked + .slider:before {
   word-break: break-all;
 }
 
+/* Inline Images Preview in Admin */
+.admin-inline-img-box {
+  display: inline-block;
+  margin: 6px 0;
+  padding: 6px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  text-align: center;
+  max-width: 100%;
+}
+
+.admin-inline-img {
+  max-width: 100%;
+  max-height: 220px;
+  border-radius: 6px;
+  display: block;
+  margin: 0 auto;
+  object-fit: contain;
+}
+
+.admin-inline-img-sm .admin-inline-img {
+  max-width: 130px;
+  max-height: 130px;
+}
+
+.admin-inline-img-md .admin-inline-img {
+  max-width: 240px;
+  max-height: 180px;
+}
+
+.admin-inline-img-label {
+  font-size: 0.72rem;
+  color: #0284c7;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.btn-inline-img-tool {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #eff6ff;
+  color: #0284c7;
+  border: 1px solid #bfdbfe;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-inline-img-tool:hover {
+  background: #dbeafe;
+}
+
+
 
 

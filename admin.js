@@ -52,6 +52,11 @@ let themeState = {
 let currentAvatarUrl = '';
 let newAvatarBase64 = null;
 
+// Inline Images Upload and Cache Map
+let pendingInlineUploads = {};
+let inlineImageCache = {};
+let currentInlineImageTarget = null;
+
 // Track active input/textarea and its text selection for Inline Text Decorator
 let lastRichTarget = null;
 let lastRichSelection = { start: 0, end: 0 };
@@ -214,9 +219,22 @@ window.clearInlineTagsFromTarget = function() {
 function stripRichTagsAdmin(str) {
   if (!str) return '';
   return String(str)
+    .replace(/\[img=[^\]]+\]/gi, '')
     .replace(/\[(?:color|bg|font|size)=[^\]]+\]/gi, '')
     .replace(/\[\/(?:color|bg|font|size|b|hide)\]/gi, '')
     .replace(/\[(?:b|hide)\]/gi, '');
+}
+
+function renderAdminInlineImageHtml(src, size) {
+  const cleanSrc = String(src || '').trim();
+  const displaySrc = inlineImageCache[cleanSrc] || localStorage.getItem('hp_inline_cache_' + cleanSrc) || cleanSrc;
+  const sizeClass = size === 'sm' ? 'admin-inline-img-sm' : (size === 'md' ? 'admin-inline-img-md' : 'admin-inline-img-lg');
+  return `
+    <div class="admin-inline-img-box ${sizeClass}">
+      <img src="${escapeAttr(displaySrc)}" alt="画像プレビュー" class="admin-inline-img" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.textContent='⚠️ 画像準備中または未保存';">
+      <div class="admin-inline-img-label">📷 挿入画像 (${size === 'sm' ? '小' : (size === 'md' ? '中' : '標準')})</div>
+    </div>
+  `;
 }
 
 function formatRichTextAdmin(str) {
@@ -230,6 +248,7 @@ function formatRichTextAdmin(str) {
       .replace(/\[font=(rounded|sans|serif|handwriting|pop|marupop|pixel)\]([\s\S]*?)\[\/font\]/gi, '<span class="font-$1">$2</span>')
       .replace(/\[size=(sm|lg|xl)\]([\s\S]*?)\[\/size\]/gi, '<span class="text-size-$1">$2</span>')
       .replace(/\[b\]([\s\S]*?)\[\/b\]/gi, '<strong>$1</strong>')
+      .replace(/\n?\[img=([^\]|]+)(?:\|(sm|md|lg))?\]\n?/gi, (_, src, size) => renderAdminInlineImageHtml(src.replace(/&amp;/g, '&'), size))
       .replace(/\[hide\]([\s\S]*?)\[\/hide\]/gi, '<span style="background:#1e293b; color:#fff; padding:2px 8px; border-radius:999px; font-size:0.78em; border:1px dashed #f43f5e;">[表示ボタンで隠す: $1]</span>');
     if (html === prev) break;
   }
@@ -237,7 +256,7 @@ function formatRichTextAdmin(str) {
 }
 
 function hasRichTags(str) {
-  return /\[(?:color|bg|font|size)=[^\]]+\]|\[(?:b|hide)\]/i.test(String(str || ''));
+  return /\[(?:color|bg|font|size|img)=[^\]]+\]|\[(?:b|hide)\]/i.test(String(str || ''));
 }
 
 function updateLiveRichPreview(inputEl) {
@@ -355,6 +374,16 @@ function setupEventListeners() {
       showToast('画像の読み込みに失敗しました', 'error');
     }
   });
+
+  // Inline Image File Upload
+  const inlineFileInput = document.getElementById('inline-img-file-input');
+  if (inlineFileInput) {
+    inlineFileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      await handleInlineImagePicked(file, currentInlineImageTarget || lastRichTarget);
+    });
+  }
 
   // Avatar URL manual input
   const urlInput = document.getElementById('avatar-url-input');
@@ -620,8 +649,9 @@ function setAvatarPreview(src) {
 }
 
 // Process and resize image
-function processAndResizeImage(file, maxSize = 600) {
+function processAndResizeImage(file, maxSize = 1000) {
   return new Promise((resolve, reject) => {
+    const isPng = file.type === 'image/png';
     const reader = new FileReader();
     reader.onload = (e) => {
       const img = new Image();
@@ -647,7 +677,8 @@ function processAndResizeImage(file, maxSize = 600) {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
 
-        const dataUrl = canvas.toDataURL('image/png', 0.9);
+        const format = isPng ? 'image/png' : 'image/jpeg';
+        const dataUrl = canvas.toDataURL(format, 0.85);
         resolve(dataUrl);
       };
       img.onerror = reject;
@@ -656,6 +687,154 @@ function processAndResizeImage(file, maxSize = 600) {
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+}
+
+// Inline Images Insertion Handlers
+window.insertImageToTarget = function(targetEl) {
+  if (!targetEl) return;
+  currentInlineImageTarget = targetEl;
+  lastRichTarget = targetEl;
+  lastRichSelection = {
+    start: typeof targetEl.selectionStart === 'number' ? targetEl.selectionStart : targetEl.value.length,
+    end: typeof targetEl.selectionEnd === 'number' ? targetEl.selectionEnd : targetEl.value.length
+  };
+  const fileInput = document.getElementById('inline-img-file-input');
+  if (fileInput) {
+    fileInput.value = '';
+    fileInput.click();
+  }
+};
+
+window.triggerInlineImageUpload = function() {
+  if (!lastRichTarget || !document.body.contains(lastRichTarget)) {
+    const fallback = document.getElementById('profile-bio');
+    if (fallback) {
+      lastRichTarget = fallback;
+    } else {
+      showToast('画像を挿入したい入力欄を先にタップしてください', 'error');
+      return;
+    }
+  }
+  currentInlineImageTarget = lastRichTarget;
+  const fileInput = document.getElementById('inline-img-file-input');
+  if (fileInput) {
+    fileInput.value = '';
+    fileInput.click();
+  }
+};
+
+window.promptInlineImageUrl = function() {
+  if (!lastRichTarget || !document.body.contains(lastRichTarget)) {
+    const fallback = document.getElementById('profile-bio');
+    if (fallback) {
+      lastRichTarget = fallback;
+    } else {
+      showToast('画像を挿入したい入力欄を先にタップしてください', 'error');
+      return;
+    }
+  }
+  const url = prompt('挿入したい画像のURLを入力してください（https://... または images/...）:');
+  if (!url || !url.trim()) return;
+  const cleanUrl = url.trim();
+  const sizeOpt = document.getElementById('inline-image-size-select')?.value || '';
+  const tag = sizeOpt ? `[img=${cleanUrl}|${sizeOpt}]` : `[img=${cleanUrl}]`;
+  insertTagAtSelectionOrEnd(lastRichTarget, tag);
+  showToast('📷 画像タグを挿入しました！', 'success');
+};
+
+async function handleInlineImagePicked(file, targetEl) {
+  if (!file) return;
+  try {
+    showToast('画像を圧縮・準備中...', 'info');
+    const dataUrl = await processAndResizeImage(file, 1000);
+    const rand = Math.random().toString(36).substring(2, 6);
+    const path = `images/img_${Date.now()}_${rand}.jpg`;
+
+    pendingInlineUploads[path] = dataUrl;
+    inlineImageCache[path] = dataUrl;
+    try {
+      localStorage.setItem('hp_inline_cache_' + path, dataUrl);
+    } catch (e) {}
+
+    const sizeSel = document.getElementById('inline-image-size-select');
+    const sizeOpt = sizeSel ? sizeSel.value : '';
+    const tag = sizeOpt ? `[img=${path}|${sizeOpt}]` : `[img=${path}]`;
+
+    const el = targetEl || lastRichTarget || document.getElementById('profile-bio');
+    insertTagAtSelectionOrEnd(el, tag);
+    showToast('📷 画像を挿入しました！「保存してHPに反映」で保存されます', 'success');
+  } catch (err) {
+    console.error(err);
+    showToast('画像の読み込みに失敗しました', 'error');
+  }
+}
+
+function insertTagAtSelectionOrEnd(el, tag) {
+  if (!el) return;
+  const val = el.value || '';
+  let start = typeof el.selectionStart === 'number' ? el.selectionStart : val.length;
+  let end = typeof el.selectionEnd === 'number' ? el.selectionEnd : val.length;
+  if (start < 0 || start > val.length) start = val.length;
+  if (end < 0 || end > val.length) end = val.length;
+
+  let insertion = tag;
+  if (start > 0 && val[start - 1] !== '\n') {
+    insertion = '\n' + insertion;
+  }
+  if (end < val.length && val[end] !== '\n') {
+    insertion = insertion + '\n';
+  }
+
+  el.value = val.substring(0, start) + insertion + val.substring(end);
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+  updateLiveRichPreview(el);
+
+  el.focus();
+  const newPos = start + insertion.length;
+  try {
+    el.setSelectionRange(newPos, newPos);
+    lastRichSelection = { start: newPos, end: newPos };
+  } catch (e) {}
+}
+
+async function uploadInlineImageToGitHub(token, path, dataUrl) {
+  const base64Content = dataUrl.split(',')[1];
+  const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${path}`;
+
+  let sha = null;
+  const getRes = await fetch(url, {
+    headers: {
+      'Authorization': getAuthHeader(token),
+      'Accept': 'application/vnd.github.v3+json'
+    }
+  });
+  if (getRes.ok) {
+    const data = await getRes.json();
+    sha = data.sha;
+  }
+
+  const putPayload = {
+    message: `Upload inline image ${path} via Admin Dashboard`,
+    content: base64Content
+  };
+  if (sha) putPayload.sha = sha;
+
+  const putRes = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      'Authorization': getAuthHeader(token),
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(putPayload)
+  });
+
+  if (!putRes.ok) {
+    const err = await putRes.json().catch(() => ({}));
+    throw new Error(`画像「${path}」の保存に失敗: ${err.message || putRes.status}`);
+  }
+
+  delete pendingInlineUploads[path];
 }
 
 // Verify Token against repository
@@ -911,7 +1090,10 @@ function renderAdminItemsEditorList(items, tabIndex, blockIndex) {
           <input type="text" class="form-input rich-target" data-field-label="項目 #${itemIdx + 1} の見出し" value="${escapeAttr(item.label)}" oninput="updateBlockOrTabItem(${tabIndex}, ${blockIndex}, ${itemIdx}, 'label', this.value)" placeholder="項目名（例: 最推し、趣味、優勝話など）" style="font-weight: 700;">
         </div>
         <div class="form-group">
-          <textarea class="form-textarea rich-target" data-field-label="項目 #${itemIdx + 1} の内容" data-preview-id="${previewId}" rows="3" oninput="updateBlockOrTabItem(${tabIndex}, ${blockIndex}, ${itemIdx}, 'value', this.value)" placeholder="内容を入力（下の「＋小枠を縦に追加」を使う場合は空欄でもOK）">${escapeHtml(item.value)}</textarea>
+          <textarea id="item-val-input-${keyPrefix}" class="form-textarea rich-target" data-field-label="項目 #${itemIdx + 1} の内容" data-preview-id="${previewId}" rows="3" oninput="updateBlockOrTabItem(${tabIndex}, ${blockIndex}, ${itemIdx}, 'value', this.value)" placeholder="内容を入力（下の「＋小枠を縦に追加」を使う場合は空欄でもOK）">${escapeHtml(item.value)}</textarea>
+          <div style="display: flex; gap: 8px; margin-top: 4px; align-items: center;">
+            <button type="button" class="btn-inline-img-tool" onclick="insertImageToTarget(document.getElementById('item-val-input-${keyPrefix}'))">📷 この項目に画像を追加</button>
+          </div>
           <div id="${previewId}" class="rich-live-preview ${showPreview ? 'has-content' : ''}">${showPreview ? `<div class="rich-live-preview-badge">👀 装飾プレビュー</div><div>${formatRichTextAdmin(item.value)}</div>` : ''}</div>
         </div>
 
@@ -919,14 +1101,21 @@ function renderAdminItemsEditorList(items, tabIndex, blockIndex) {
         ${subItems.length > 0 ? `
           <div style="display: flex; flex-direction: column; gap: 8px; padding: 8px 10px; background: #f8fafc; border-left: 3px solid var(--primary); border-radius: 8px;">
             <strong style="font-size: 0.75rem; color: var(--primary);">📑 この項目の中の縦連ね小枠（${subItems.length}個）</strong>
-            ${subItems.map((sub, subIdx) => `
+            ${subItems.map((sub, subIdx) => {
+              const subPreviewId = `sub-rich-preview-${keyPrefix}-${subIdx}`;
+              const showSubPreview = hasRichTags(sub.value);
+              return `
               <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                   <span style="font-size: 0.74rem; font-weight: 700; color: var(--text-muted);">小枠 #${subIdx + 1}</span>
                   <button type="button" class="btn-delete-link" onclick="deleteSubItem(${tabIndex}, ${blockIndex}, ${itemIdx}, ${subIdx})">削除</button>
                 </div>
                 <input type="text" class="form-input rich-target" data-field-label="小枠 #${subIdx + 1} の見出し" style="font-size: 0.82rem; font-weight: 700; padding: 6px 9px;" value="${escapeAttr(sub.label)}" oninput="updateSubItem(${tabIndex}, ${blockIndex}, ${itemIdx}, ${subIdx}, 'label', this.value)" placeholder="小見出し（例: ①リリイベ、②サイン入りチェキ など）">
-                <textarea class="form-textarea rich-target" data-field-label="小枠 #${subIdx + 1} の内容" rows="2" style="font-size: 0.82rem; padding: 6px 9px;" oninput="updateSubItem(${tabIndex}, ${blockIndex}, ${itemIdx}, ${subIdx}, 'value', this.value)" placeholder="小枠の内容を入力">${escapeHtml(sub.value)}</textarea>
+                <textarea id="sub-val-input-${keyPrefix}-${subIdx}" class="form-textarea rich-target" data-field-label="小枠 #${subIdx + 1} の内容" data-preview-id="${subPreviewId}" rows="2" style="font-size: 0.82rem; padding: 6px 9px;" oninput="updateSubItem(${tabIndex}, ${blockIndex}, ${itemIdx}, ${subIdx}, 'value', this.value)" placeholder="小枠の内容を入力">${escapeHtml(sub.value)}</textarea>
+                <div style="display: flex; gap: 8px; margin-top: 2px; align-items: center;">
+                  <button type="button" class="btn-inline-img-tool" style="font-size: 0.74rem; padding: 3px 8px;" onclick="insertImageToTarget(document.getElementById('sub-val-input-${keyPrefix}-${subIdx}'))">📷 この小枠に画像を追加</button>
+                </div>
+                <div id="${subPreviewId}" class="rich-live-preview ${showSubPreview ? 'has-content' : ''}">${showSubPreview ? `<div class="rich-live-preview-badge">👀 装飾プレビュー</div><div>${formatRichTextAdmin(sub.value)}</div>` : ''}</div>
                 <label style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 700; color: #be123c; cursor: pointer;">
                   <input type="checkbox" style="width: 14px; height: 14px; accent-color: #f43f5e;" ${sub.isSensitive ? 'checked' : ''} onchange="updateSubItemSensitive(${tabIndex}, ${blockIndex}, ${itemIdx}, ${subIdx}, this.checked)">
                   <span>🙈 この小枠（#${subIdx + 1}）を「表示する」ボタンを押すまで隠す</span>
@@ -935,7 +1124,8 @@ function renderAdminItemsEditorList(items, tabIndex, blockIndex) {
                   <input type="text" class="form-input" style="font-size: 0.74rem; padding: 5px 8px;" value="${escapeAttr(sub.sensitiveWarning || '')}" oninput="updateSubItem(${tabIndex}, ${blockIndex}, ${itemIdx}, ${subIdx}, 'sensitiveWarning', this.value)" placeholder="ボタンの上に出すメッセージ（任意）">
                 </div>
               </div>
-            `).join('')}
+            `;
+            }).join('')}
           </div>
         ` : ''}
 
@@ -1532,6 +1722,16 @@ async function saveToGitHub() {
     btnText.textContent = 'データを保存中...';
     const updatedData = buildDataJson(finalAvatarUrl);
     const jsonString = JSON.stringify(updatedData, null, 2);
+
+    // Upload any pending inline images that are referenced in data.json
+    const pendingPaths = Object.keys(pendingInlineUploads);
+    for (let i = 0; i < pendingPaths.length; i++) {
+      const p = pendingPaths[i];
+      if (jsonString.includes(p)) {
+        btnText.textContent = `画像 (${i + 1}/${pendingPaths.length}) 保存中...`;
+        await uploadInlineImageToGitHub(token, p, pendingInlineUploads[p]);
+      }
+    }
 
     const getUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${DATA_FILE_PATH}?t=${Date.now()}`;
     const getRes = await fetch(getUrl, {

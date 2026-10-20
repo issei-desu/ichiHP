@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>HP管理画面 - Admin Dashboard</title>
-  <link rel="stylesheet" href="style.css?v=20261020_2">
-  <link rel="stylesheet" href="admin.css?v=20261020_2">
+  <link rel="stylesheet" href="style.css?v=20261020_4">
+  <link rel="stylesheet" href="admin.css?v=20261020_4">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Hachi+Maru+Pop&family=M+PLUS+Rounded+1c:wght@400;500;700;800&family=Mochiy+Pop+One&family=Noto+Sans+JP:wght@400;500;700&family=Outfit:wght@400;600;700&family=Shippori+Mincho:wght@500;700&family=Yomogi&display=swap" rel="stylesheet">
@@ -122,6 +122,18 @@
             <button type="button" class="inline-action-btn primary" onclick="applyInlineTag('font', document.getElementById('inline-font-select').value)">フォント適用</button>
             <button type="button" class="inline-action-btn danger" onclick="clearInlineTagsFromTarget()">装飾を解除</button>
           </div>
+
+          <!-- Image Insertion -->
+          <div class="inline-control-group">
+            <span class="inline-group-label">画像挿入:</span>
+            <button type="button" class="inline-action-btn" style="background:#f0fdf4; color:#15803d; border-color:#bbf7d0; font-weight:700;" onclick="triggerInlineImageUpload()">📷 写真を選んで挿入</button>
+            <button type="button" class="inline-action-btn" onclick="promptInlineImageUrl()">🔗 画像URLで挿入</button>
+            <select id="inline-image-size-select" class="inline-font-select" style="max-width: 140px;">
+              <option value="">標準（幅100%）</option>
+              <option value="md">中サイズ</option>
+              <option value="sm">小サイズ</option>
+            </select>
+          </div>
         </div>
       </details>
 
@@ -144,6 +156,7 @@
                   📷 写真を選ぶ（スマホから選択）
                 </label>
                 <input type="file" id="avatar-file-input" accept="image/*" style="display: none;">
+                <input type="file" id="inline-img-file-input" accept="image/*" style="display: none;">
                 <button type="button" id="remove-avatar-btn" class="btn-subtle" style="font-size: 0.78rem;">画像を削除</button>
               </div>
             </div>
@@ -160,6 +173,9 @@
           <div class="form-group">
             <label for="profile-bio" class="form-label">トップの紹介文（Bio）</label>
             <textarea id="profile-bio" class="form-textarea rich-target" data-field-label="トップの紹介文" rows="3" placeholder="どうも、いちです。"></textarea>
+            <div style="display: flex; gap: 8px; margin-top: 4px; align-items: center;">
+              <button type="button" class="btn-inline-img-tool" onclick="insertImageToTarget(document.getElementById('profile-bio'))">📷 この紹介文に画像を追加</button>
+            </div>
             <div id="profile-bio-rich-preview" class="rich-live-preview"></div>
           </div>
 
@@ -436,6 +452,6 @@
     </div>
   </div>
 
-  <script src="admin.js?v=20261020_2"></script>
+  <script src="admin.js?v=20261020_4"></script>
 </body>
 </html>

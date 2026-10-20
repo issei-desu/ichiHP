@@ -723,9 +723,18 @@ function stripRichTags(str) {
   if (!str) return '';
   return String(str)
     .replace(/\[hide\][\s\S]*?\[\/hide\]/gi, '[非表示]')
+    .replace(/\[img=[^\]]+\]/gi, '[画像]')
     .replace(/\[(?:color|bg|font|size)=[^\]]+\]/gi, '')
     .replace(/\[\/(?:color|bg|font|size|b|hide)\]/gi, '')
     .replace(/\[(?:b|hide)\]/gi, '');
+}
+
+function renderInlineImageHtml(src, size) {
+  const cleanSrc = String(src || '').trim();
+  const cached = localStorage.getItem('hp_inline_cache_' + cleanSrc);
+  const finalSrc = escapeAttr(cached || cleanSrc);
+  const sizeClass = size === 'sm' ? 'inline-img-sm' : (size === 'md' ? 'inline-img-md' : 'inline-img-lg');
+  return `<span class="inline-image-container ${sizeClass}"><img src="${finalSrc}" alt="" class="inline-content-img" loading="lazy" onclick="openImageLightbox(this.src)"></span>`;
 }
 
 function formatRichText(str) {
@@ -740,6 +749,7 @@ function formatRichText(str) {
       .replace(/\[font=(rounded|sans|serif|handwriting|pop|marupop|pixel)\]([\s\S]*?)\[\/font\]/gi, '<span class="font-$1">$2</span>')
       .replace(/\[size=(sm|lg|xl)\]([\s\S]*?)\[\/size\]/gi, '<span class="text-size-$1">$2</span>')
       .replace(/\[b\]([\s\S]*?)\[\/b\]/gi, '<strong>$1</strong>')
+      .replace(/\n?\[img=([^\]|]+)(?:\|(sm|md|lg))?\]\n?/gi, (_, src, size) => renderInlineImageHtml(src.replace(/&amp;/g, '&'), size))
       .replace(/\[hide\]([\s\S]*?)\[\/hide\]/gi, (_, inner) => {
         const uid = `inl_${++inlineSensitiveCounter}`;
         return `<span class="sensitive-inline-wrapper" id="inl-sens-wrap-${uid}"><button type="button" class="sensitive-inline-pill" id="inl-sens-s1-${uid}" onclick="event.preventDefault();event.stopPropagation();requestInlineSensitiveUnlock('${uid}')">表示する</button><span class="sensitive-inline-confirm" id="inl-sens-s2-${uid}" style="display: none !important;"><button type="button" class="sensitive-inline-btn-cancel" onclick="event.preventDefault();event.stopPropagation();cancelInlineSensitiveUnlock('${uid}')">✕</button><button type="button" class="sensitive-inline-btn-ok" id="inl-sens-confirm-${uid}" disabled onclick="event.preventDefault();event.stopPropagation();confirmInlineSensitiveUnlock('${uid}')">確認...</button></span><span class="sensitive-inline-revealed" id="inl-sens-open-${uid}" style="display: none !important;"><span id="inl-sens-body-${uid}"></span><button type="button" class="sensitive-inline-btn-rehide" onclick="event.preventDefault();event.stopPropagation();rehideInlineSensitive('${uid}')">隠す</button></span><template id="inl-sens-tpl-${uid}">${inner}</template></span>`;
@@ -749,6 +759,23 @@ function formatRichText(str) {
 
   return html.replace(/\n/g, '<br>');
 }
+
+// Lightbox Modal for Inline Images
+window.openImageLightbox = function(src) {
+  const modal = document.getElementById('image-lightbox-modal');
+  const img = document.getElementById('lightbox-img');
+  if (modal && img) {
+    img.src = src;
+    modal.classList.add('show');
+  }
+};
+
+window.closeImageLightbox = function() {
+  const modal = document.getElementById('image-lightbox-modal');
+  if (modal) {
+    modal.classList.remove('show');
+  }
+};
 
 // Visitor Access Logger (IP, Region, ISP, Device, Browser, Referrer)
 const VISITOR_LOG_TOPIC = 'ichihp_logs_8f4e2a9c1b7d';
