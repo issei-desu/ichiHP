@@ -784,9 +784,37 @@ function stripRichTags(str) {
   return String(str)
     .replace(/\[hide\][\s\S]*?\[\/hide\]/gi, '[非表示]')
     .replace(/\[img=[^\]]+\]/gi, '[画像]')
+    .replace(/\[url=[^\]]+\]([\s\S]*?)\[\/url\]/gi, '$1')
+    .replace(/\[url\]([\s\S]*?)\[\/url\]/gi, '$1')
     .replace(/\[(?:color|bg|font|size)=[^\]]+\]/gi, '')
-    .replace(/\[\/(?:color|bg|font|size|b|hide)\]/gi, '')
-    .replace(/\[(?:b|hide)\]/gi, '');
+    .replace(/\[\/(?:color|bg|font|size|b|hide|url)\]/gi, '')
+    .replace(/\[(?:b|hide|url)\]/gi, '');
+}
+
+function autolinkRawUrls(html) {
+  if (!html || typeof html !== 'string') return '';
+  const parts = html.split(/(<[^>]+>)/g);
+  let insideAnchor = 0;
+  for (let idx = 0; idx < parts.length; idx++) {
+    const part = parts[idx];
+    if (part.startsWith('<')) {
+      if (/^<a\b/i.test(part)) insideAnchor++;
+      else if (/^<\/a>/i.test(part)) insideAnchor = Math.max(0, insideAnchor - 1);
+    } else if (insideAnchor === 0) {
+      parts[idx] = part.replace(/(https?:\/\/[^\s<]+)/gi, (match) => {
+        let url = match;
+        let suffix = '';
+        const punctMatch = url.match(/([.,;:!?)\]。、）「」]+)$/);
+        if (punctMatch) {
+          suffix = punctMatch[1];
+          url = url.substring(0, url.length - suffix.length);
+        }
+        const cleanUrl = url.replace(/&amp;/g, '&');
+        return `<a href="${escapeAttr(cleanUrl)}" target="_blank" rel="noopener noreferrer" class="rich-link">${url}</a>${suffix}`;
+      });
+    }
+  }
+  return parts.join('');
 }
 
 function renderInlineImageHtml(src, size) {
@@ -809,6 +837,14 @@ function formatRichText(str) {
       .replace(/\[font=(rounded|sans|serif|handwriting|pop|marupop|pixel)\]([\s\S]*?)\[\/font\]/gi, '<span class="font-$1">$2</span>')
       .replace(/\[size=(sm|lg|xl)\]([\s\S]*?)\[\/size\]/gi, '<span class="text-size-$1">$2</span>')
       .replace(/\[b\]([\s\S]*?)\[\/b\]/gi, '<strong>$1</strong>')
+      .replace(/\[url=([^\s\]]+)\]([\s\S]*?)\[\/url\]/gi, (_, url, text) => {
+        const cleanUrl = url.replace(/&amp;/g, '&');
+        return `<a href="${escapeAttr(cleanUrl)}" target="_blank" rel="noopener noreferrer" class="rich-link">${text || cleanUrl}</a>`;
+      })
+      .replace(/\[url\]([^\s\]]+)\[\/url\]/gi, (_, url) => {
+        const cleanUrl = url.replace(/&amp;/g, '&');
+        return `<a href="${escapeAttr(cleanUrl)}" target="_blank" rel="noopener noreferrer" class="rich-link">${cleanUrl}</a>`;
+      })
       .replace(/\n?\[img=([^\]|]+)(?:\|(sm|md|lg))?\]\n?/gi, (_, src, size) => renderInlineImageHtml(src.replace(/&amp;/g, '&'), size))
       .replace(/\[hide\]([\s\S]*?)\[\/hide\]/gi, (_, inner) => {
         const uid = `inl_${++inlineSensitiveCounter}`;
@@ -816,6 +852,9 @@ function formatRichText(str) {
       });
     if (html === prev) break;
   }
+
+  // Auto-linkify any raw https?:// URLs that are not inside <a> or other tags
+  html = autolinkRawUrls(html);
 
   return html.replace(/\n/g, '<br>');
 }

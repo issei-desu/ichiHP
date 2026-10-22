@@ -52,10 +52,12 @@ let themeState = {
 let currentAvatarUrl = '';
 let newAvatarBase64 = null;
 
-// Inline Images Upload and Cache Map
+// Inline Images & Files Upload and Cache Map
 let pendingInlineUploads = {};
+let pendingInlineFileUploads = {};
 let inlineImageCache = {};
 let currentInlineImageTarget = null;
+let currentInlineDocTarget = null;
 
 // Track active input/textarea and its text selection for Inline Text Decorator
 let lastRichTarget = null;
@@ -219,9 +221,37 @@ function stripRichTagsAdmin(str) {
   if (!str) return '';
   return String(str)
     .replace(/\[img=[^\]]+\]/gi, '')
+    .replace(/\[url=[^\]]+\]([\s\S]*?)\[\/url\]/gi, '$1')
+    .replace(/\[url\]([\s\S]*?)\[\/url\]/gi, '$1')
     .replace(/\[(?:color|bg|font|size)=[^\]]+\]/gi, '')
-    .replace(/\[\/(?:color|bg|font|size|b|hide)\]/gi, '')
-    .replace(/\[(?:b|hide)\]/gi, '');
+    .replace(/\[\/(?:color|bg|font|size|b|hide|url)\]/gi, '')
+    .replace(/\[(?:b|hide|url)\]/gi, '');
+}
+
+function autolinkRawUrls(html) {
+  if (!html || typeof html !== 'string') return '';
+  const parts = html.split(/(<[^>]+>)/g);
+  let insideAnchor = 0;
+  for (let idx = 0; idx < parts.length; idx++) {
+    const part = parts[idx];
+    if (part.startsWith('<')) {
+      if (/^<a\b/i.test(part)) insideAnchor++;
+      else if (/^<\/a>/i.test(part)) insideAnchor = Math.max(0, insideAnchor - 1);
+    } else if (insideAnchor === 0) {
+      parts[idx] = part.replace(/(https?:\/\/[^\s<]+)/gi, (match) => {
+        let url = match;
+        let suffix = '';
+        const punctMatch = url.match(/([.,;:!?)\]。、）「」]+)$/);
+        if (punctMatch) {
+          suffix = punctMatch[1];
+          url = url.substring(0, url.length - suffix.length);
+        }
+        const cleanUrl = url.replace(/&amp;/g, '&');
+        return `<a href="${escapeAttr(cleanUrl)}" target="_blank" rel="noopener noreferrer" class="rich-link">${url}</a>${suffix}`;
+      });
+    }
+  }
+  return parts.join('');
 }
 
 function renderAdminInlineImageHtml(src, size) {
@@ -247,15 +277,27 @@ function formatRichTextAdmin(str) {
       .replace(/\[font=(rounded|sans|serif|handwriting|pop|marupop|pixel)\]([\s\S]*?)\[\/font\]/gi, '<span class="font-$1">$2</span>')
       .replace(/\[size=(sm|lg|xl)\]([\s\S]*?)\[\/size\]/gi, '<span class="text-size-$1">$2</span>')
       .replace(/\[b\]([\s\S]*?)\[\/b\]/gi, '<strong>$1</strong>')
+      .replace(/\[url=([^\s\]]+)\]([\s\S]*?)\[\/url\]/gi, (_, url, text) => {
+        const cleanUrl = url.replace(/&amp;/g, '&');
+        return `<a href="${escapeAttr(cleanUrl)}" target="_blank" rel="noopener noreferrer" class="rich-link">${text || cleanUrl}</a>`;
+      })
+      .replace(/\[url\]([^\s\]]+)\[\/url\]/gi, (_, url) => {
+        const cleanUrl = url.replace(/&amp;/g, '&');
+        return `<a href="${escapeAttr(cleanUrl)}" target="_blank" rel="noopener noreferrer" class="rich-link">${cleanUrl}</a>`;
+      })
       .replace(/\n?\[img=([^\]|]+)(?:\|(sm|md|lg))?\]\n?/gi, (_, src, size) => renderAdminInlineImageHtml(src.replace(/&amp;/g, '&'), size))
       .replace(/\[hide\]([\s\S]*?)\[\/hide\]/gi, '<span style="background:#1e293b; color:#fff; padding:2px 8px; border-radius:999px; font-size:0.78em; border:1px dashed #f43f5e;">[表示ボタンで隠す: $1]</span>');
     if (html === prev) break;
   }
+
+  // Auto-linkify any raw https?:// URLs that are not inside <a> or other tags
+  html = autolinkRawUrls(html);
+
   return html.replace(/\n/g, '<br>');
 }
 
 function hasRichTags(str) {
-  return /\[(?:color|bg|font|size|img)=[^\]]+\]|\[(?:b|hide)\]/i.test(String(str || ''));
+  return /\[(?:color|bg|font|size|img|url)=[^\]]+\]|\[(?:b|hide|url)\]|https?:\/\//i.test(String(str || ''));
 }
 
 function updateLiveRichPreview(inputEl) {
@@ -553,6 +595,16 @@ function setupEventListeners() {
       const file = e.target.files[0];
       if (!file) return;
       await handleInlineImagePicked(file, currentInlineImageTarget || lastRichTarget);
+    });
+  }
+
+  // Inline Document / General File Upload
+  const inlineDocInput = document.getElementById('inline-doc-file-input');
+  if (inlineDocInput) {
+    inlineDocInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      await handleInlineFilePicked(file, currentInlineDocTarget || lastRichTarget);
     });
   }
 
@@ -1136,6 +1188,118 @@ async function uploadInlineImageToGitHub(token, path, dataUrl) {
   delete pendingInlineUploads[path];
 }
 
+// Inline Link & File Insertion Handlers
+window.promptInsertLinkToTarget = function(targetEl) {
+  const el = targetEl || lastRichTarget || document.getElementById('profile-bio');
+  if (!el) {
+    showToast('リンクを挿入したい入力欄を先にタップしてください', 'error');
+    return;
+  }
+
+  const val = el.value || '';
+  const start = typeof el.selectionStart === 'number' ? el.selectionStart : val.length;
+  const end = typeof el.selectionEnd === 'number' ? el.selectionEnd : val.length;
+  const selectedText = val.substring(start, end).trim();
+
+  const url = prompt('リンク先のURLを入力してください（例: https://...）:');
+  if (!url || !url.trim()) return;
+  const cleanUrl = url.trim();
+
+  let linkText = selectedText;
+  if (!linkText) {
+    const inputTitle = prompt('リンクの表示文字を入力してください（空欄ならURLをそのまま表示）:', '');
+    if (inputTitle && inputTitle.trim()) {
+      linkText = inputTitle.trim();
+    }
+  }
+
+  const tag = linkText ? `[url=${cleanUrl}]${linkText}[/url]` : cleanUrl;
+  insertTagAtSelectionOrEnd(el, tag);
+  showToast('🔗 リンクを挿入しました！', 'success');
+};
+
+window.triggerInlineFileUpload = function(targetEl) {
+  const el = targetEl || lastRichTarget || document.getElementById('profile-bio');
+  if (!el) {
+    showToast('ファイルを挿入したい入力欄を先にタップしてください', 'error');
+    return;
+  }
+  currentInlineDocTarget = el;
+  const fileInput = document.getElementById('inline-doc-file-input');
+  if (fileInput) {
+    fileInput.value = '';
+    fileInput.click();
+  }
+};
+
+async function handleInlineFilePicked(file, targetEl) {
+  if (!file) return;
+  try {
+    showToast('ファイルを準備中...', 'info');
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const dataUrl = e.target.result;
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const rand = Math.random().toString(36).substring(2, 6);
+      const path = `files/${Date.now()}_${rand}_${safeName}`;
+
+      pendingInlineFileUploads[path] = dataUrl;
+
+      const tag = `[url=${path}]${file.name} 📄[/url]`;
+      const el = targetEl || currentInlineDocTarget || lastRichTarget || document.getElementById('profile-bio');
+      insertTagAtSelectionOrEnd(el, tag);
+      showToast('📁 ファイルを追加しました！「保存してHPに反映」でサーバーに保存されます', 'success');
+    };
+    reader.onerror = () => {
+      showToast('ファイルの読み込みに失敗しました', 'error');
+    };
+    reader.readAsDataURL(file);
+  } catch (err) {
+    console.error(err);
+    showToast('ファイルの処理に失敗しました', 'error');
+  }
+}
+
+async function uploadInlineFileToGitHub(token, path, dataUrl) {
+  const base64Content = dataUrl.split(',')[1];
+  const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${path}`;
+
+  let sha = null;
+  const getRes = await fetch(url, {
+    headers: {
+      'Authorization': getAuthHeader(token),
+      'Accept': 'application/vnd.github.v3+json'
+    }
+  });
+  if (getRes.ok) {
+    const data = await getRes.json();
+    sha = data.sha;
+  }
+
+  const putPayload = {
+    message: `Upload file ${path} via Admin Dashboard`,
+    content: base64Content
+  };
+  if (sha) putPayload.sha = sha;
+
+  const putRes = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      'Authorization': getAuthHeader(token),
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(putPayload)
+  });
+
+  if (!putRes.ok) {
+    const err = await putRes.json().catch(() => ({}));
+    throw new Error(`ファイル「${path}」の保存に失敗: ${err.message || putRes.status}`);
+  }
+
+  delete pendingInlineFileUploads[path];
+}
+
 // Verify Token against repository
 async function verifyToken(token) {
   try {
@@ -1431,8 +1595,10 @@ function renderAdminItemsEditorList(items, tabIndex, blockIndex) {
         </div>
         <div class="form-group">
           <textarea id="item-val-input-${keyPrefix}" class="form-textarea rich-target" data-field-label="項目 #${itemIdx + 1} の内容" data-preview-id="${previewId}" rows="3" oninput="updateBlockOrTabItem(${tabIndex}, ${blockIndex}, ${itemIdx}, 'value', this.value)" placeholder="内容を入力（下の「＋小枠を縦に追加」を使う場合は空欄でもOK）">${escapeHtml(item.value)}</textarea>
-          <div style="display: flex; gap: 8px; margin-top: 4px; align-items: center;">
-            <button type="button" class="btn-inline-img-tool" onclick="insertImageToTarget(document.getElementById('item-val-input-${keyPrefix}'))">📷 この項目に画像を追加</button>
+          <div style="display: flex; gap: 8px; margin-top: 4px; align-items: center; flex-wrap: wrap;">
+            <button type="button" class="btn-inline-img-tool" onclick="insertImageToTarget(document.getElementById('item-val-input-${keyPrefix}'))">📷 画像を追加</button>
+            <button type="button" class="btn-inline-img-tool" onclick="promptInsertLinkToTarget(document.getElementById('item-val-input-${keyPrefix}'))">🔗 リンクを追加</button>
+            <button type="button" class="btn-inline-img-tool" onclick="triggerInlineFileUpload(document.getElementById('item-val-input-${keyPrefix}'))">📁 ファイルを追加</button>
           </div>
           <div id="${previewId}" class="rich-live-preview ${showPreview ? 'has-content' : ''}">${showPreview ? `<div class="rich-live-preview-badge">👀 装飾プレビュー</div><div>${formatRichTextAdmin(item.value)}</div>` : ''}</div>
         </div>
@@ -1459,8 +1625,10 @@ function renderAdminItemsEditorList(items, tabIndex, blockIndex) {
                 </div>
                 <input type="text" class="form-input rich-target" data-field-label="小枠 #${subIdx + 1} の見出し" style="font-size: 0.82rem; font-weight: 700; padding: 6px 9px;" value="${escapeAttr(sub.label)}" oninput="updateSubItem(${tabIndex}, ${blockIndex}, ${itemIdx}, ${subIdx}, 'label', this.value)" placeholder="小見出し（例: ①リリイベ、②サイン入りチェキ など）">
                 <textarea id="sub-val-input-${keyPrefix}-${subIdx}" class="form-textarea rich-target" data-field-label="小枠 #${subIdx + 1} の内容" data-preview-id="${subPreviewId}" rows="2" style="font-size: 0.82rem; padding: 6px 9px;" oninput="updateSubItem(${tabIndex}, ${blockIndex}, ${itemIdx}, ${subIdx}, 'value', this.value)" placeholder="小枠の内容を入力">${escapeHtml(sub.value)}</textarea>
-                <div style="display: flex; gap: 8px; margin-top: 2px; align-items: center;">
-                  <button type="button" class="btn-inline-img-tool" style="font-size: 0.74rem; padding: 3px 8px;" onclick="insertImageToTarget(document.getElementById('sub-val-input-${keyPrefix}-${subIdx}'))">📷 この小枠に画像を追加</button>
+                <div style="display: flex; gap: 8px; margin-top: 2px; align-items: center; flex-wrap: wrap;">
+                  <button type="button" class="btn-inline-img-tool" style="font-size: 0.74rem; padding: 3px 8px;" onclick="insertImageToTarget(document.getElementById('sub-val-input-${keyPrefix}-${subIdx}'))">📷 画像を追加</button>
+                  <button type="button" class="btn-inline-img-tool" style="font-size: 0.74rem; padding: 3px 8px;" onclick="promptInsertLinkToTarget(document.getElementById('sub-val-input-${keyPrefix}-${subIdx}'))">🔗 リンクを追加</button>
+                  <button type="button" class="btn-inline-img-tool" style="font-size: 0.74rem; padding: 3px 8px;" onclick="triggerInlineFileUpload(document.getElementById('sub-val-input-${keyPrefix}-${subIdx}'))">📁 ファイルを追加</button>
                 </div>
                 <div id="${subPreviewId}" class="rich-live-preview ${showSubPreview ? 'has-content' : ''}">${showSubPreview ? `<div class="rich-live-preview-badge">👀 装飾プレビュー</div><div>${formatRichTextAdmin(sub.value)}</div>` : ''}</div>
                 <label style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 700; color: #be123c; cursor: pointer;">
@@ -2171,6 +2339,16 @@ async function saveToGitHub() {
       if (jsonString.includes(p)) {
         btnText.textContent = `画像 (${i + 1}/${pendingPaths.length}) 保存中...`;
         await uploadInlineImageToGitHub(token, p, pendingInlineUploads[p]);
+      }
+    }
+
+    // Upload any pending inline files (HTML, PDF, etc.) referenced in data.json
+    const pendingDocPaths = Object.keys(pendingInlineFileUploads);
+    for (let i = 0; i < pendingDocPaths.length; i++) {
+      const p = pendingDocPaths[i];
+      if (jsonString.includes(p)) {
+        btnText.textContent = `ファイル (${i + 1}/${pendingDocPaths.length}) 保存中...`;
+        await uploadInlineFileToGitHub(token, p, pendingInlineFileUploads[p]);
       }
     }
 

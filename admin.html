@@ -135,6 +135,13 @@
               <option value="sm">小サイズ</option>
             </select>
           </div>
+
+          <!-- Link & File Insertion -->
+          <div class="inline-control-group">
+            <span class="inline-group-label">リンク/ファイル:</span>
+            <button type="button" class="inline-action-btn" style="background:#f5f3ff; color:#6d28d9; border-color:#ddd6fe; font-weight:700;" onclick="promptInsertLinkToTarget(lastRichTarget)">🔗 リンクを挿入</button>
+            <button type="button" class="inline-action-btn" style="background:#f0f9ff; color:#0369a1; border-color:#bae6fd; font-weight:700;" onclick="triggerInlineFileUpload(lastRichTarget)">📁 ファイルを追加</button>
+          </div>
         </div>
       </details>
 
@@ -158,6 +165,7 @@
                 </label>
                 <input type="file" id="avatar-file-input" accept="image/*" style="display: none;">
                 <input type="file" id="inline-img-file-input" accept="image/*" style="display: none;">
+                <input type="file" id="inline-doc-file-input" style="display: none;" accept=".html,.htm,.pdf,.txt,.zip,.png,.jpg,.jpeg,.gif,.svg,.json,.css,.js">
                 <button type="button" id="crop-avatar-btn" class="btn-subtle" style="display: none; font-size: 0.78rem;">✂️ 位置・向きを調整</button>
                 <button type="button" id="remove-avatar-btn" class="btn-subtle" style="font-size: 0.78rem;">画像を削除</button>
               </div>
@@ -175,8 +183,10 @@
           <div class="form-group">
             <label for="profile-bio" class="form-label">トップの紹介文（Bio）</label>
             <textarea id="profile-bio" class="form-textarea rich-target" data-field-label="トップの紹介文" rows="3" placeholder="どうも、いちです。"></textarea>
-            <div style="display: flex; gap: 8px; margin-top: 4px; align-items: center;">
-              <button type="button" class="btn-inline-img-tool" onclick="insertImageToTarget(document.getElementById('profile-bio'))">📷 この紹介文に画像を追加</button>
+            <div style="display: flex; gap: 8px; margin-top: 4px; align-items: center; flex-wrap: wrap;">
+              <button type="button" class="btn-inline-img-tool" onclick="insertImageToTarget(document.getElementById('profile-bio'))">📷 画像を追加</button>
+              <button type="button" class="btn-inline-img-tool" onclick="promptInsertLinkToTarget(document.getElementById('profile-bio'))">🔗 リンクを追加</button>
+              <button type="button" class="btn-inline-img-tool" onclick="triggerInlineFileUpload(document.getElementById('profile-bio'))">📁 ファイルを追加</button>
             </div>
             <div id="profile-bio-rich-preview" class="rich-live-preview"></div>
           </div>
@@ -558,6 +568,6 @@
     </div>
   </div>
 
-  <script src="admin.js?v=20261022_1"></script>
+  <script src="admin.js?v=20261022_2"></script>
 </body>
 </html>

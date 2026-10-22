@@ -1090,4 +1090,33 @@ body {
   border: 1px solid #fecaca;
 }
 
+/* Links inside rich textboxes (Bio, items, sub-items) */
+.rich-link {
+  color: var(--primary, #9333ea);
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+  font-weight: 700;
+  word-break: break-all;
+  display: inline;
+  transition: all 0.2s ease;
+}
+
+.rich-link:hover,
+.rich-link:active {
+  color: var(--primary-hover, #7e22ce);
+  text-decoration-thickness: 2.5px;
+  opacity: 0.85;
+}
+
+.rich-link::after {
+  content: ' ↗';
+  font-size: 0.82em;
+  font-weight: 800;
+  text-decoration: none;
+  display: inline-block;
+  opacity: 0.8;
+}
+
+
 

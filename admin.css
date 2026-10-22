@@ -1361,6 +1361,22 @@ input:checked + .slider:before {
   flex: 1;
 }
 
+/* Links inside rich text preview in Admin */
+.rich-link {
+  color: var(--primary, #9333ea);
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  font-weight: 700;
+  word-break: break-all;
+}
+
+.rich-link::after {
+  content: ' ↗';
+  font-size: 0.82em;
+  opacity: 0.8;
+}
+
+
 
 
 
