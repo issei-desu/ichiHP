@@ -363,16 +363,188 @@ function setupEventListeners() {
     if (!file) return;
 
     try {
-      showToast('画像を最適化中...', 'info');
-      newAvatarBase64 = await processAndResizeImage(file, 600);
-      setAvatarPreview(newAvatarBase64);
-      document.getElementById('avatar-url-input').value = '';
-      showToast('画像を選択しました。「保存」を押すと反映されます', 'success');
+      showToast('画像を読み込み中...', 'info');
+      const reader = new FileReader();
+      reader.onload = (loadEvt) => {
+        openAvatarCropper(loadEvt.target.result);
+      };
+      reader.onerror = () => {
+        showToast('画像の読み込みに失敗しました', 'error');
+      };
+      reader.readAsDataURL(file);
     } catch (err) {
       console.error(err);
       showToast('画像の読み込みに失敗しました', 'error');
     }
   });
+
+  // Re-adjust avatar button
+  const cropAvatarBtn = document.getElementById('crop-avatar-btn');
+  if (cropAvatarBtn) {
+    cropAvatarBtn.addEventListener('click', () => {
+      const activeSrc = newAvatarBase64 || currentAvatarUrl;
+      if (activeSrc) {
+        openAvatarCropper(activeSrc);
+      }
+    });
+  }
+
+  // Cropper Controls Event Listeners
+  const cropperModal = document.getElementById('avatar-cropper-modal');
+  const cropperCanvas = document.getElementById('cropper-canvas');
+  const cropperViewport = cropperCanvas ? cropperCanvas.parentElement : null;
+
+  if (cropperViewport) {
+    // Mouse drag
+    cropperViewport.addEventListener('mousedown', (e) => {
+      isCropperDragging = true;
+      cropperDragStart = { x: e.clientX, y: e.clientY };
+      cropperOffsetStart = { x: cropperState.offsetX, y: cropperState.offsetY };
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isCropperDragging) return;
+      const dx = e.clientX - cropperDragStart.x;
+      const dy = e.clientY - cropperDragStart.y;
+      cropperState.offsetX = cropperOffsetStart.x + dx;
+      cropperState.offsetY = cropperOffsetStart.y + dy;
+      drawCropperCanvas();
+    });
+
+    window.addEventListener('mouseup', () => {
+      isCropperDragging = false;
+    });
+
+    // Touch drag & pinch zoom
+    cropperViewport.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        isCropperDragging = true;
+        cropperDragStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        cropperOffsetStart = { x: cropperState.offsetX, y: cropperState.offsetY };
+      } else if (e.touches.length === 2) {
+        isCropperDragging = false;
+        cropperPinchStartDist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        cropperPinchStartZoom = cropperState.zoom;
+      }
+    }, { passive: false });
+
+    cropperViewport.addEventListener('touchmove', (e) => {
+      e.preventDefault(); // prevent page scroll while dragging
+      if (e.touches.length === 1 && isCropperDragging) {
+        const dx = e.touches[0].clientX - cropperDragStart.x;
+        const dy = e.touches[0].clientY - cropperDragStart.y;
+        cropperState.offsetX = cropperOffsetStart.x + dx;
+        cropperState.offsetY = cropperOffsetStart.y + dy;
+        drawCropperCanvas();
+      } else if (e.touches.length === 2 && cropperPinchStartDist > 0) {
+        const dist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        const factor = dist / cropperPinchStartDist;
+        cropperState.zoom = Math.min(3, Math.max(0.5, cropperPinchStartZoom * factor));
+        const zoomRange = document.getElementById('cropper-zoom-range');
+        if (zoomRange) zoomRange.value = cropperState.zoom;
+        drawCropperCanvas();
+      }
+    }, { passive: false });
+
+    cropperViewport.addEventListener('touchend', (e) => {
+      if (e.touches.length === 0) {
+        isCropperDragging = false;
+        cropperPinchStartDist = 0;
+      }
+    });
+
+    // Mouse wheel zoom
+    cropperViewport.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const delta = e.deltaY < 0 ? 0.08 : -0.08;
+      cropperState.zoom = Math.min(3, Math.max(0.5, cropperState.zoom + delta));
+      const zoomRange = document.getElementById('cropper-zoom-range');
+      if (zoomRange) zoomRange.value = cropperState.zoom;
+      drawCropperCanvas();
+    }, { passive: false });
+  }
+
+  // Zoom slider
+  const zoomRange = document.getElementById('cropper-zoom-range');
+  if (zoomRange) {
+    zoomRange.addEventListener('input', (e) => {
+      cropperState.zoom = parseFloat(e.target.value) || 1;
+      drawCropperCanvas();
+    });
+  }
+
+  // Rotate Left (-90)
+  const rotateLeftBtn = document.getElementById('cropper-rotate-left');
+  if (rotateLeftBtn) {
+    rotateLeftBtn.addEventListener('click', () => {
+      cropperState.rotation = (cropperState.rotation - 90 + 360) % 360;
+      drawCropperCanvas();
+    });
+  }
+
+  // Rotate Right (+90)
+  const rotateRightBtn = document.getElementById('cropper-rotate-right');
+  if (rotateRightBtn) {
+    rotateRightBtn.addEventListener('click', () => {
+      cropperState.rotation = (cropperState.rotation + 90) % 360;
+      drawCropperCanvas();
+    });
+  }
+
+  // Flip Horizontal
+  const flipHBtn = document.getElementById('cropper-flip-h');
+  if (flipHBtn) {
+    flipHBtn.addEventListener('click', () => {
+      cropperState.flipH *= -1;
+      drawCropperCanvas();
+    });
+  }
+
+  // Reset Cropper
+  const resetBtn = document.getElementById('cropper-reset-btn');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      cropperState.zoom = 1;
+      cropperState.rotation = 0;
+      cropperState.flipH = 1;
+      cropperState.offsetX = 0;
+      cropperState.offsetY = 0;
+      if (zoomRange) zoomRange.value = 1;
+      drawCropperCanvas();
+    });
+  }
+
+  // Cropper Cancel / Close
+  const closeCropperBtn = document.getElementById('close-cropper-btn');
+  const cropperCancelBtn = document.getElementById('cropper-cancel-btn');
+  if (closeCropperBtn) closeCropperBtn.addEventListener('click', closeAvatarCropper);
+  if (cropperCancelBtn) cropperCancelBtn.addEventListener('click', closeAvatarCropper);
+  if (cropperModal) {
+    cropperModal.addEventListener('click', (e) => {
+      if (e.target === cropperModal) closeAvatarCropper();
+    });
+  }
+
+  // Cropper Apply (Confirm & Save to preview)
+  const cropperApplyBtn = document.getElementById('cropper-apply-btn');
+  if (cropperApplyBtn) {
+    cropperApplyBtn.addEventListener('click', () => {
+      const croppedBase64 = getCroppedAvatarBase64(600);
+      if (croppedBase64) {
+        newAvatarBase64 = croppedBase64;
+        setAvatarPreview(newAvatarBase64);
+        document.getElementById('avatar-url-input').value = '';
+        closeAvatarCropper();
+        showToast('✨ アイコンを調整しました！「保存」を押すとHPに反映されます', 'success');
+      }
+    });
+  }
 
   // Inline Image File Upload
   const inlineFileInput = document.getElementById('inline-img-file-input');
@@ -606,15 +778,173 @@ window.selectThemePreset = function(presetId) {
 function setAvatarPreview(src) {
   const img = document.getElementById('admin-avatar-preview');
   const fallback = document.getElementById('admin-avatar-fallback');
+  const cropBtn = document.getElementById('crop-avatar-btn');
   if (src) {
     img.src = src;
     img.style.display = 'block';
     fallback.style.display = 'none';
+    if (cropBtn) cropBtn.style.display = 'inline-block';
   } else {
     img.src = '';
     img.style.display = 'none';
     fallback.style.display = 'flex';
+    if (cropBtn) cropBtn.style.display = 'none';
   }
+}
+
+// ==========================================
+// Avatar Cropper & Transformer (Crop, Pan, Zoom, Rotate, Flip)
+// ==========================================
+let cropperImg = null;
+let cropperState = {
+  zoom: 1,
+  rotation: 0, // 0, 90, 180, 270
+  flipH: 1, // 1 or -1
+  offsetX: 0, // image center offset relative to viewport center
+  offsetY: 0
+};
+let isCropperDragging = false;
+let cropperDragStart = { x: 0, y: 0 };
+let cropperOffsetStart = { x: 0, y: 0 };
+let cropperPinchStartDist = 0;
+let cropperPinchStartZoom = 1;
+
+function openAvatarCropper(imageSource) {
+  const modal = document.getElementById('avatar-cropper-modal');
+  if (!modal) return;
+
+  const img = new Image();
+  // Support crossOrigin if URL
+  if (!imageSource.startsWith('data:')) {
+    img.crossOrigin = 'anonymous';
+  }
+  img.onload = () => {
+    cropperImg = img;
+    cropperState = {
+      zoom: 1,
+      rotation: 0,
+      flipH: 1,
+      offsetX: 0,
+      offsetY: 0
+    };
+    const zoomRange = document.getElementById('cropper-zoom-range');
+    if (zoomRange) zoomRange.value = 1;
+
+    modal.classList.add('show');
+    setupCropperCanvas();
+    drawCropperCanvas();
+  };
+  img.onerror = () => {
+    showToast('画像の読み込みに失敗しました', 'error');
+  };
+  img.src = imageSource;
+}
+
+function closeAvatarCropper() {
+  const modal = document.getElementById('avatar-cropper-modal');
+  if (modal) modal.classList.remove('show');
+}
+
+function setupCropperCanvas() {
+  const canvas = document.getElementById('cropper-canvas');
+  if (!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const size = Math.round(rect.width || 280);
+  canvas.width = size * dpr;
+  canvas.height = size * dpr;
+}
+
+function drawCropperCanvas() {
+  const canvas = document.getElementById('cropper-canvas');
+  if (!canvas || !cropperImg) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
+  const dpr = window.devicePixelRatio || 1;
+
+  ctx.clearRect(0, 0, w, h);
+
+  // Background
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 0, w, h);
+
+  ctx.save();
+  // Translate to center + user offsets (scaled by dpr)
+  const centerX = (w / 2) + (cropperState.offsetX * dpr);
+  const centerY = (h / 2) + (cropperState.offsetY * dpr);
+  ctx.translate(centerX, centerY);
+
+  // Apply rotation
+  ctx.rotate((cropperState.rotation * Math.PI) / 180);
+
+  // Apply horizontal flip
+  ctx.scale(cropperState.flipH, 1);
+
+  // Compute base scale so image fills the crop circle
+  // Crop area radius is approximately (size - 20) / 2
+  const cropDiameter = (canvas.width - (20 * dpr));
+  const isRotated90 = (cropperState.rotation % 180) !== 0;
+  const effectiveImgW = isRotated90 ? cropperImg.height : cropperImg.width;
+  const effectiveImgH = isRotated90 ? cropperImg.width : cropperImg.height;
+
+  // Base scale: fit image min dimension to cover crop circle
+  const baseScale = Math.max(cropDiameter / effectiveImgW, cropDiameter / effectiveImgH);
+  const finalScale = baseScale * cropperState.zoom;
+
+  const drawW = cropperImg.width * finalScale;
+  const drawH = cropperImg.height * finalScale;
+
+  // Draw image centered at (0, 0)
+  ctx.drawImage(cropperImg, -drawW / 2, -drawH / 2, drawW, drawH);
+
+  ctx.restore();
+}
+
+function getCroppedAvatarBase64(outputSize = 600) {
+  if (!cropperImg) return null;
+
+  const outCanvas = document.createElement('canvas');
+  outCanvas.width = outputSize;
+  outCanvas.height = outputSize;
+  const ctx = outCanvas.getContext('2d');
+
+  // Fill transparent or white? Avatars are usually circular png
+  ctx.clearRect(0, 0, outputSize, outputSize);
+
+  ctx.save();
+  // Center of output
+  ctx.translate(outputSize / 2, outputSize / 2);
+
+  // In preview canvas, crop diameter was (canvasSize - 20).
+  // The ratio from outputSize to preview crop diameter:
+  const previewCanvas = document.getElementById('cropper-canvas');
+  const dpr = window.devicePixelRatio || 1;
+  const previewCropDiameter = previewCanvas ? (previewCanvas.width - (20 * dpr)) : (260 * dpr);
+
+  const scaleRatio = outputSize / previewCropDiameter;
+
+  // Apply user offset scaled
+  ctx.translate(cropperState.offsetX * dpr * scaleRatio, cropperState.offsetY * dpr * scaleRatio);
+
+  // Rotate & Flip
+  ctx.rotate((cropperState.rotation * Math.PI) / 180);
+  ctx.scale(cropperState.flipH, 1);
+
+  const isRotated90 = (cropperState.rotation % 180) !== 0;
+  const effectiveImgW = isRotated90 ? cropperImg.height : cropperImg.width;
+  const effectiveImgH = isRotated90 ? cropperImg.width : cropperImg.height;
+
+  const baseScale = Math.max(previewCropDiameter / effectiveImgW, previewCropDiameter / effectiveImgH);
+  const finalScale = baseScale * cropperState.zoom * scaleRatio;
+
+  const drawW = cropperImg.width * finalScale;
+  const drawH = cropperImg.height * finalScale;
+
+  ctx.drawImage(cropperImg, -drawW / 2, -drawH / 2, drawW, drawH);
+  ctx.restore();
+
+  return outCanvas.toDataURL('image/png', 0.92);
 }
 
 // Process and resize image
