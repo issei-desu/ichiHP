@@ -294,8 +294,8 @@
       "aboutTitle": "",
       "aboutSubtitle": "",
       "font": "",
-      "titleColor": "#000000",
-      "textColor": "#000000",
+      "titleColor": "",
+      "textColor": "",
       "isSensitive": false,
       "sensitiveWarning": "",
       "items": [
@@ -312,6 +312,16 @@
         {
           "label": "編集アプリ。",
           "value": "https://issei-desu.github.io/henshu-shiteko-ze/download\nまだデバグとか全然してないし、\nAIが作った感じがモロ見えで...。",
+          "font": "",
+          "labelColor": "",
+          "valueColor": "",
+          "isSensitive": false,
+          "sensitiveWarning": "",
+          "subItems": []
+        },
+        {
+          "label": "リクレル数ってのを探すためにひたすら試行し続けるだけのサイト。",
+          "value": "https://issei-desu.github.io/196",
           "font": "",
           "labelColor": "",
           "valueColor": "",
