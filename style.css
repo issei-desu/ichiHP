@@ -486,7 +486,7 @@ body {
 .about-label {
   font-size: 0.8rem;
   font-weight: 700;
-  color: var(--secondary);
+  color: var(--about-label-color, var(--secondary));
   display: block;
   margin-bottom: 3px;
 }
@@ -899,7 +899,7 @@ body {
 .about-subitem-label {
   font-size: 0.85rem;
   font-weight: 800;
-  color: var(--secondary);
+  color: var(--about-label-color, var(--secondary));
 }
 
 /* Inline Images inside textboxes */

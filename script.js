@@ -732,6 +732,18 @@ function applyTheme(theme) {
     root.style.setProperty('--text-main', theme.textColor);
     root.style.setProperty('--text-muted', mixHex(theme.textColor, isDark ? '#0f172a' : '#ffffff', 0.25));
   }
+
+  // Ensure readable label color inside cards even if secondary color has poor contrast (e.g. white #ffffff on white card)
+  const sLuminance = (0.299 * sRgb.r + 0.587 * sRgb.g + 0.114 * sRgb.b) / 255;
+  let labelColor = secondary;
+  if (!isDark && sLuminance > 0.65) {
+    const pLuminance = (0.299 * pRgb.r + 0.587 * pRgb.g + 0.114 * pRgb.b) / 255;
+    labelColor = pLuminance <= 0.65 ? primary : (theme.textColor || '#1e293b');
+  } else if (isDark && sLuminance < 0.35) {
+    const pLuminance = (0.299 * pRgb.r + 0.587 * pRgb.g + 0.114 * pRgb.b) / 255;
+    labelColor = pLuminance >= 0.35 ? primary : (theme.textColor || '#f8fafc');
+  }
+  root.style.setProperty('--about-label-color', labelColor);
 }
 
 function hexToRgb(hex) {

@@ -294,8 +294,8 @@
       "aboutTitle": "",
       "aboutSubtitle": "",
       "font": "",
-      "titleColor": "",
-      "textColor": "",
+      "titleColor": "#000000",
+      "textColor": "#000000",
       "isSensitive": false,
       "sensitiveWarning": "",
       "items": [

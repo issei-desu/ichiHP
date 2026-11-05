@@ -642,14 +642,16 @@ function setupEventListeners() {
   // Add Tab Button
   document.getElementById('add-tab-btn').addEventListener('click', () => {
     const newTabId = 'tab_' + Date.now();
+    const inheritTitleColor = tabsState.length > 0 && tabsState[0].titleColor ? tabsState[0].titleColor : '';
+    const inheritTextColor = tabsState.length > 0 && tabsState[0].textColor ? tabsState[0].textColor : '';
     tabsState.push({
       id: newTabId,
       name: '新しいタブ',
       aboutTitle: 'About Me',
       aboutSubtitle: '',
       font: '',
-      titleColor: '',
-      textColor: '',
+      titleColor: inheritTitleColor,
+      textColor: inheritTextColor,
       isSensitive: false,
       sensitiveWarning: '',
       items: [
