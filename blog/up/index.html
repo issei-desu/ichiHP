@@ -85,10 +85,17 @@
 
         <div class="up-meta-item" id="schedule-datetime-group" style="display: none;">
           <label class="up-meta-label" for="post-schedule-datetime">
-            <span>予約公開日時</span>
-            <span style="font-size: 0.72rem; color: #2563eb; font-weight: normal;">指定日時に自動公開</span>
+            <span>予約公開日時（時間指定必須） <span style="color:#ef4444;">*</span></span>
+            <span style="font-size: 0.72rem; color: #2563eb; font-weight: normal;">日付と時間（時:分）を必ず指定</span>
           </label>
-          <input type="datetime-local" id="post-schedule-datetime" class="up-input">
+          <input type="datetime-local" id="post-schedule-datetime" class="up-input" step="60" required>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px;">
+            <button type="button" class="up-btn up-btn-outline up-btn-sm" style="font-size: 0.75rem; padding: 2px 8px;" onclick="setQuickSchedule(1, 'hours')">1時間後</button>
+            <button type="button" class="up-btn up-btn-outline up-btn-sm" style="font-size: 0.75rem; padding: 2px 8px;" onclick="setQuickSchedule(18, 'today_time')">今日 18:00</button>
+            <button type="button" class="up-btn up-btn-outline up-btn-sm" style="font-size: 0.75rem; padding: 2px 8px;" onclick="setQuickSchedule(21, 'today_time')">今日 21:00</button>
+            <button type="button" class="up-btn up-btn-outline up-btn-sm" style="font-size: 0.75rem; padding: 2px 8px;" onclick="setQuickSchedule(18, 'tomorrow_time')">明日 18:00</button>
+            <button type="button" class="up-btn up-btn-outline up-btn-sm" style="font-size: 0.75rem; padding: 2px 8px;" onclick="setQuickSchedule(21, 'tomorrow_time')">明日 21:00</button>
+          </div>
         </div>
 
         <div class="up-meta-item">

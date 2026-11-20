@@ -420,13 +420,9 @@ function formatJapaneseScheduledDate(dateStr) {
   const m = d.getMonth() + 1;
   const day = d.getDate();
   const h = d.getHours();
-  const min = d.getMinutes();
+  const min = String(d.getMinutes()).padStart(2, '0');
 
-  if (h === 0 && min === 0) {
-    return `${y}年${m}月${day}日`;
-  }
-  const minStr = String(min).padStart(2, '0');
-  return `${y}年${m}月${day}日 ${h}:${minStr}`;
+  return `${y}年${m}月${day}日 ${h}:${min}`;
 }
 
 function showScheduledArticleNotice(post, isAdmin = false) {

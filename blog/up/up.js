@@ -229,6 +229,28 @@ function handlePublishTypeChange() {
   }
 }
 
+function setQuickSchedule(val, type) {
+  const d = new Date();
+  if (type === 'hours') {
+    d.setTime(d.getTime() + val * 60 * 60 * 1000);
+    d.setSeconds(0, 0);
+  } else if (type === 'today_time') {
+    d.setHours(val, 0, 0, 0);
+    if (d.getTime() <= Date.now()) {
+      d.setDate(d.getDate() + 1);
+    }
+  } else if (type === 'tomorrow_time') {
+    d.setDate(d.getDate() + 1);
+    d.setHours(val, 0, 0, 0);
+  }
+  const schedInput = document.getElementById('post-schedule-datetime');
+  if (schedInput) {
+    schedInput.value = toDatetimeLocalValue(d);
+    schedInput.style.borderColor = '';
+    schedInput.dispatchEvent(new Event('change'));
+  }
+}
+
 function submitFromPrimaryBtn() {
   const type = document.getElementById('post-publish-type')?.value || 'published';
   submitPost(type);
@@ -311,8 +333,12 @@ function setupEventListeners() {
   }
 
   if (scheduleInput) {
+    scheduleInput.addEventListener('input', () => {
+      scheduleInput.style.borderColor = '';
+    });
     scheduleInput.addEventListener('change', () => {
       isDirty = true;
+      scheduleInput.style.borderColor = '';
       if (scheduleInput.value) {
         const d = new Date(scheduleInput.value);
         if (!isNaN(d.getTime())) {
@@ -894,25 +920,39 @@ async function submitPost(overrideType) {
     scheduledAt = null;
   } else if (publishType === 'scheduled') {
     isPublished = true;
-    const schedVal = scheduleInput?.value;
+    const schedVal = (scheduleInput?.value || '').trim();
     if (!schedVal) {
-      alert('予約公開日時を指定してください。');
-      if (scheduleInput) scheduleInput.focus();
+      alert('【時間の指定が必要です】\n予約投稿には「公開日」と「時間（時:分）」の入力が必須です。\n日時を設定してください。');
+      if (scheduleInput) {
+        scheduleInput.focus();
+        scheduleInput.style.borderColor = '#ef4444';
+      }
+      return;
+    }
+    if (!schedVal.includes('T')) {
+      alert('【時間の指定が必要です】\n予約投稿には時間（時:分）の設定が必須です。時間まで指定してください。');
+      if (scheduleInput) {
+        scheduleInput.focus();
+        scheduleInput.style.borderColor = '#ef4444';
+      }
       return;
     }
     const schedDate = new Date(schedVal);
     if (isNaN(schedDate.getTime())) {
-      alert('予約日時が正しくありません。');
+      alert('予約日時の形式が正しくありません。正しい日付と時間を指定してください。');
+      if (scheduleInput) scheduleInput.focus();
       return;
     }
     if (schedDate.getTime() <= Date.now()) {
-      if (!confirm('設定された予約日時はすでに過去の時刻です。このまま「今すぐ公開」として保存しますか？')) {
-        return;
+      alert('【時間の指定が必要です】\n予約投稿日時は、現在より未来の時間を設定してください。\n（※今すぐ公開したい場合は、公開設定を「今すぐ公開」に切り替えてください）');
+      if (scheduleInput) {
+        scheduleInput.focus();
+        scheduleInput.style.borderColor = '#ef4444';
       }
-      scheduledAt = null;
-    } else {
-      scheduledAt = schedDate.toISOString();
+      return;
     }
+    if (scheduleInput) scheduleInput.style.borderColor = '';
+    scheduledAt = schedDate.toISOString();
   } else {
     isPublished = true;
     scheduledAt = null;
