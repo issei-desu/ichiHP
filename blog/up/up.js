@@ -1,6 +1,7 @@
 /* ===================================================
    blog/up - Note-style Blog Post Editor Logic
    Designed for ichiHP / Clean, Distraction-Free UI
+   Features: Real-time preview, Image upload, Scheduled posting
    =================================================== */
 
 const GITHUB_OWNER = 'issei-desu';
@@ -23,6 +24,7 @@ async function initApp() {
   setupEventListeners();
   setupViewMode();
   setupDateDefault();
+  handlePublishTypeChange();
   await checkAuthStatus();
   await loadBlogData();
 
@@ -191,6 +193,84 @@ function updateNavCount() {
 }
 
 /* ==========================================
+   Publish Type & Scheduling Handling
+   ========================================== */
+function handlePublishTypeChange() {
+  const typeSelect = document.getElementById('post-publish-type');
+  const type = typeSelect ? typeSelect.value : 'published';
+  const schedGroup = document.getElementById('schedule-datetime-group');
+  const schedInput = document.getElementById('post-schedule-datetime');
+  const saveBtnText = document.getElementById('btn-save-text');
+
+  if (type === 'scheduled') {
+    if (schedGroup) schedGroup.style.display = 'flex';
+    if (schedInput && !schedInput.value) {
+      // Default to tomorrow 18:00
+      const d = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      d.setHours(18, 0, 0, 0);
+      schedInput.value = toDatetimeLocalValue(d);
+
+      const dateInput = document.getElementById('post-date');
+      if (dateInput) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        dateInput.value = `${y}/${m}/${day} 18:00`;
+      }
+    }
+    if (saveBtnText) saveBtnText.textContent = currentPostId ? '予約日時を更新して保存' : '予約投稿として保存';
+  } else if (type === 'draft') {
+    if (schedGroup) schedGroup.style.display = 'none';
+    if (saveBtnText) saveBtnText.textContent = '下書きとして保存';
+  } else {
+    // published
+    if (schedGroup) schedGroup.style.display = 'none';
+    if (saveBtnText) saveBtnText.textContent = currentPostId ? '更新して保存' : '保存して公開する';
+  }
+}
+
+function submitFromPrimaryBtn() {
+  const type = document.getElementById('post-publish-type')?.value || 'published';
+  submitPost(type);
+}
+
+function getPostStatus(post) {
+  if (!post || post.isPublished === false) {
+    return { type: 'draft', label: '下書き' };
+  }
+  if (post.scheduledAt) {
+    const scheduledTime = new Date(post.scheduledAt).getTime();
+    if (!isNaN(scheduledTime) && Date.now() < scheduledTime) {
+      return { type: 'scheduled', label: '予約中', timeStr: formatScheduleDisplay(post.scheduledAt) };
+    }
+  }
+  return { type: 'published', label: '公開中' };
+}
+
+function toDatetimeLocalValue(d) {
+  if (!d) return '';
+  const date = (d instanceof Date) ? d : new Date(d);
+  if (isNaN(date.getTime())) return '';
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const h = String(date.getHours()).padStart(2, '0');
+  const min = String(date.getMinutes()).padStart(2, '0');
+  return `${y}-${m}-${day}T${h}:${min}`;
+}
+
+function formatScheduleDisplay(isoStr) {
+  if (!isoStr) return '';
+  const d = new Date(isoStr);
+  if (isNaN(d.getTime())) return isoStr;
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const h = String(d.getHours()).padStart(2, '0');
+  const min = String(d.getMinutes()).padStart(2, '0');
+  return `${m}/${day} ${h}:${min}`;
+}
+
+/* ==========================================
    Editor Setup & Event Handlers
    ========================================== */
 function setupEventListeners() {
@@ -199,6 +279,7 @@ function setupEventListeners() {
   const contentInput = document.getElementById('post-content');
   const tagsInput = document.getElementById('post-tags');
   const dateInput = document.getElementById('post-date');
+  const scheduleInput = document.getElementById('post-schedule-datetime');
 
   if (titleInput) {
     titleInput.addEventListener('input', () => {
@@ -225,6 +306,24 @@ function setupEventListeners() {
   if (dateInput) {
     dateInput.addEventListener('input', () => {
       isDirty = true;
+      renderLivePreview();
+    });
+  }
+
+  if (scheduleInput) {
+    scheduleInput.addEventListener('change', () => {
+      isDirty = true;
+      if (scheduleInput.value) {
+        const d = new Date(scheduleInput.value);
+        if (!isNaN(d.getTime())) {
+          const y = d.getFullYear();
+          const m = String(d.getMonth() + 1).padStart(2, '0');
+          const day = String(d.getDate()).padStart(2, '0');
+          const h = String(d.getHours()).padStart(2, '0');
+          const min = String(d.getMinutes()).padStart(2, '0');
+          if (dateInput) dateInput.value = `${y}/${m}/${day} ${h}:${min}`;
+        }
+      }
       renderLivePreview();
     });
   }
@@ -315,8 +414,7 @@ function setupEventListeners() {
   window.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 's') {
       e.preventDefault();
-      const published = document.getElementById('post-published')?.value !== 'false';
-      submitPost(published);
+      submitFromPrimaryBtn();
     }
   });
 
@@ -532,17 +630,24 @@ function renderDrawerPosts() {
 
   container.innerHTML = allPosts.map(post => {
     const isCurrent = currentPostId === post.id;
-    const isPub = post.isPublished !== false;
+    const status = getPostStatus(post);
     const date = escapeHtml(post.date || '日付未設定');
     const title = escapeHtml(post.title || '無題の記事');
+
+    let badgeHtml = '';
+    if (status.type === 'scheduled') {
+      badgeHtml = `<span style="font-size: 0.72rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;">予約: ${escapeHtml(status.timeStr)}</span>`;
+    } else if (status.type === 'draft') {
+      badgeHtml = `<span style="font-size: 0.72rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: #f1f5f9; color: #64748b;">下書き</span>`;
+    } else {
+      badgeHtml = `<span style="font-size: 0.72rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: #ecfdf5; color: #059669;">公開中</span>`;
+    }
 
     return `
       <div class="drawer-post-item ${isCurrent ? 'active' : ''}">
         <div class="drawer-post-header">
           <span class="drawer-post-date">${date}</span>
-          <span style="font-size: 0.72rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; ${isPub ? 'background: #ecfdf5; color: #059669;' : 'background: #f1f5f9; color: #64748b;'}">
-            ${isPub ? '公開中' : '下書き'}
-          </span>
+          ${badgeHtml}
         </div>
         <div class="drawer-post-title">${title}</div>
         <div class="drawer-post-actions">
@@ -573,7 +678,12 @@ function resetEditorToNew() {
   document.getElementById('cover-url-input').value = '';
   document.getElementById('post-excerpt').value = '';
   document.getElementById('post-content').value = '';
-  document.getElementById('post-published').value = 'true';
+
+  const publishTypeSelect = document.getElementById('post-publish-type');
+  if (publishTypeSelect) publishTypeSelect.value = 'published';
+  const schedInput = document.getElementById('post-schedule-datetime');
+  if (schedInput) schedInput.value = '';
+  handlePublishTypeChange();
 
   setupDateDefault();
   updateCoverPreview('');
@@ -610,7 +720,21 @@ function loadPostIntoEditor(id) {
   document.getElementById('cover-url-input').value = post.cover || '';
   document.getElementById('post-excerpt').value = post.excerpt || '';
   document.getElementById('post-content').value = post.content || '';
-  document.getElementById('post-published').value = post.isPublished !== false ? 'true' : 'false';
+
+  const publishTypeSelect = document.getElementById('post-publish-type');
+  const schedInput = document.getElementById('post-schedule-datetime');
+
+  if (post.isPublished === false) {
+    if (publishTypeSelect) publishTypeSelect.value = 'draft';
+    if (schedInput) schedInput.value = '';
+  } else if (post.scheduledAt && new Date(post.scheduledAt).getTime() > Date.now()) {
+    if (publishTypeSelect) publishTypeSelect.value = 'scheduled';
+    if (schedInput) schedInput.value = toDatetimeLocalValue(new Date(post.scheduledAt));
+  } else {
+    if (publishTypeSelect) publishTypeSelect.value = 'published';
+    if (schedInput) schedInput.value = '';
+  }
+  handlePublishTypeChange();
 
   updateCoverPreview(post.cover || '');
   updateEditorModeTag();
@@ -627,7 +751,7 @@ function loadPostIntoEditor(id) {
 function updateEditorModeTag() {
   const modeTag = document.getElementById('post-mode-tag');
   const modeDesc = document.getElementById('post-mode-desc');
-  const saveBtnText = document.getElementById('btn-save-text');
+  const publishType = document.getElementById('post-publish-type')?.value || 'published';
 
   if (currentPostId) {
     if (modeTag) {
@@ -635,15 +759,15 @@ function updateEditorModeTag() {
       modeTag.textContent = '編集中';
     }
     if (modeDesc) modeDesc.textContent = `ID: ${currentPostId} を編集中です`;
-    if (saveBtnText) saveBtnText.textContent = '更新して保存';
   } else {
     if (modeTag) {
       modeTag.className = 'up-status-tag tag-new';
       modeTag.textContent = '新規記事';
     }
     if (modeDesc) modeDesc.textContent = '新しい記事を作成しています';
-    if (saveBtnText) saveBtnText.textContent = '保存して公開する';
   }
+
+  handlePublishTypeChange();
 }
 
 /* ==========================================
@@ -730,7 +854,7 @@ async function uploadImageToGitHub(token, path, dataUrl) {
 /* ==========================================
    Saving / Submitting Blog Post
    ========================================== */
-async function submitPost(isPublished) {
+async function submitPost(overrideType) {
   const token = localStorage.getItem('gh_token');
   if (!token) {
     openAuthModal();
@@ -743,6 +867,7 @@ async function submitPost(isPublished) {
   const tagsInput = document.getElementById('post-tags');
   const coverUrlInput = document.getElementById('cover-url-input');
   const excerptInput = document.getElementById('post-excerpt');
+  const scheduleInput = document.getElementById('post-schedule-datetime');
 
   const title = (titleInput?.value || '').trim();
   const content = (contentInput?.value || '').trim();
@@ -757,6 +882,40 @@ async function submitPost(isPublished) {
     alert('記事の本文を入力してください。');
     if (contentInput) contentInput.focus();
     return;
+  }
+
+  // Determine publication & scheduling state
+  const publishType = overrideType || document.getElementById('post-publish-type')?.value || 'published';
+  let isPublished = true;
+  let scheduledAt = null;
+
+  if (publishType === 'draft') {
+    isPublished = false;
+    scheduledAt = null;
+  } else if (publishType === 'scheduled') {
+    isPublished = true;
+    const schedVal = scheduleInput?.value;
+    if (!schedVal) {
+      alert('予約公開日時を指定してください。');
+      if (scheduleInput) scheduleInput.focus();
+      return;
+    }
+    const schedDate = new Date(schedVal);
+    if (isNaN(schedDate.getTime())) {
+      alert('予約日時が正しくありません。');
+      return;
+    }
+    if (schedDate.getTime() <= Date.now()) {
+      if (!confirm('設定された予約日時はすでに過去の時刻です。このまま「今すぐ公開」として保存しますか？')) {
+        return;
+      }
+      scheduledAt = null;
+    } else {
+      scheduledAt = schedDate.toISOString();
+    }
+  } else {
+    isPublished = true;
+    scheduledAt = null;
   }
 
   const date = (dateInput?.value || '').trim() || new Date().toISOString().slice(0, 10).replace(/-/g, '/');
@@ -826,10 +985,10 @@ async function submitPost(isPublished) {
           cover,
           excerpt,
           content,
-          isPublished
+          isPublished,
+          scheduledAt
         };
       } else {
-        // Fallback: prepend if not found
         fullData.blog.posts.unshift({
           id: targetId,
           title,
@@ -839,7 +998,8 @@ async function submitPost(isPublished) {
           excerpt,
           content,
           likes: 0,
-          isPublished
+          isPublished,
+          scheduledAt
         });
       }
     } else {
@@ -857,7 +1017,8 @@ async function submitPost(isPublished) {
         excerpt,
         content,
         likes: 0,
-        isPublished
+        isPublished,
+        scheduledAt
       };
       fullData.blog.posts.unshift(newPost);
     }
@@ -867,9 +1028,16 @@ async function submitPost(isPublished) {
     const updatedJsonStr = JSON.stringify(fullData, null, 2);
     const contentBase64 = utf8ToBase64(updatedJsonStr);
 
+    let commitMsg = `Publish blog post "${title}" via blog/up`;
+    if (scheduledAt) {
+      commitMsg = `Schedule blog post "${title}" for ${scheduledAt} via blog/up`;
+    } else if (!isPublished) {
+      commitMsg = `Draft blog post "${title}" via blog/up`;
+    }
+
     const putUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${DATA_FILE_PATH}`;
     const putPayload = {
-      message: `Publish blog post "${title}" via blog/up`,
+      message: commitMsg,
       content: contentBase64,
       sha: sha
     };
@@ -898,7 +1066,13 @@ async function submitPost(isPublished) {
     const saveStatus = document.getElementById('save-status-indicator');
     if (saveStatus) saveStatus.style.display = 'inline';
 
-    showToast(isPublished ? '保存＆公開完了！ブログに反映されました' : '下書きとして保存しました', 'success');
+    if (scheduledAt) {
+      showToast(`「${formatScheduleDisplay(scheduledAt)}」に予約投稿を設定しました！`, 'success');
+    } else if (isPublished) {
+      showToast('保存＆公開完了！ブログに反映されました', 'success');
+    } else {
+      showToast('下書きとして保存しました', 'success');
+    }
 
   } catch (err) {
     console.error('Save error:', err);

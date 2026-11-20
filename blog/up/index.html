@@ -75,15 +75,24 @@
       <!-- Meta Grid (Date, Published status, Tags) -->
       <div class="up-meta-grid">
         <div class="up-meta-item">
-          <label class="up-meta-label" for="post-published">公開ステータス</label>
-          <select id="post-published" class="up-select">
-            <option value="true">公開する（全員に表示）</option>
-            <option value="false">下書き（非公開）</option>
+          <label class="up-meta-label" for="post-publish-type">公開設定</label>
+          <select id="post-publish-type" class="up-select" onchange="handlePublishTypeChange()">
+            <option value="published">今すぐ公開</option>
+            <option value="scheduled">予約投稿（日時指定）</option>
+            <option value="draft">下書き（非公開）</option>
           </select>
         </div>
 
+        <div class="up-meta-item" id="schedule-datetime-group" style="display: none;">
+          <label class="up-meta-label" for="post-schedule-datetime">
+            <span>予約公開日時</span>
+            <span style="font-size: 0.72rem; color: #2563eb; font-weight: normal;">指定日時に自動公開</span>
+          </label>
+          <input type="datetime-local" id="post-schedule-datetime" class="up-input">
+        </div>
+
         <div class="up-meta-item">
-          <label class="up-meta-label" for="post-date">投稿日</label>
+          <label class="up-meta-label" for="post-date">表示日付</label>
           <input type="text" id="post-date" class="up-input" placeholder="2026/11/20">
         </div>
 
@@ -202,10 +211,10 @@
       </div>
 
       <div class="up-bottom-right">
-        <button type="button" class="up-btn up-btn-outline" id="btn-save-draft" onclick="submitPost(false)">
+        <button type="button" class="up-btn up-btn-outline" id="btn-save-draft" onclick="submitPost('draft')">
           下書きとして保存
         </button>
-        <button type="button" class="up-btn up-btn-primary" id="btn-save-publish" onclick="submitPost(true)">
+        <button type="button" class="up-btn up-btn-primary" id="btn-save-publish" onclick="submitFromPrimaryBtn()">
           <span id="btn-save-text">保存して公開する</span>
         </button>
       </div>

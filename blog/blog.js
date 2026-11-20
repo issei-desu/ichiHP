@@ -122,8 +122,31 @@ function renderCreatorHeader() {
   updateStatsCounts();
 }
 
+/* ==========================================
+   Visibility & Scheduling Helpers
+   ========================================== */
+function isPostVisible(post) {
+  if (!post || post.isPublished === false) return false;
+  if (post.scheduledAt) {
+    const scheduledTime = new Date(post.scheduledAt).getTime();
+    if (!isNaN(scheduledTime) && Date.now() < scheduledTime) {
+      return false; // Still scheduled for the future
+    }
+  }
+  return true;
+}
+
+function isPostScheduled(post) {
+  if (!post || post.isPublished === false) return false;
+  if (post.scheduledAt) {
+    const scheduledTime = new Date(post.scheduledAt).getTime();
+    return !isNaN(scheduledTime) && Date.now() < scheduledTime;
+  }
+  return false;
+}
+
 function updateStatsCounts() {
-  const publishedPosts = blogData.posts.filter(p => p.isPublished !== false);
+  const publishedPosts = blogData.posts.filter(isPostVisible);
   const postsCountEl = document.getElementById('stat-posts-count');
   const likesCountEl = document.getElementById('stat-likes-count');
 
@@ -145,7 +168,7 @@ function renderTagFilters() {
   const container = document.getElementById('tags-filter-row');
   if (!container) return;
 
-  const publishedPosts = blogData.posts.filter(p => p.isPublished !== false);
+  const publishedPosts = blogData.posts.filter(isPostVisible);
   const tagsSet = new Set();
   publishedPosts.forEach(p => {
     if (Array.isArray(p.tags)) {
@@ -206,7 +229,7 @@ function renderPostsFeed() {
   const listEl = document.getElementById('posts-list');
   if (!listEl) return;
 
-  let posts = blogData.posts.filter(p => p.isPublished !== false);
+  let posts = blogData.posts.filter(isPostVisible);
 
   // Tag filter
   if (currentActiveTag !== 'ALL') {
@@ -293,7 +316,7 @@ window.openArticle = function(postId) {
   window.location.hash = `post-${postId}`;
 };
 
-function showArticleDetail(post) {
+function showArticleDetail(post, isAdminPreview = false) {
   currentViewingPost = post;
   const feedView = document.getElementById('view-feed');
   const detailView = document.getElementById('view-detail');
@@ -305,6 +328,29 @@ function showArticleDetail(post) {
 
   // Update Page Title
   document.title = `${post.title} - ${blogData.title}`;
+
+  // Admin Preview Banner for Scheduled / Draft Posts
+  let banner = document.getElementById('detail-admin-preview-banner');
+  if (isAdminPreview) {
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.id = 'detail-admin-preview-banner';
+      banner.style.cssText = 'background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 10px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 0.88rem; font-weight: 700; display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;';
+      const backBar = detailView.querySelector('.detail-back-bar');
+      if (backBar) backBar.after(banner);
+      else detailView.prepend(banner);
+    }
+    let msg = '管理者プレビュー: 下書きです（一般には公開されていません）';
+    if (isPostScheduled(post)) {
+      const d = new Date(post.scheduledAt);
+      const timeStr = isNaN(d.getTime()) ? post.scheduledAt : `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+      msg = `管理者プレビュー: 予約投稿（${timeStr} に自動公開予定）`;
+    }
+    banner.innerHTML = `<span>${escapeHtml(msg)}</span><a href="up/?id=${escapeAttr(post.id)}" style="color: #2563eb; text-decoration: underline; font-size: 0.8rem;">記事を編集 ↗</a>`;
+    banner.style.display = 'flex';
+  } else if (banner) {
+    banner.style.display = 'none';
+  }
 
   // Tags
   const tagsRow = document.getElementById('detail-tags-row');
@@ -387,8 +433,17 @@ function handleHashRouting() {
     const postId = hash.replace(/^post-/, '');
     const post = blogData.posts.find(p => p.id === postId);
     if (post) {
-      showArticleDetail(post);
-      return;
+      if (isPostVisible(post)) {
+        showArticleDetail(post);
+        return;
+      }
+      // If admin has token, allow viewing draft / scheduled post preview
+      const hasToken = !!localStorage.getItem('gh_token');
+      if (hasToken) {
+        showArticleDetail(post, true);
+        return;
+      }
+      showToast('この記事はまだ公開されていないか、予約投稿です');
     }
   }
   showFeedView();
@@ -513,7 +568,7 @@ function renderPrevNextNav(currentPost) {
   const navContainer = document.getElementById('prev-next-nav');
   if (!navContainer) return;
 
-  const published = blogData.posts.filter(p => p.isPublished !== false);
+  const published = blogData.posts.filter(isPostVisible);
   const currentIndex = published.findIndex(p => p.id === currentPost.id);
 
   let html = '';

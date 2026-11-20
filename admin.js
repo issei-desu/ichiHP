@@ -2586,6 +2586,18 @@ function renderAdminBlogPosts() {
 
   listEl.innerHTML = posts.map((post, idx) => {
     const isPub = post.isPublished !== false;
+    const isSched = isPub && post.scheduledAt && new Date(post.scheduledAt).getTime() > Date.now();
+    let statusClass = 'published';
+    let statusLabel = '公開中';
+    if (!isPub) {
+      statusClass = 'draft';
+      statusLabel = '下書き';
+    } else if (isSched) {
+      statusClass = 'scheduled';
+      const d = new Date(post.scheduledAt);
+      const timeStr = isNaN(d.getTime()) ? '' : ` (${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')})`;
+      statusLabel = `予約${timeStr}`;
+    }
     const dateStr = post.date || '';
     const tags = Array.isArray(post.tags) ? post.tags : (post.tags ? String(post.tags).split(',').map(t => t.trim()).filter(Boolean) : []);
     const thumbHtml = post.cover
@@ -2600,8 +2612,8 @@ function renderAdminBlogPosts() {
         <div class="blog-post-admin-info">
           <div class="blog-post-admin-meta">
             <span>${escapeHtml(dateStr || '日付未設定')}</span>
-            <span class="blog-post-admin-status ${isPub ? 'published' : 'draft'}">
-              ${isPub ? '公開中' : '下書き'}
+            <span class="blog-post-admin-status ${statusClass}" ${isSched ? 'style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe;"' : ''}>
+              ${statusLabel}
             </span>
             <span>スキ: ${post.likes || 0}</span>
           </div>
