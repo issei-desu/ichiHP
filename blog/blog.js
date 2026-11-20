@@ -395,7 +395,161 @@ function showArticleDetail(post, isAdminPreview = false) {
   }
 
   // Like Button State
+  const likeBtn = document.getElementById('detail-like-btn');
+  if (likeBtn) likeBtn.style.display = 'inline-flex';
   updateDetailLikeButtonState();
+
+  // Bottom Creator Card
+  const bottomAvatar = document.getElementById('detail-bottom-avatar');
+  const bottomName = document.getElementById('detail-bottom-name');
+  const bottomBio = document.getElementById('detail-bottom-bio');
+  if (bottomAvatar && avatarSrc) bottomAvatar.src = avatarSrc;
+  if (bottomName) bottomName.textContent = siteProfile.name;
+  if (bottomBio && siteProfile.bio) bottomBio.innerHTML = formatRichText(siteProfile.bio);
+
+  // Prev / Next Navigation
+  renderPrevNextNav(post);
+}
+
+function formatJapaneseScheduledDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+
+  const y = d.getFullYear();
+  const m = d.getMonth() + 1;
+  const day = d.getDate();
+  const h = d.getHours();
+  const min = d.getMinutes();
+
+  if (h === 0 && min === 0) {
+    return `${y}年${m}月${day}日`;
+  }
+  const minStr = String(min).padStart(2, '0');
+  return `${y}年${m}月${day}日 ${h}:${minStr}`;
+}
+
+function showScheduledArticleNotice(post, isAdmin = false) {
+  currentViewingPost = post;
+  const feedView = document.getElementById('view-feed');
+  const detailView = document.getElementById('view-detail');
+  if (!detailView) return;
+
+  if (feedView) feedView.style.display = 'none';
+  detailView.style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  const schedDateStr = formatJapaneseScheduledDate(post.scheduledAt);
+
+  // Update Page Title
+  document.title = `${post.title} (公開予定) - ${blogData.title}`;
+
+  // Admin Banner
+  let banner = document.getElementById('detail-admin-preview-banner');
+  if (isAdmin) {
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.id = 'detail-admin-preview-banner';
+      banner.style.cssText = 'background: #eff6ff; border: 1.5px solid #bfdbfe; color: #1e40af; padding: 12px 18px; border-radius: 8px; margin-bottom: 24px; font-size: 0.88rem; font-weight: 700; display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;';
+      const backBar = detailView.querySelector('.detail-back-bar');
+      if (backBar) backBar.after(banner);
+      else detailView.prepend(banner);
+    }
+    banner.innerHTML = `
+      <div>
+        <div>管理者プレビュー: 予約投稿中</div>
+        <div style="font-weight: normal; font-size: 0.8rem; margin-top: 2px; color: #2563eb;">一般の読者には「この記事は ${escapeHtml(schedDateStr)} に投稿されます」と表示されています。</div>
+      </div>
+      <a href="up/?id=${escapeAttr(post.id)}" style="background: #2563eb; color: #ffffff; padding: 5px 12px; border-radius: 6px; text-decoration: none; font-size: 0.8rem; font-weight: 600;">記事を編集 ↗</a>
+    `;
+    banner.style.display = 'flex';
+  } else if (banner) {
+    banner.style.display = 'none';
+  }
+
+  // Tags
+  const tagsRow = document.getElementById('detail-tags-row');
+  if (tagsRow) {
+    const tags = Array.isArray(post.tags) ? post.tags : [];
+    const tagPills = tags.map(t => `<span class="post-tag">#${escapeHtml(t)}</span>`).join('');
+    tagsRow.innerHTML = `<span class="post-tag" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-weight:700;">予約投稿</span>` + tagPills;
+  }
+
+  // Title
+  const titleEl = document.getElementById('detail-title');
+  if (titleEl) titleEl.innerHTML = formatRichText(post.title);
+
+  // Author & Publish Meta
+  const authorAvatar = document.getElementById('detail-author-avatar');
+  const authorName = document.getElementById('detail-author-name');
+  const publishMeta = document.getElementById('detail-publish-meta');
+  const avatarSrc = siteProfile.avatar ? resolveAssetUrl(siteProfile.avatar) : '';
+
+  if (authorAvatar && avatarSrc) authorAvatar.src = avatarSrc;
+  if (authorName) authorName.textContent = siteProfile.name;
+  if (publishMeta) {
+    publishMeta.textContent = `${schedDateStr} 公開予定`;
+  }
+
+  // Cover Box
+  const coverBox = document.getElementById('detail-cover-box');
+  const coverImg = document.getElementById('detail-cover-img');
+  if (coverBox && coverImg) {
+    if (post.cover) {
+      coverImg.src = resolveAssetUrl(post.cover);
+      coverBox.style.display = 'block';
+    } else {
+      coverBox.style.display = 'none';
+    }
+  }
+
+  // Body: Display the Scheduled Notice Card
+  const bodyEl = document.getElementById('detail-body');
+  if (bodyEl) {
+    let noticeCardHtml = `
+      <div class="scheduled-post-card">
+        <div class="scheduled-icon-circle">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+        </div>
+        <h2 class="scheduled-notice-title">この記事は${escapeHtml(schedDateStr)}に投稿されます。</h2>
+        <p class="scheduled-notice-desc">
+          現在、公開予約が設定されています。<br>
+          公開日時になると、このURLで記事の本文が読めるようになります。どうぞお楽しみに！
+        </p>
+        <div class="scheduled-actions-row">
+          <button type="button" class="header-btn primary" onclick="goToFeed(event)" style="padding: 9px 20px; font-size: 0.9rem;">
+            ほかの記事を読む
+          </button>
+          <button type="button" class="header-btn" onclick="copyCurrentArticleLink()" style="padding: 9px 20px; font-size: 0.9rem;">
+            記事URLをコピー
+          </button>
+        </div>
+      </div>
+    `;
+
+    // If author/admin is logged in, also show full body preview below the announcement
+    if (isAdmin) {
+      noticeCardHtml += `
+        <div style="margin-top: 36px; padding-top: 24px; border-top: 2px dashed #cbd5e1;">
+          <div style="font-size: 0.88rem; font-weight: 700; color: #475569; margin-bottom: 16px;">▼ 管理者用本文プレビュー（一般読者には非表示）</div>
+          <div class="admin-preview-content">
+            ${formatRichArticleBody(post.content || '')}
+          </div>
+        </div>
+      `;
+    }
+
+    bodyEl.innerHTML = noticeCardHtml;
+  }
+
+  // Disable like button for scheduled teaser (keep share enabled)
+  const likeBtn = document.getElementById('detail-like-btn');
+  if (likeBtn) {
+    likeBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+  }
 
   // Bottom Creator Card
   const bottomAvatar = document.getElementById('detail-bottom-avatar');
@@ -437,13 +591,18 @@ function handleHashRouting() {
         showArticleDetail(post);
         return;
       }
-      // If admin has token, allow viewing draft / scheduled post preview
+      if (isPostScheduled(post)) {
+        const hasToken = !!localStorage.getItem('gh_token');
+        showScheduledArticleNotice(post, hasToken);
+        return;
+      }
+      // Non-published draft
       const hasToken = !!localStorage.getItem('gh_token');
       if (hasToken) {
         showArticleDetail(post, true);
         return;
       }
-      showToast('この記事はまだ公開されていないか、予約投稿です');
+      showToast('この記事は現在非公開（下書き）です');
     }
   }
   showFeedView();

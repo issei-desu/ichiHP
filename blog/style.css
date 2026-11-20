@@ -1038,3 +1038,57 @@ a {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ==========================================
+   Scheduled Post Notice Card (Teaser View)
+   ========================================== */
+.scheduled-post-card {
+  background: #ffffff;
+  border: 1.5px solid #dbeafe;
+  border-radius: var(--radius-lg);
+  padding: 44px 24px;
+  text-align: center;
+  margin: 28px 0 36px;
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.scheduled-icon-circle {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: #eff6ff;
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.scheduled-notice-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #1e293b;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.scheduled-notice-desc {
+  font-size: 0.95rem;
+  color: #64748b;
+  line-height: 1.7;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.scheduled-actions-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 10px;
+}
+
