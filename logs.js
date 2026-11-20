@@ -107,7 +107,7 @@ function setupEventListeners() {
     const verification = await verifyToken(token);
 
     unlockBtn.disabled = false;
-    btnText.textContent = '🔓 ロック解除してログイン';
+    btnText.textContent = 'ロック解除してログイン';
     spinner.style.display = 'none';
 
     if (!verification.valid) {
@@ -119,7 +119,7 @@ function setupEventListeners() {
     localStorage.setItem('gh_token', token);
     tokenInput.value = '';
     unlockLogsScreen();
-    showToast('✨ 認証に成功しました！', 'success');
+    showToast('認証に成功しました！', 'success');
   });
 
   // Logout button
@@ -143,11 +143,11 @@ function setupEventListeners() {
     ignoreCheckbox.addEventListener('change', (e) => {
       if (e.target.checked) {
         localStorage.setItem('hp_ignore_my_visits', '1');
-        showToast('🚫 この端末からのアクセスを記録しない設定にしました', 'info');
+        showToast('この端末からのアクセスを記録しない設定にしました', 'info');
       } else {
         localStorage.setItem('hp_ignore_my_visits', '0');
         sessionStorage.removeItem('hp_visit_logged_at');
-        showToast('✅ この端末からのアクセスも記録するようにしました（動作テスト用）', 'success');
+        showToast('この端末からのアクセスも記録するようにしました（動作テスト用）', 'success');
       }
     });
   }
@@ -234,7 +234,7 @@ async function loadVisitorLogs(showNotification = false) {
 
     renderVisitorLogs();
     if (showNotification) {
-      showToast('✨ 最新アクセスログを取得しました', 'success');
+      showToast('最新アクセスログを取得しました', 'success');
     }
   } catch (err) {
     console.warn('Error fetching visitor logs:', err);
@@ -263,7 +263,7 @@ function renderVisitorLogs() {
     listEl.innerHTML = `
       <div class="logs-empty-state">
         まだアクセス記録がありません。<br>
-        <span style="font-size: 0.76rem;">※「🚫 このスマホのアクセスは記録しない」のチェックを外してHPを開くと、テスト記録できます。</span>
+        <span style="font-size: 0.76rem;">※「このスマホのアクセスは記録しない」のチェックを外してHPを開くと、テスト記録できます。</span>
       </div>
     `;
     return;
@@ -296,15 +296,15 @@ function renderVisitorLogs() {
     return `
       <div class="visitor-log-item">
         <div class="log-item-top">
-          <span class="log-time">🕒 ${escapeHtml(dateStr)}</span>
+          <span class="log-time">${escapeHtml(dateStr)}</span>
           <button type="button" class="log-ip-badge" onclick="copyIpToClipboard('${escapeAttr(ipStr)}')" title="タップしてIPをコピー">
-            🌐 IP: ${escapeHtml(ipStr)} 📋
+            IP: ${escapeHtml(ipStr)}
           </button>
         </div>
         ${ipv6Info ? `<div class="log-meta-line">${ipv6Info}</div>` : ''}
-        <div class="log-meta-line">📍 ${escapeHtml(log.location || '地域不明')}${ispInfo}</div>
+        <div class="log-meta-line">地域: ${escapeHtml(log.location || '地域不明')}${ispInfo}</div>
         <div class="log-meta-line">${escapeHtml(log.device || '端末不明')} ・ ${escapeHtml(log.browser || '')}${screenInfo}</div>
-        <div class="log-meta-line">🔗 参照元: ${escapeHtml(log.referrer || '直接アクセス')}</div>
+        <div class="log-meta-line">参照元: ${escapeHtml(log.referrer || '直接アクセス')}</div>
       </div>
     `;
   }).join('');
@@ -332,7 +332,7 @@ function formatLogDate(ts) {
 window.copyIpToClipboard = function(ip) {
   if (!ip) return;
   navigator.clipboard?.writeText(ip).then(() => {
-    showToast(`📋 IPアドレス (${ip}) をコピーしました`, 'info');
+    showToast(`IPアドレス (${ip}) をコピーしました`, 'info');
   }).catch(() => {});
 };
 
@@ -345,7 +345,7 @@ function copyVisitorLogsToClipboard() {
     `[${formatLogDate(l.time)}] IP: ${l.ip}${l.ipv6 ? ` (IPv6: ${l.ipv6})` : ''} | ${l.location} (${l.isp || '-'}) | ${l.device} / ${l.browser} | 参照元: ${l.referrer}`
   );
   navigator.clipboard?.writeText(lines.join('\n')).then(() => {
-    showToast('📋 アクセスログ一覧をクリップボードにコピーしました', 'success');
+    showToast('アクセスログ一覧をクリップボードにコピーしました', 'success');
   }).catch(() => {
     showToast('コピーに失敗しました', 'error');
   });
@@ -357,7 +357,7 @@ function clearVisitorLogsArchive() {
   localStorage.removeItem(VISITOR_LOGS_ARCHIVE_KEY);
   currentVisitorLogs = [];
   renderVisitorLogs();
-  showToast('🗑️ アクセスログ履歴をクリアしました', 'info');
+  showToast('アクセスログ履歴をクリアしました', 'info');
 }
 
 let toastTimer = null;

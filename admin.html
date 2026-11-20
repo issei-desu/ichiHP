@@ -19,8 +19,8 @@
         <span class="logo-text">HP管理画面</span>
       </div>
       <div class="nav-links">
-        <a href="logs.html" class="btn-subtle" style="font-weight: 600; color: #2563eb;">📊 ログを見る</a>
-        <button type="button" id="header-logout-btn" class="btn-subtle" style="display: none; border: none; cursor: pointer;">🔒 ログアウト</button>
+        <a href="logs.html" class="btn-subtle" style="font-weight: 600; color: #2563eb;">ログを見る</a>
+        <button type="button" id="header-logout-btn" class="btn-subtle" style="display: none; border: none; cursor: pointer;">ログアウト</button>
         <a href="index.html" class="btn-subtle">← HPを見る</a>
       </div>
     </div>
@@ -31,7 +31,7 @@
     <section id="auth-lock-screen" class="lock-screen-wrapper">
       <div class="card lock-card">
         <div class="lock-icon-circle">
-          <span>🔒</span>
+          <span></span>
         </div>
         <h2 class="lock-title">管理者認証</h2>
         <p class="lock-desc">
@@ -45,18 +45,18 @@
             <input type="password" id="lock-token-input" class="form-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="current-password" required>
           </div>
           <button type="submit" id="unlock-btn" class="btn btn-primary" style="margin-top: 10px;">
-            <span id="unlock-btn-text">🔓 ロック解除してログイン</span>
+            <span id="unlock-btn-text">ロック解除してログイン</span>
             <span id="unlock-btn-spinner" class="spinner" style="display: none;"></span>
           </button>
         </form>
 
         <details class="token-guide" style="margin-top: 20px; text-align: left;">
-          <summary>💡 認証コードについて</summary>
+          <summary>認証コードについて</summary>
           <div class="guide-content">
             <p style="margin-bottom: 8px;">認証コードには、GitHubで発行した個人アクセストークン（repo権限）を使用します：</p>
             <p style="margin-bottom: 10px;">
               <a href="https://github.com/settings/tokens/new?description=ichiHP-admin&scopes=repo" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="display: inline-block; color: #fff; text-decoration: none;">
-                🔑 トークン作成画面を開く
+                トークン作成画面を開く
               </a>
             </p>
             <p style="font-size: 0.78rem; color: var(--text-muted);">※入力されたコードはお使いのスマホ（ブラウザ）にのみ安全に保存され、第三者には見えません。</p>
@@ -69,17 +69,17 @@
     <div id="admin-content" style="display: none; flex-direction: column; gap: 20px;">
       <!-- Notice Banner -->
       <div class="admin-banner">
-        <div class="banner-icon">📱</div>
+        <div class="banner-icon"></div>
         <div class="banner-text">
           <strong>管理者モード（認証済み）</strong>
-          <span>各枠の文字色・フォント・表示ボタン隠し設定や、文章の一部分だけの装飾もできます✨</span>
+          <span>各枠の文字色・フォント・表示ボタン隠し設定や、文章の一部分だけの装飾もできます</span>
         </div>
       </div>
 
       <!-- Sticky Collapsible Inline Text Decorator Bar (Works on any focused input/textarea) -->
       <details class="inline-decorator-card" id="inline-decorator-bar">
         <summary class="inline-decorator-header">
-          <span class="inline-decorator-title">🖍️ 選択部分の文字装飾ツール（タップで開閉）</span>
+          <span class="inline-decorator-title">選択部分の文字装飾ツール（タップで開閉）</span>
           <span class="inline-decorator-target" id="inline-decorator-target-label">文字を選択して装飾</span>
         </summary>
         <div class="inline-decorator-controls">
@@ -105,7 +105,7 @@
             <button type="button" class="inline-action-btn" style="font-weight:800;" onclick="applyInlineTag('b')"><b>B 太字</b></button>
             <button type="button" class="inline-action-btn" onclick="applyInlineTag('size', 'lg')">大文字</button>
             <button type="button" class="inline-action-btn" onclick="applyInlineTag('size', 'sm')">小文字</button>
-            <button type="button" class="inline-action-btn" style="background:#1e293b; color:#fff; border-color:#f43f5e;" onclick="applyInlineTag('hide')">🙈 表示ボタンで隠す</button>
+            <button type="button" class="inline-action-btn" style="background:#1e293b; color:#fff; border-color:#f43f5e;" onclick="applyInlineTag('hide')">表示ボタンで隠す</button>
           </div>
 
           <!-- Inline Font Select -->
@@ -127,8 +127,8 @@
           <!-- Image Insertion -->
           <div class="inline-control-group">
             <span class="inline-group-label">画像挿入:</span>
-            <button type="button" class="inline-action-btn" style="background:#f0fdf4; color:#15803d; border-color:#bbf7d0; font-weight:700;" onclick="triggerInlineImageUpload()">📷 写真を選んで挿入</button>
-            <button type="button" class="inline-action-btn" onclick="promptInlineImageUrl()">🔗 画像URLで挿入</button>
+            <button type="button" class="inline-action-btn" style="background:#f0fdf4; color:#15803d; border-color:#bbf7d0; font-weight:700;" onclick="triggerInlineImageUpload()">写真を選んで挿入</button>
+            <button type="button" class="inline-action-btn" onclick="promptInlineImageUrl()">画像URLで挿入</button>
             <select id="inline-image-size-select" class="inline-font-select" style="max-width: 140px;">
               <option value="">標準（幅100%）</option>
               <option value="md">中サイズ</option>
@@ -139,8 +139,8 @@
           <!-- Link & File Insertion -->
           <div class="inline-control-group">
             <span class="inline-group-label">リンク/ファイル:</span>
-            <button type="button" class="inline-action-btn" style="background:#f5f3ff; color:#6d28d9; border-color:#ddd6fe; font-weight:700;" onclick="promptInsertLinkToTarget(lastRichTarget)">🔗 リンクを挿入</button>
-            <button type="button" class="inline-action-btn" style="background:#f0f9ff; color:#0369a1; border-color:#bae6fd; font-weight:700;" onclick="triggerInlineFileUpload(lastRichTarget)">📁 ファイルを追加</button>
+            <button type="button" class="inline-action-btn" style="background:#f5f3ff; color:#6d28d9; border-color:#ddd6fe; font-weight:700;" onclick="promptInsertLinkToTarget(lastRichTarget)">リンクを挿入</button>
+            <button type="button" class="inline-action-btn" style="background:#f0f9ff; color:#0369a1; border-color:#bae6fd; font-weight:700;" onclick="triggerInlineFileUpload(lastRichTarget)">ファイルを追加</button>
           </div>
         </div>
       </details>
@@ -149,7 +149,7 @@
       <form id="admin-form">
         <!-- Profile Section -->
         <section class="card admin-card">
-          <h2 class="card-title">👤 プロフィール基本情報</h2>
+          <h2 class="card-title">プロフィール基本情報</h2>
           
           <!-- Avatar Image Editor -->
           <div class="avatar-editor-box">
@@ -157,16 +157,16 @@
             <div class="avatar-editor-content">
               <div class="avatar-preview-wrapper">
                 <img id="admin-avatar-preview" src="" alt="Avatar Preview" class="admin-avatar-img" style="display: none;">
-                <div id="admin-avatar-fallback" class="admin-avatar-fallback">✨</div>
+                <div id="admin-avatar-fallback" class="admin-avatar-fallback"></div>
               </div>
               <div class="avatar-editor-actions">
                 <label for="avatar-file-input" class="btn btn-secondary btn-sm file-upload-label">
-                  📷 写真を選ぶ（スマホから選択）
+                  写真を選ぶ（スマホから選択）
                 </label>
                 <input type="file" id="avatar-file-input" accept="image/*" style="display: none;">
                 <input type="file" id="inline-img-file-input" accept="image/*" style="display: none;">
                 <input type="file" id="inline-doc-file-input" style="display: none;" accept=".html,.htm,.pdf,.txt,.zip,.png,.jpg,.jpeg,.gif,.svg,.json,.css,.js">
-                <button type="button" id="crop-avatar-btn" class="btn-subtle" style="display: none; font-size: 0.78rem;">✂️ 位置・向きを調整</button>
+                <button type="button" id="crop-avatar-btn" class="btn-subtle" style="display: none; font-size: 0.78rem;">位置・向きを調整</button>
                 <button type="button" id="remove-avatar-btn" class="btn-subtle" style="font-size: 0.78rem;">画像を削除</button>
               </div>
             </div>
@@ -184,16 +184,16 @@
             <label for="profile-bio" class="form-label">トップの紹介文（Bio）</label>
             <textarea id="profile-bio" class="form-textarea rich-target" data-field-label="トップの紹介文" rows="3" placeholder="どうも、いちです。"></textarea>
             <div style="display: flex; gap: 8px; margin-top: 4px; align-items: center; flex-wrap: wrap;">
-              <button type="button" class="btn-inline-img-tool" onclick="insertImageToTarget(document.getElementById('profile-bio'))">📷 画像を追加</button>
-              <button type="button" class="btn-inline-img-tool" onclick="promptInsertLinkToTarget(document.getElementById('profile-bio'))">🔗 リンクを追加</button>
-              <button type="button" class="btn-inline-img-tool" onclick="triggerInlineFileUpload(document.getElementById('profile-bio'))">📁 ファイルを追加</button>
+              <button type="button" class="btn-inline-img-tool" onclick="insertImageToTarget(document.getElementById('profile-bio'))">画像を追加</button>
+              <button type="button" class="btn-inline-img-tool" onclick="promptInsertLinkToTarget(document.getElementById('profile-bio'))">リンクを追加</button>
+              <button type="button" class="btn-inline-img-tool" onclick="triggerInlineFileUpload(document.getElementById('profile-bio'))">ファイルを追加</button>
             </div>
             <div id="profile-bio-rich-preview" class="rich-live-preview"></div>
           </div>
 
           <!-- Per-box style settings for Profile -->
           <details class="box-style-details">
-            <summary>🎨 この枠（プロフィール）の文字色・フォント設定</summary>
+            <summary>この枠（プロフィール）の文字色・フォント設定</summary>
             <div class="box-style-grid">
               <div class="box-style-field">
                 <label>この枠のフォント</label>
@@ -239,7 +239,7 @@
         <!-- Tabs Manager Section -->
         <section class="card admin-card">
           <div class="card-header-row">
-            <h2 class="card-title">📑 タブ別プロフィール管理</h2>
+            <h2 class="card-title">タブ別プロフィール管理</h2>
             <button type="button" id="add-tab-btn" class="btn btn-subtle-primary btn-sm">＋ タブ追加</button>
           </div>
           <p class="card-desc">タブごと・項目ごとの枠で文字色やフォントを変えたり、文章の一部分だけ色・フォントを変えられます。</p>
@@ -258,7 +258,7 @@
         <!-- Unified Links Manager Section -->
         <section class="card admin-card">
           <div class="card-header-row">
-            <h2 class="card-title">🔗 リンク一覧管理（共通）</h2>
+            <h2 class="card-title">リンク一覧管理（共通）</h2>
             <button type="button" id="add-link-btn" class="btn btn-subtle-primary btn-sm">＋ リンク追加</button>
           </div>
           <p class="card-desc">タブの下に一括で表示されるリンク一覧を編集できます。各リンク枠ごとに文字色・フォントも選べます。</p>
@@ -273,7 +273,7 @@
           </div>
 
           <details class="box-style-details">
-            <summary>🎨 リンク枠全体のフォント・見出し文字色</summary>
+            <summary>リンク枠全体のフォント・見出し文字色</summary>
             <div class="box-style-grid">
               <div class="box-style-field">
                 <label>リンク枠の基本フォント</label>
@@ -307,14 +307,14 @@
         <!-- Comments / Messages Customization Section -->
         <section class="card admin-card">
           <div class="card-header-row">
-            <h2 class="card-title">💌 訪問者コメント欄の文言・見た目設定</h2>
+            <h2 class="card-title">訪問者コメント欄の文言・見た目設定</h2>
           </div>
           <p class="card-desc">ホームページ一番下に設置された「メッセージ・コメント欄」の見出し、説明文、ボタン文字などを自由にカスタマイズできます。</p>
 
           <div style="display: flex; flex-direction: column; gap: 10px;">
             <div class="form-group">
               <label for="comments-title-input" class="form-label" style="font-size: 0.78rem;">セクション大見出し</label>
-              <input type="text" id="comments-title-input" class="form-input rich-target" data-field-label="コメント大見出し" placeholder="コメント 💌">
+              <input type="text" id="comments-title-input" class="form-input rich-target" data-field-label="コメント大見出し" placeholder="コメント">
             </div>
 
             <div class="form-group">
@@ -324,12 +324,12 @@
 
             <div class="form-group">
               <label for="comments-button-text-input" class="form-label" style="font-size: 0.78rem;">送信ボタンの文字</label>
-              <input type="text" id="comments-button-text-input" class="form-input rich-target" data-field-label="送信ボタン文字" placeholder="📨 メッセージを送る">
+              <input type="text" id="comments-button-text-input" class="form-input rich-target" data-field-label="送信ボタン文字" placeholder="メッセージを送る">
             </div>
 
             <div class="form-group">
               <label for="comments-placeholder-input" class="form-label" style="font-size: 0.78rem;">入力欄の薄い案内文字（プレースホルダー）</label>
-              <input type="text" id="comments-placeholder-input" class="form-input" placeholder="HP見に来たよ！ / 応援してます✨ などお気軽にどうぞ">
+              <input type="text" id="comments-placeholder-input" class="form-input" placeholder="HP見に来たよ！ / 応援してます などお気軽にどうぞ">
             </div>
 
             <div class="form-group">
@@ -349,16 +349,16 @@
 
             <div class="form-group">
               <label for="comments-required-error-input" class="form-label" style="font-size: 0.78rem;">未入力エラー時の警告メッセージ</label>
-              <input type="text" id="comments-required-error-input" class="form-input rich-target" data-field-label="未入力エラーメッセージ" placeholder="⚠️ メッセージを入力してください">
+              <input type="text" id="comments-required-error-input" class="form-input rich-target" data-field-label="未入力エラーメッセージ" placeholder="メッセージを入力してください">
             </div>
 
             <div class="form-group">
               <label for="comments-success-msg-input" class="form-label" style="font-size: 0.78rem;">送信完了時に表示するメッセージ</label>
-              <input type="text" id="comments-success-msg-input" class="form-input rich-target" data-field-label="送信完了メッセージ" placeholder="✨ メッセージを送信しました！ありがとうございます🥰">
+              <input type="text" id="comments-success-msg-input" class="form-input rich-target" data-field-label="送信完了メッセージ" placeholder="メッセージを送信しました！ありがとうございます">
             </div>
 
             <details class="box-style-details">
-              <summary>🎨 コメント欄のフォント・見出し文字色</summary>
+              <summary>コメント欄のフォント・見出し文字色</summary>
               <div class="box-style-grid">
                 <div class="box-style-field">
                   <label>コメント枠のフォント</label>
@@ -386,22 +386,22 @@
           </div>
         </section>
 
-        <!-- ✍️ Note-style Blog Management Section -->
+        <!-- Note-style Blog Management Section -->
         <section class="card admin-card" id="blog-manager-section">
           <div class="card-header-row blog-manager-header">
             <div>
-              <h2 class="card-title">✍️ note風ブログ記事管理</h2>
+              <h2 class="card-title">note風ブログ記事管理</h2>
               <p class="card-desc" style="margin-top: 4px;">https://issei-desu.github.io/ichiHP/blog で公開されるnote風ブログの記事を作成・編集できます。</p>
             </div>
             <div style="display: flex; gap: 8px; align-items: center;">
-              <a href="blog/" target="_blank" rel="noopener" class="blog-view-link-btn">📖 ブログを開く ↗</a>
+              <a href="blog/" target="_blank" rel="noopener" class="blog-view-link-btn">ブログを開く ↗</a>
               <button type="button" id="add-blog-post-btn" class="btn btn-primary btn-sm">＋ 新しい記事を書く</button>
             </div>
           </div>
 
           <!-- Blog Meta (Title & Subtitle) -->
           <details class="box-style-details" style="margin-top: 6px;">
-            <summary>⚙️ ブログ名・サブタイトル設定</summary>
+            <summary>ブログ名・サブタイトル設定</summary>
             <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 10px;">
               <div class="form-group">
                 <label for="blog-site-title-input" class="form-label" style="font-size: 0.82rem;">ブログの表示名</label>
@@ -428,7 +428,7 @@
 
         <!-- Color Theme Section -->
         <section class="card admin-card">
-          <h2 class="card-title">🎨 配色・全体フォント設定</h2>
+          <h2 class="card-title">配色・全体フォント設定</h2>
           <p class="card-desc">サイト全体のベース配色や基本フォント・基本文字色を設定できます。</p>
 
           <div class="form-group">
@@ -493,32 +493,32 @@
         <!-- Visitor Access Logs Shortcut & Discord Settings Section -->
         <section class="card admin-card" id="visitor-logs-section">
           <div class="card-header-row">
-            <h2 class="card-title">📊 訪問者アクセスログ・足跡</h2>
+            <h2 class="card-title">訪問者アクセスログ・足跡</h2>
             <a href="logs.html" class="btn btn-primary btn-sm">ログ専用ページを開く ↗</a>
           </div>
           <p class="card-desc">HPを見に来た人のIPアドレス・都道府県・回線・端末機種・参照元などのアクセスログは専用ページで閲覧・管理できます。</p>
 
           <div style="background: var(--bg-main, #f8fafc); border: 1px solid var(--border-color, #e2e8f0); border-radius: 12px; padding: 14px; margin-top: 10px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
             <div>
-              <strong style="font-size: 0.92rem; display: block;">📊 専用ログビューア</strong>
+              <strong style="font-size: 0.92rem; display: block;">専用ログビューア</strong>
               <span style="font-size: 0.8rem; color: var(--text-muted);">キーワード検索、詳細フィルタ、IPコピー、履歴クリアに対応しています。</span>
             </div>
-            <a href="logs.html" class="btn btn-secondary btn-sm" style="text-decoration: none;">📊 ログ画面へ</a>
+            <a href="logs.html" class="btn btn-secondary btn-sm" style="text-decoration: none;">ログ画面へ</a>
           </div>
 
           <!-- Optional Discord Real-time Notification Settings -->
           <details class="box-style-details" style="margin-top: 14px;">
-            <summary>🔔 Discordへの通知連携（アクセス通知 & コメント通知）</summary>
+            <summary>Discordへの通知連携（アクセス通知 & コメント通知）</summary>
             <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 12px;">
               <div>
-                <label for="discord-webhook-input" class="form-label" style="font-size: 0.82rem; font-weight: 600;">👀 アクセスログ通知用 Webhook URL</label>
+                <label for="discord-webhook-input" class="form-label" style="font-size: 0.82rem; font-weight: 600;">アクセスログ通知用 Webhook URL</label>
                 <p style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 4px;">
                   誰かがHPを見に来た瞬間にDiscordへIP・地域・端末・参照元を通知します（空欄なら無効）。
                 </p>
                 <input type="url" id="discord-webhook-input" class="form-input" placeholder="https://discord.com/api/webhooks/..." style="font-size: 0.82rem;">
               </div>
               <div style="border-top: 1px dashed var(--border-color); padding-top: 10px;">
-                <label for="discord-comment-webhook-input" class="form-label" style="font-size: 0.82rem; font-weight: 600;">💬 コメント・メッセージ通知用 Webhook URL</label>
+                <label for="discord-comment-webhook-input" class="form-label" style="font-size: 0.82rem; font-weight: 600;">コメント・メッセージ通知用 Webhook URL</label>
                 <p style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 4px;">
                   訪問者がホームページ下部のコメント欄からメッセージを送信した時に通知します（アクセス通知とは別のチャンネルURLを指定可能）。
                 </p>
@@ -531,7 +531,7 @@
         <!-- Site Meta Section -->
         <section class="card admin-card">
           <details>
-            <summary class="card-title" style="cursor: pointer; font-size: 1rem;">⚙️ サイト全体設定（タイトル・フッターなど）</summary>
+            <summary class="card-title" style="cursor: pointer; font-size: 1rem;">サイト全体設定（タイトル・フッターなど）</summary>
             <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 12px;">
               <div class="form-group">
                 <label for="site-title-input" class="form-label">ブラウザのタブ名（ページタイトル）</label>
@@ -550,7 +550,7 @@
           <div class="save-bar-content">
             <button type="button" id="preview-btn" class="btn btn-secondary">プレビュー</button>
             <button type="submit" id="save-all-btn" class="btn btn-primary">
-              <span id="save-btn-text">🚀 保存してHPに反映</span>
+              <span id="save-btn-text">保存してHPに反映</span>
               <span id="save-btn-spinner" class="spinner" style="display: none;"></span>
             </button>
           </div>
@@ -579,7 +579,7 @@
   <div id="avatar-cropper-modal" class="modal">
     <div class="modal-content cropper-modal-content">
       <div class="modal-header">
-        <h3>✂️ アイコン画像の調整</h3>
+        <h3>アイコン画像の調整</h3>
         <button type="button" id="close-cropper-btn" class="close-btn">&times;</button>
       </div>
       <div class="modal-body cropper-modal-body">
@@ -590,7 +590,7 @@
         </div>
         <div class="cropper-controls">
           <div class="cropper-row">
-            <label for="cropper-zoom-range">🔍 ズーム</label>
+            <label for="cropper-zoom-range">ズーム</label>
             <input type="range" id="cropper-zoom-range" min="0.5" max="3" step="0.05" value="1">
           </div>
           <div class="cropper-buttons-row">
@@ -603,7 +603,7 @@
       </div>
       <div class="modal-footer cropper-modal-footer">
         <button type="button" id="cropper-cancel-btn" class="btn btn-secondary">キャンセル</button>
-        <button type="button" id="cropper-apply-btn" class="btn btn-primary">✂️ この範囲で決定</button>
+        <button type="button" id="cropper-apply-btn" class="btn btn-primary">この範囲で決定</button>
       </div>
     </div>
   </div>
@@ -612,7 +612,7 @@
   <div id="blog-editor-modal" class="modal">
     <div class="modal-content blog-modal-content">
       <div class="modal-header">
-        <h3 id="blog-modal-title">✍️ ブログ記事の作成・編集</h3>
+        <h3 id="blog-modal-title">ブログ記事の作成・編集</h3>
         <button type="button" id="close-blog-modal-btn" class="close-btn">&times;</button>
       </div>
       <div class="modal-body blog-modal-body">
@@ -640,12 +640,12 @@
         <div class="form-group">
           <label class="form-label">見出し画像（カバー写真）</label>
           <div class="blog-cover-preview-box" id="blog-cover-preview-box">
-            <span class="blog-cover-preview-placeholder" id="blog-cover-placeholder">📷 画像が設定されていません</span>
+            <span class="blog-cover-preview-placeholder" id="blog-cover-placeholder">画像が設定されていません</span>
             <img id="blog-cover-preview-img" src="" alt="カバープレビュー" style="display: none;">
           </div>
           <div style="display: flex; gap: 8px; margin-top: 8px; align-items: center; flex-wrap: wrap;">
             <label class="btn btn-secondary btn-sm" style="cursor: pointer;">
-              📁 画像を選択
+              画像を選択
               <input type="file" id="blog-form-cover-file" accept="image/*" style="display: none;">
             </label>
             <input type="url" id="blog-form-cover-url" class="form-input" placeholder="または画像URL (https://... または images/...)" style="flex: 1; min-width: 160px; font-size: 0.82rem;">
@@ -669,9 +669,9 @@
             <button type="button" class="blog-tool-btn" onclick="insertBlogTag('==', '==')">マーカー</button>
             <button type="button" class="blog-tool-btn" onclick="insertBlogTag('> ', '')">引用</button>
             <button type="button" class="blog-tool-btn" onclick="insertBlogTag('[spoiler]', '[/spoiler]')">伏せ字/ネタバレ</button>
-            <button type="button" class="blog-tool-btn" onclick="insertBlogLink()">🔗 リンク</button>
+            <button type="button" class="blog-tool-btn" onclick="insertBlogLink()">リンク</button>
             <label class="blog-tool-btn" style="cursor: pointer; margin: 0;">
-              🖼️ 本文に画像挿入
+              本文に画像挿入
               <input type="file" id="blog-inline-img-file" accept="image/*" style="display: none;" onchange="handleBlogInlineImageUpload(this)">
             </label>
           </div>
@@ -686,7 +686,7 @@
       </div>
       <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; padding: 12px 20px; border-top: 1px solid #e2e8f0; background: #ffffff;">
         <button type="button" id="blog-form-cancel-btn" class="btn btn-secondary">キャンセル</button>
-        <button type="button" id="blog-form-save-btn" class="btn btn-primary">💾 記事を保存</button>
+        <button type="button" id="blog-form-save-btn" class="btn btn-primary">記事を保存</button>
       </div>
     </div>
   </div>

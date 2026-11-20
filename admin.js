@@ -19,14 +19,14 @@ let blogState = {
 };
 
 const THEME_PRESETS = [
-  { id: 'pink', name: '🌸 ピンク（初期）', primary: '#f43f5e', secondary: '#8b5cf6', bg: '#fff5f7' },
-  { id: 'purple', name: '💜 パープル（紫）', primary: '#9333ea', secondary: '#ec4899', bg: '#faf5ff' },
-  { id: 'yellow', name: '💛 イエロー（黄）', primary: '#eab308', secondary: '#f97316', bg: '#fefce8' },
-  { id: 'green', name: '💚 グリーン（緑）', primary: '#10b981', secondary: '#06b6d4', bg: '#ecfdf5' },
-  { id: 'red', name: '❤️ レッド（赤）', primary: '#ef4444', secondary: '#f43f5e', bg: '#fef2f2' },
-  { id: 'blue', name: '💙 ブルー（青）', primary: '#3b82f6', secondary: '#6366f1', bg: '#eff6ff' },
-  { id: 'white', name: '🤍 ホワイト / モノトーン', primary: '#475569', secondary: '#94a3b8', bg: '#f8fafc' },
-  { id: 'dark', name: '🖤 ダーク（黒背景）', primary: '#c084fc', secondary: '#f472b6', bg: '#0f172a' }
+  { id: 'pink', name: 'ピンク（初期）', primary: '#f43f5e', secondary: '#8b5cf6', bg: '#fff5f7' },
+  { id: 'purple', name: 'パープル（紫）', primary: '#9333ea', secondary: '#ec4899', bg: '#faf5ff' },
+  { id: 'yellow', name: 'イエロー（黄）', primary: '#eab308', secondary: '#f97316', bg: '#fefce8' },
+  { id: 'green', name: 'グリーン（緑）', primary: '#10b981', secondary: '#06b6d4', bg: '#ecfdf5' },
+  { id: 'red', name: 'レッド（赤）', primary: '#ef4444', secondary: '#f43f5e', bg: '#fef2f2' },
+  { id: 'blue', name: 'ブルー（青）', primary: '#3b82f6', secondary: '#6366f1', bg: '#eff6ff' },
+  { id: 'white', name: 'ホワイト / モノトーン', primary: '#475569', secondary: '#94a3b8', bg: '#f8fafc' },
+  { id: 'dark', name: 'ダーク（黒背景）', primary: '#c084fc', secondary: '#f472b6', bg: '#0f172a' }
 ];
 
 const FONT_OPTIONS = [
@@ -200,7 +200,7 @@ window.applyInlineTag = function(tagType, tagValue) {
     lastRichSelection = { start: newStart, end: newEnd };
   } catch (e) {}
 
-  showToast(tagType === 'hide' ? '🙈 選択部分を「表示ボタンで隠す」に設定しました！' : '✨ 文字の装飾を適用しました！', 'success');
+  showToast(tagType === 'hide' ? '選択部分を「表示ボタンで隠す」に設定しました！' : '文字の装飾を適用しました！', 'success');
 };
 
 window.clearInlineTagsFromTarget = function() {
@@ -267,8 +267,8 @@ function renderAdminInlineImageHtml(src, size) {
   const sizeClass = size === 'sm' ? 'admin-inline-img-sm' : (size === 'md' ? 'admin-inline-img-md' : 'admin-inline-img-lg');
   return `
     <div class="admin-inline-img-box ${sizeClass}">
-      <img src="${escapeAttr(displaySrc)}" alt="画像プレビュー" class="admin-inline-img" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.textContent='⚠️ 画像準備中または未保存';">
-      <div class="admin-inline-img-label">📷 挿入画像 (${size === 'sm' ? '小' : (size === 'md' ? '中' : '標準')})</div>
+      <img src="${escapeAttr(displaySrc)}" alt="画像プレビュー" class="admin-inline-img" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.textContent='画像準備中または未保存';">
+      <div class="admin-inline-img-label">挿入画像 (${size === 'sm' ? '小' : (size === 'md' ? '中' : '標準')})</div>
     </div>
   `;
 }
@@ -320,7 +320,7 @@ function updateLiveRichPreview(inputEl) {
   const val = inputEl.value || '';
   if (hasRichTags(val)) {
     previewEl.classList.add('has-content');
-    previewEl.innerHTML = `<div class="rich-live-preview-badge">👀 装飾プレビュー</div><div>${formatRichTextAdmin(val)}</div>`;
+    previewEl.innerHTML = `<div class="rich-live-preview-badge">装飾プレビュー</div><div>${formatRichTextAdmin(val)}</div>`;
   } else {
     previewEl.classList.remove('has-content');
     previewEl.innerHTML = '';
@@ -381,7 +381,7 @@ function setupEventListeners() {
     const verification = await verifyToken(token);
 
     unlockBtn.disabled = false;
-    btnText.textContent = '🔓 ロック解除してログイン';
+    btnText.textContent = 'ロック解除してログイン';
     spinner.style.display = 'none';
 
     if (!verification.valid) {
@@ -393,7 +393,7 @@ function setupEventListeners() {
     localStorage.setItem('gh_token', token);
     tokenInput.value = '';
     unlockAdminScreen();
-    showToast('✨ 認証に成功しました！', 'success');
+    showToast('認証に成功しました！', 'success');
   });
 
   // Logout (Lock) Button
@@ -590,7 +590,7 @@ function setupEventListeners() {
         setAvatarPreview(newAvatarBase64);
         document.getElementById('avatar-url-input').value = '';
         closeAvatarCropper();
-        showToast('✨ アイコンを調整しました！「保存」を押すとHPに反映されます', 'success');
+        showToast('アイコンを調整しました！「保存」を押すとHPに反映されます', 'success');
       }
     });
   }
@@ -807,7 +807,7 @@ function setupEventListeners() {
         const urlInput = document.getElementById('blog-form-cover-url');
         if (urlInput) urlInput.value = dataUrl;
         updateBlogCoverPreview(dataUrl);
-        showToast('📷 カバー画像をセットしました', 'success');
+        showToast('カバー画像をセットしました', 'success');
       } catch (err) {
         console.error('Blog cover process error:', err);
         showToast('画像の処理に失敗しました', 'error');
@@ -1159,7 +1159,7 @@ window.promptInlineImageUrl = function() {
   const sizeOpt = document.getElementById('inline-image-size-select')?.value || '';
   const tag = sizeOpt ? `[img=${cleanUrl}|${sizeOpt}]` : `[img=${cleanUrl}]`;
   insertTagAtSelectionOrEnd(lastRichTarget, tag);
-  showToast('📷 画像タグを挿入しました！', 'success');
+  showToast('画像タグを挿入しました！', 'success');
 };
 
 async function handleInlineImagePicked(file, targetEl) {
@@ -1182,7 +1182,7 @@ async function handleInlineImagePicked(file, targetEl) {
 
     const el = targetEl || lastRichTarget || document.getElementById('profile-bio');
     insertTagAtSelectionOrEnd(el, tag);
-    showToast('📷 画像を挿入しました！「保存してHPに反映」で保存されます', 'success');
+    showToast('画像を挿入しました！「保存してHPに反映」で保存されます', 'success');
   } catch (err) {
     console.error(err);
     showToast('画像の読み込みに失敗しました', 'error');
@@ -1284,7 +1284,7 @@ window.promptInsertLinkToTarget = function(targetEl) {
 
   const tag = linkText ? `[url=${cleanUrl}]${linkText}[/url]` : cleanUrl;
   insertTagAtSelectionOrEnd(el, tag);
-  showToast('🔗 リンクを挿入しました！', 'success');
+  showToast('リンクを挿入しました！', 'success');
 };
 
 window.triggerInlineFileUpload = function(targetEl) {
@@ -1314,10 +1314,10 @@ async function handleInlineFilePicked(file, targetEl) {
 
       pendingInlineFileUploads[path] = dataUrl;
 
-      const tag = `[url=${path}]${file.name} 📄[/url]`;
+      const tag = `[url=${path}]${file.name}[/url]`;
       const el = targetEl || currentInlineDocTarget || lastRichTarget || document.getElementById('profile-bio');
       insertTagAtSelectionOrEnd(el, tag);
-      showToast('📁 ファイルを追加しました！「保存してHPに反映」でサーバーに保存されます', 'success');
+      showToast('ファイルを追加しました！「保存してHPに反映」でサーバーに保存されます', 'success');
     };
     reader.onerror = () => {
       showToast('ファイルの読み込みに失敗しました', 'error');
@@ -1551,7 +1551,7 @@ function populateForm(data) {
     tabsState = [
       {
         id: 'real',
-        name: 'リアル・日常 🌿',
+        name: 'リアル・日常',
         aboutTitle: 'About Me',
         aboutSubtitle: '',
         font: '',
@@ -1586,13 +1586,13 @@ function populateForm(data) {
   // Comments Settings
   const commentSettings = data.comments || {};
   const commentTitleInput = document.getElementById('comments-title-input');
-  if (commentTitleInput) commentTitleInput.value = commentSettings.title !== undefined ? commentSettings.title : 'コメント 💌';
+  if (commentTitleInput) commentTitleInput.value = commentSettings.title !== undefined ? commentSettings.title : 'コメント';
   const commentSubInput = document.getElementById('comments-subtitle-input');
   if (commentSubInput) commentSubInput.value = commentSettings.subtitle !== undefined ? commentSettings.subtitle : 'サイトを見に来た感想やひとこと、メッセージを気軽にどうぞ！';
   const commentBtnInput = document.getElementById('comments-button-text-input');
-  if (commentBtnInput) commentBtnInput.value = commentSettings.buttonText !== undefined ? commentSettings.buttonText : '📨 メッセージを送る';
+  if (commentBtnInput) commentBtnInput.value = commentSettings.buttonText !== undefined ? commentSettings.buttonText : 'メッセージを送る';
   const commentPlaceInput = document.getElementById('comments-placeholder-input');
-  if (commentPlaceInput) commentPlaceInput.value = commentSettings.placeholder !== undefined ? commentSettings.placeholder : 'HP見に来たよ！ / 応援してます✨ などお気軽にどうぞ';
+  if (commentPlaceInput) commentPlaceInput.value = commentSettings.placeholder !== undefined ? commentSettings.placeholder : 'HP見に来たよ！ / 応援してます などお気軽にどうぞ';
   const commentNameLabelInput = document.getElementById('comments-name-label-input');
   if (commentNameLabelInput) commentNameLabelInput.value = commentSettings.nameLabel !== undefined ? commentSettings.nameLabel : 'お名前・ニックネーム（任意）';
   const commentNamePlaceInput = document.getElementById('comments-name-placeholder-input');
@@ -1600,9 +1600,9 @@ function populateForm(data) {
   const commentBodyLabelInput = document.getElementById('comments-body-label-input');
   if (commentBodyLabelInput) commentBodyLabelInput.value = commentSettings.bodyLabel !== undefined ? commentSettings.bodyLabel : 'メッセージ・ひとこと';
   const commentRequiredErrInput = document.getElementById('comments-required-error-input');
-  if (commentRequiredErrInput) commentRequiredErrInput.value = commentSettings.requiredError !== undefined ? commentSettings.requiredError : '⚠️ メッセージを入力してください';
+  if (commentRequiredErrInput) commentRequiredErrInput.value = commentSettings.requiredError !== undefined ? commentSettings.requiredError : 'メッセージを入力してください';
   const commentSuccessMsgInput = document.getElementById('comments-success-msg-input');
-  if (commentSuccessMsgInput) commentSuccessMsgInput.value = commentSettings.successMessage !== undefined ? commentSettings.successMessage : '✨ メッセージを送信しました！ありがとうございます🥰';
+  if (commentSuccessMsgInput) commentSuccessMsgInput.value = commentSettings.successMessage !== undefined ? commentSettings.successMessage : 'メッセージを送信しました！ありがとうございます';
 
   const commentFontSel = document.getElementById('comments-font-select');
   if (commentFontSel) commentFontSel.value = commentSettings.font || '';
@@ -1685,17 +1685,17 @@ function renderAdminItemsEditorList(items, tabIndex, blockIndex) {
         <div class="form-group">
           <textarea id="item-val-input-${keyPrefix}" class="form-textarea rich-target" data-field-label="項目 #${itemIdx + 1} の内容" data-preview-id="${previewId}" rows="3" oninput="updateBlockOrTabItem(${tabIndex}, ${blockIndex}, ${itemIdx}, 'value', this.value)" placeholder="内容を入力（下の「＋小枠を縦に追加」を使う場合は空欄でもOK）">${escapeHtml(item.value)}</textarea>
           <div style="display: flex; gap: 8px; margin-top: 4px; align-items: center; flex-wrap: wrap;">
-            <button type="button" class="btn-inline-img-tool" onclick="insertImageToTarget(document.getElementById('item-val-input-${keyPrefix}'))">📷 画像を追加</button>
-            <button type="button" class="btn-inline-img-tool" onclick="promptInsertLinkToTarget(document.getElementById('item-val-input-${keyPrefix}'))">🔗 リンクを追加</button>
-            <button type="button" class="btn-inline-img-tool" onclick="triggerInlineFileUpload(document.getElementById('item-val-input-${keyPrefix}'))">📁 ファイルを追加</button>
+            <button type="button" class="btn-inline-img-tool" onclick="insertImageToTarget(document.getElementById('item-val-input-${keyPrefix}'))">画像を追加</button>
+            <button type="button" class="btn-inline-img-tool" onclick="promptInsertLinkToTarget(document.getElementById('item-val-input-${keyPrefix}'))">リンクを追加</button>
+            <button type="button" class="btn-inline-img-tool" onclick="triggerInlineFileUpload(document.getElementById('item-val-input-${keyPrefix}'))">ファイルを追加</button>
           </div>
-          <div id="${previewId}" class="rich-live-preview ${showPreview ? 'has-content' : ''}">${showPreview ? `<div class="rich-live-preview-badge">👀 装飾プレビュー</div><div>${formatRichTextAdmin(item.value)}</div>` : ''}</div>
+          <div id="${previewId}" class="rich-live-preview ${showPreview ? 'has-content' : ''}">${showPreview ? `<div class="rich-live-preview-badge">装飾プレビュー</div><div>${formatRichTextAdmin(item.value)}</div>` : ''}</div>
         </div>
 
         <!-- Vertically Stacked Sub-Items inside this Item -->
         ${subItems.length > 0 ? `
           <div style="display: flex; flex-direction: column; gap: 8px; padding: 8px 10px; background: #f8fafc; border-left: 3px solid var(--primary); border-radius: 8px;">
-            <strong style="font-size: 0.75rem; color: var(--primary);">📑 この項目の中の縦連ね小枠（${subItems.length}個）</strong>
+            <strong style="font-size: 0.75rem; color: var(--primary);">この項目の中の縦連ね小枠（${subItems.length}個）</strong>
             ${subItems.map((sub, subIdx) => {
               const subPreviewId = `sub-rich-preview-${keyPrefix}-${subIdx}`;
               const showSubPreview = hasRichTags(sub.value);
@@ -1715,14 +1715,14 @@ function renderAdminItemsEditorList(items, tabIndex, blockIndex) {
                 <input type="text" class="form-input rich-target" data-field-label="小枠 #${subIdx + 1} の見出し" style="font-size: 0.82rem; font-weight: 700; padding: 6px 9px;" value="${escapeAttr(sub.label)}" oninput="updateSubItem(${tabIndex}, ${blockIndex}, ${itemIdx}, ${subIdx}, 'label', this.value)" placeholder="小見出し（例: ①リリイベ、②サイン入りチェキ など）">
                 <textarea id="sub-val-input-${keyPrefix}-${subIdx}" class="form-textarea rich-target" data-field-label="小枠 #${subIdx + 1} の内容" data-preview-id="${subPreviewId}" rows="2" style="font-size: 0.82rem; padding: 6px 9px;" oninput="updateSubItem(${tabIndex}, ${blockIndex}, ${itemIdx}, ${subIdx}, 'value', this.value)" placeholder="小枠の内容を入力">${escapeHtml(sub.value)}</textarea>
                 <div style="display: flex; gap: 8px; margin-top: 2px; align-items: center; flex-wrap: wrap;">
-                  <button type="button" class="btn-inline-img-tool" style="font-size: 0.74rem; padding: 3px 8px;" onclick="insertImageToTarget(document.getElementById('sub-val-input-${keyPrefix}-${subIdx}'))">📷 画像を追加</button>
-                  <button type="button" class="btn-inline-img-tool" style="font-size: 0.74rem; padding: 3px 8px;" onclick="promptInsertLinkToTarget(document.getElementById('sub-val-input-${keyPrefix}-${subIdx}'))">🔗 リンクを追加</button>
-                  <button type="button" class="btn-inline-img-tool" style="font-size: 0.74rem; padding: 3px 8px;" onclick="triggerInlineFileUpload(document.getElementById('sub-val-input-${keyPrefix}-${subIdx}'))">📁 ファイルを追加</button>
+                  <button type="button" class="btn-inline-img-tool" style="font-size: 0.74rem; padding: 3px 8px;" onclick="insertImageToTarget(document.getElementById('sub-val-input-${keyPrefix}-${subIdx}'))">画像を追加</button>
+                  <button type="button" class="btn-inline-img-tool" style="font-size: 0.74rem; padding: 3px 8px;" onclick="promptInsertLinkToTarget(document.getElementById('sub-val-input-${keyPrefix}-${subIdx}'))">リンクを追加</button>
+                  <button type="button" class="btn-inline-img-tool" style="font-size: 0.74rem; padding: 3px 8px;" onclick="triggerInlineFileUpload(document.getElementById('sub-val-input-${keyPrefix}-${subIdx}'))">ファイルを追加</button>
                 </div>
-                <div id="${subPreviewId}" class="rich-live-preview ${showSubPreview ? 'has-content' : ''}">${showSubPreview ? `<div class="rich-live-preview-badge">👀 装飾プレビュー</div><div>${formatRichTextAdmin(sub.value)}</div>` : ''}</div>
+                <div id="${subPreviewId}" class="rich-live-preview ${showSubPreview ? 'has-content' : ''}">${showSubPreview ? `<div class="rich-live-preview-badge">装飾プレビュー</div><div>${formatRichTextAdmin(sub.value)}</div>` : ''}</div>
                 <label style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 700; color: #be123c; cursor: pointer;">
                   <input type="checkbox" style="width: 14px; height: 14px; accent-color: #f43f5e;" ${sub.isSensitive ? 'checked' : ''} onchange="updateSubItemSensitive(${tabIndex}, ${blockIndex}, ${itemIdx}, ${subIdx}, this.checked)">
-                  <span>🙈 この小枠（#${subIdx + 1}）を「表示する」ボタンを押すまで隠す</span>
+                  <span>この小枠（#${subIdx + 1}）を「表示する」ボタンを押すまで隠す</span>
                 </label>
                 <div id="sub-sens-warn-${keyPrefix}-${subIdx}" style="display: ${sub.isSensitive ? 'block' : 'none'};">
                   <input type="text" class="form-input" style="font-size: 0.74rem; padding: 5px 8px;" value="${escapeAttr(sub.sensitiveWarning || '')}" oninput="updateSubItem(${tabIndex}, ${blockIndex}, ${itemIdx}, ${subIdx}, 'sensitiveWarning', this.value)" placeholder="ボタンの上に出すメッセージ（任意）">
@@ -1740,14 +1740,14 @@ function renderAdminItemsEditorList(items, tabIndex, blockIndex) {
         <div style="background: #fff1f2; border: 1px dashed #fda4af; border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px;">
           <label style="display: flex; align-items: center; gap: 7px; font-size: 0.78rem; font-weight: 700; color: #be123c; cursor: pointer;">
             <input type="checkbox" style="width: 15px; height: 15px; accent-color: #f43f5e;" ${item.isSensitive ? 'checked' : ''} onchange="updateBlockOrTabItemSensitive(${tabIndex}, ${blockIndex}, ${itemIdx}, this.checked)">
-            <span>🙈 この項目（#${itemIdx + 1}）全体を「表示する」ボタンを押すまで隠す</span>
+            <span>この項目（#${itemIdx + 1}）全体を「表示する」ボタンを押すまで隠す</span>
           </label>
           <div id="item-sens-warn-wrap-${keyPrefix}" style="display: ${item.isSensitive ? 'block' : 'none'};">
             <input type="text" class="form-input" style="font-size: 0.76rem; padding: 6px 8px; background: #fff;" value="${escapeAttr(item.sensitiveWarning || '')}" oninput="updateBlockOrTabItem(${tabIndex}, ${blockIndex}, ${itemIdx}, 'sensitiveWarning', this.value)" placeholder="ボタンの上に出すメッセージ（任意・空欄ならボタンのみ表示）">
           </div>
         </div>
         <details class="box-style-details">
-          <summary>🎨 この項目枠（#${itemIdx + 1}）の文字色・フォント</summary>
+          <summary>この項目枠（#${itemIdx + 1}）の文字色・フォント</summary>
           <div class="box-style-grid">
             <div class="box-style-field">
               <label>この項目のフォント</label>
@@ -1815,11 +1815,11 @@ function renderAdminTabs() {
 
     <div class="form-group">
       <label class="form-label">タブの表示名（上部の切り替えボタン名）</label>
-      <input type="text" class="form-input rich-target" data-field-label="タブ名" value="${escapeAttr(tab.name)}" oninput="updateTabField(${tabIndex}, 'name', this.value)" placeholder="例: リアル・日常 🌿">
+      <input type="text" class="form-input rich-target" data-field-label="タブ名" value="${escapeAttr(tab.name)}" oninput="updateTabField(${tabIndex}, 'name', this.value)" placeholder="例: リアル・日常">
     </div>
 
     <details class="box-style-details">
-      <summary>🎨 このタブ全体の基本文字色・フォント設定</summary>
+      <summary>このタブ全体の基本文字色・フォント設定</summary>
       <div class="box-style-grid">
         <div class="box-style-field">
           <label>このタブの基本フォント</label>
@@ -1849,7 +1849,7 @@ function renderAdminTabs() {
     <!-- Main Block #1 in Tab -->
     <div class="tab-sub-section" style="border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 12px; background: #fff;">
       <div class="card-header-row">
-        <strong style="font-size: 0.92rem; color: var(--primary);">📦 枠 #1（1つ目のカード枠）</strong>
+        <strong style="font-size: 0.92rem; color: var(--primary);">枠 #1（1つ目のカード枠）</strong>
         <button type="button" class="btn btn-subtle-primary btn-sm" onclick="addBlockOrTabItem(${tabIndex}, -1)">＋ 項目追加</button>
       </div>
 
@@ -1865,7 +1865,7 @@ function renderAdminTabs() {
       <div style="background: #fff1f2; border: 1.5px dashed #fda4af; border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px;">
         <label style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; font-weight: 800; color: #be123c; cursor: pointer;">
           <input type="checkbox" style="width: 16px; height: 16px; accent-color: #f43f5e;" ${tab.isSensitive ? 'checked' : ''} onchange="updateTabSensitive(${tabIndex}, this.checked)">
-          <span>🙈 この枠 #1 全体を「表示する」ボタンを押すまで隠す</span>
+          <span>この枠 #1 全体を「表示する」ボタンを押すまで隠す</span>
         </label>
         <div id="tab-sens-warn-wrap-${tabIndex}" style="display: ${tab.isSensitive ? 'block' : 'none'};">
           <input type="text" class="form-input" style="font-size: 0.78rem; background: #fff;" value="${escapeAttr(tab.sensitiveWarning || '')}" oninput="updateTabField(${tabIndex}, 'sensitiveWarning', this.value)" placeholder="ボタンの上に出すメッセージ（任意・空欄ならボタンのみ表示）">
@@ -1884,7 +1884,7 @@ function renderAdminTabs() {
       <div class="tab-sub-section" style="border: 2px solid #ddd6fe; border-radius: 12px; padding: 12px; background: #faf5ff;">
         <div class="card-header-row">
           <div style="display: flex; align-items: center; gap: 8px;">
-            <strong style="font-size: 0.92rem; color: #7c3aed;">📦 縦に連ねる枠 #${blkIdx + 2}</strong>
+            <strong style="font-size: 0.92rem; color: #7c3aed;">縦に連ねる枠 #${blkIdx + 2}</strong>
             <div class="order-btn-group">
               <button type="button" class="order-btn" title="枠を上へ移動" ${blkIdx === 0 ? 'disabled' : ''} onclick="moveTabBlock(${tabIndex}, ${blkIdx}, -1)">▲</button>
               <button type="button" class="order-btn" title="枠を下へ移動" ${blkIdx === totalBlocks - 1 ? 'disabled' : ''} onclick="moveTabBlock(${tabIndex}, ${blkIdx}, 1)">▼</button>
@@ -1912,7 +1912,7 @@ function renderAdminTabs() {
         <div style="background: #fff1f2; border: 1.5px dashed #fda4af; border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px;">
           <label style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; font-weight: 800; color: #be123c; cursor: pointer;">
             <input type="checkbox" style="width: 16px; height: 16px; accent-color: #f43f5e;" ${block.isSensitive ? 'checked' : ''} onchange="updateTabBlockSensitive(${tabIndex}, ${blkIdx}, this.checked)">
-            <span>🙈 この枠 #${blkIdx + 2} 全体を「表示する」ボタンを押すまで隠す</span>
+            <span>この枠 #${blkIdx + 2} 全体を「表示する」ボタンを押すまで隠す</span>
           </label>
           <div id="blk-sens-warn-wrap-${tabIndex}-${blkIdx}" style="display: ${block.isSensitive ? 'block' : 'none'};">
             <input type="text" class="form-input" style="font-size: 0.78rem; background: #fff;" value="${escapeAttr(block.sensitiveWarning || '')}" oninput="updateTabBlockField(${tabIndex}, ${blkIdx}, 'sensitiveWarning', this.value)" placeholder="ボタンの上に出すメッセージ（任意・空欄ならボタンのみ表示）">
@@ -1928,7 +1928,7 @@ function renderAdminTabs() {
 
     <!-- Button to Stack Another Card Block Vertically inside this Tab -->
     <button type="button" class="btn btn-secondary" style="width: 100%; border: 2px dashed var(--primary); color: var(--primary); background: #fdf4ff; font-weight: 800;" onclick="addTabBlock(${tabIndex})">
-      ➕ このタブの下にさらに枠（カード）を縦に追加する
+      ＋ このタブの下にさらに枠（カード）を縦に追加する
     </button>
   `;
 }
@@ -1983,14 +1983,14 @@ function renderAdminLinks() {
       <div style="background: #fff1f2; border: 1px dashed #fda4af; border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px;">
         <label style="display: flex; align-items: center; gap: 7px; font-size: 0.78rem; font-weight: 700; color: #be123c; cursor: pointer;">
           <input type="checkbox" style="width: 15px; height: 15px; accent-color: #f43f5e;" ${link.isSensitive ? 'checked' : ''} onchange="updateLinkSensitive(${linkIdx}, this.checked)">
-          <span>🙈 このリンク（#${linkIdx + 1}）を「表示する」ボタンを押すまで隠す</span>
+          <span>このリンク（#${linkIdx + 1}）を「表示する」ボタンを押すまで隠す</span>
         </label>
         <div id="link-sens-warn-wrap-${linkIdx}" style="display: ${link.isSensitive ? 'block' : 'none'};">
           <input type="text" class="form-input" style="font-size: 0.76rem; padding: 6px 8px; background: #fff;" value="${escapeAttr(link.sensitiveWarning || '')}" oninput="updateLink(${linkIdx}, 'sensitiveWarning', this.value)" placeholder="ボタンの上に出すメッセージ（任意・空欄ならボタンのみ表示）">
         </div>
       </div>
       <details class="box-style-details">
-        <summary>🎨 このリンク枠（#${linkIdx + 1}）の文字色・フォント</summary>
+        <summary>このリンク枠（#${linkIdx + 1}）の文字色・フォント</summary>
         <div class="box-style-grid">
           <div class="box-style-field">
             <label>このリンクのフォント</label>
@@ -2331,15 +2331,15 @@ function buildDataJson(avatarUrl) {
     linksTitleColor: /^#[0-9a-f]{6}$/i.test(linksTitleColor) ? linksTitleColor : '',
     links: linksState,
     comments: {
-      title: document.getElementById('comments-title-input')?.value.trim() || 'コメント 💌',
+      title: document.getElementById('comments-title-input')?.value.trim() || 'コメント',
       subtitle: document.getElementById('comments-subtitle-input')?.value.trim() || '',
-      buttonText: document.getElementById('comments-button-text-input')?.value.trim() || '📨 メッセージを送る',
+      buttonText: document.getElementById('comments-button-text-input')?.value.trim() || 'メッセージを送る',
       placeholder: document.getElementById('comments-placeholder-input')?.value.trim() || '',
       nameLabel: document.getElementById('comments-name-label-input')?.value.trim() || 'お名前・ニックネーム（任意）',
       namePlaceholder: document.getElementById('comments-name-placeholder-input')?.value.trim() || '',
       bodyLabel: document.getElementById('comments-body-label-input')?.value.trim() || 'メッセージ・ひとこと',
-      requiredError: document.getElementById('comments-required-error-input')?.value.trim() || '⚠️ メッセージを入力してください',
-      successMessage: document.getElementById('comments-success-msg-input')?.value.trim() || '✨ メッセージを送信しました！ありがとうございます🥰',
+      requiredError: document.getElementById('comments-required-error-input')?.value.trim() || 'メッセージを入力してください',
+      successMessage: document.getElementById('comments-success-msg-input')?.value.trim() || 'メッセージを送信しました！ありがとうございます',
       font: commentsFont,
       titleColor: /^#[0-9a-f]{6}$/i.test(commentsTitleColor) ? commentsTitleColor : ''
     },
@@ -2496,14 +2496,14 @@ async function saveToGitHub() {
       console.warn('Could not cache latest data:', e);
     }
 
-    showToast('✨ 保存完了！HPに反映されました', 'success');
+    showToast('保存完了！HPに反映されました', 'success');
   } catch (err) {
     console.error('Save error:', err);
     showToast(`エラー: ${err.message}`, 'error');
     alert(`【保存エラー】\n${err.message}`);
   } finally {
     saveBtn.disabled = false;
-    btnText.textContent = '🚀 保存してHPに反映';
+    btnText.textContent = '保存してHPに反映';
     spinner.style.display = 'none';
   }
 }
@@ -2590,7 +2590,7 @@ function renderAdminBlogPosts() {
     const tags = Array.isArray(post.tags) ? post.tags : (post.tags ? String(post.tags).split(',').map(t => t.trim()).filter(Boolean) : []);
     const thumbHtml = post.cover
       ? `<img src="${escapeAttr(post.cover)}" alt="cover">`
-      : `<span>📝</span>`;
+      : `<span style="font-size: 0.8rem; color: var(--text-muted);">No image</span>`;
 
     return `
       <div class="blog-post-admin-card" data-post-id="${escapeAttr(post.id)}">
@@ -2599,11 +2599,11 @@ function renderAdminBlogPosts() {
         </div>
         <div class="blog-post-admin-info">
           <div class="blog-post-admin-meta">
-            <span>📅 ${escapeHtml(dateStr || '日付未設定')}</span>
+            <span>${escapeHtml(dateStr || '日付未設定')}</span>
             <span class="blog-post-admin-status ${isPub ? 'published' : 'draft'}">
               ${isPub ? '公開中' : '下書き'}
             </span>
-            <span>❤️ ${post.likes || 0}</span>
+            <span>スキ: ${post.likes || 0}</span>
           </div>
           <div class="blog-post-admin-title">
             ${escapeHtml(post.title || '無題の記事')}
@@ -2617,8 +2617,8 @@ function renderAdminBlogPosts() {
         <div class="blog-post-admin-actions">
           <button type="button" class="blog-icon-btn" title="上へ移動" ${idx === 0 ? 'disabled style="opacity:0.3; cursor:not-allowed;"' : ''} onclick="moveBlogPost(${idx}, -1)">▲</button>
           <button type="button" class="blog-icon-btn" title="下へ移動" ${idx === posts.length - 1 ? 'disabled style="opacity:0.3; cursor:not-allowed;"' : ''} onclick="moveBlogPost(${idx}, 1)">▼</button>
-          <button type="button" class="blog-icon-btn" title="記事を編集" onclick="openBlogEditorModal('${escapeAttr(post.id)}')">✏️</button>
-          <button type="button" class="blog-icon-btn danger" title="記事を削除" onclick="deleteBlogPost('${escapeAttr(post.id)}')">🗑️</button>
+          <button type="button" class="blog-icon-btn" title="記事を編集" onclick="openBlogEditorModal('${escapeAttr(post.id)}')">編集</button>
+          <button type="button" class="blog-icon-btn danger" title="記事を削除" onclick="deleteBlogPost('${escapeAttr(post.id)}')">削除</button>
         </div>
       </div>
     `;
@@ -2646,7 +2646,7 @@ function openBlogEditorModal(postId = null) {
       showToast('記事が見つかりません', 'error');
       return;
     }
-    if (titleHeader) titleHeader.textContent = '✍️ 記事の編集';
+    if (titleHeader) titleHeader.textContent = '記事の編集';
     idInput.value = post.id;
     titleInput.value = post.title || '';
     dateInput.value = post.date || '';
@@ -2658,7 +2658,7 @@ function openBlogEditorModal(postId = null) {
     updateBlogCoverPreview(post.cover || '');
   } else {
     // New Post
-    if (titleHeader) titleHeader.textContent = '✍️ 新しい記事を書く';
+    if (titleHeader) titleHeader.textContent = '新しい記事を書く';
     idInput.value = '';
     titleInput.value = '';
 
@@ -2764,7 +2764,7 @@ function saveBlogPostFromModal() {
 function deleteBlogPost(postId) {
   const post = (blogState.posts || []).find(p => p.id === postId);
   const title = post ? post.title : 'この記事';
-  if (!confirm(`「${title}」を削除してもよろしいですか？\n※「🚀 保存してHPに反映」を押すと完全に削除されます。`)) {
+  if (!confirm(`「${title}」を削除してもよろしいですか？\n※「保存してHPに反映」を押すと完全に削除されます。`)) {
     return;
   }
 
@@ -2848,7 +2848,7 @@ async function handleBlogInlineImageUpload(inputEl) {
     textarea.focus();
     textarea.setSelectionRange(newPos, newPos);
 
-    showToast('📷 画像を本文に挿入しました！', 'success');
+    showToast('画像を本文に挿入しました！', 'success');
   } catch (err) {
     console.error('Blog inline image error:', err);
     showToast('画像の挿入に失敗しました', 'error');

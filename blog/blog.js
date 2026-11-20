@@ -75,7 +75,7 @@ function getDefaultSamplePosts() {
       tags: ['日常', 'Webサイト'],
       cover: '',
       excerpt: 'ホームページにnote風のブログコーナーを作ってみました。日常のことや推し活の感想、作ったWebページのことなどを気ままに綴っていきます。',
-      content: `どうも、いちです。\n\nホームページに新しく**note風のブログ**を作ってみました！\n\n今までプロフィールやリンクを載せていましたが、「作ったウェブページのことや、参戦したライブの感想、日々のちょっとしたこと」をもっと文章としてじっくり残せる場所が欲しかったので作ってみました。\n\n[h2]これから書いていきたいこと[/h2]\n• 日常のちょっとした話\n• ライブやイベントの参戦レポ・感想\n• 作ったWebサイトや技術の話\n\nnoteみたいに読みやすく、写真やリンクも自由に載せられるようにしてあります。\n記事の最後にはnoteでおなじみの「スキ（❤️）」ボタンもついているので、気軽に押してもらえると励みになります！\n\nマイペースに更新していくので、たまに覗きに来てくれたら嬉しいです✨`,
+      content: `どうも、いちです。\n\nホームページに新しく**note風のブログ**を作ってみました！\n\n今までプロフィールやリンクを載せていましたが、「作ったウェブページのことや、参戦したライブの感想、日々のちょっとしたこと」をもっと文章としてじっくり残せる場所が欲しかったので作ってみました。\n\n[h2]これから書いていきたいこと[/h2]\n• 日常のちょっとした話\n• ライブやイベントの参戦レポ・感想\n• 作ったWebサイトや技術の話\n\nnoteみたいに読みやすく、写真やリンクも自由に載せられるようにしてあります。\n記事の最後にはnoteでおなじみの「スキ」ボタンもついているので、気軽に押してもらえると励みになります！\n\nマイペースに更新していくので、たまに覗きに来てくれたら嬉しいです。`,
       likes: 5,
       isPublished: true
     }
@@ -257,9 +257,9 @@ function renderPostsFeed() {
         ${coverHtml}
         <div class="post-card-content">
           <div class="post-card-meta">
-            <span>📅 ${postDate}</span>
+            <span>${postDate}</span>
             <span>·</span>
-            <span>☕ ${readTime}</span>
+            <span>${readTime}</span>
           </div>
           <h2 class="post-card-title">${postTitle}</h2>
           <p class="post-card-excerpt">${excerpt}</p>
@@ -270,7 +270,7 @@ function renderPostsFeed() {
           ` : ''}
           <div class="post-card-footer">
             <div class="card-author-mini">
-              ${avatarSrc ? `<img src="${avatarSrc}" class="author-mini-avatar" alt="">` : '✨'}
+              ${avatarSrc ? `<img src="${avatarSrc}" class="author-mini-avatar" alt="">` : ''}
               <span>${escapeHtml(siteProfile.name)}</span>
             </div>
             <span class="post-like-count ${isLiked ? 'liked' : ''}">
@@ -395,7 +395,7 @@ function handleHashRouting() {
 }
 
 /* ==========================================
-   Like (スキ ❤️) Button Logic
+   Like (スキ) Button Logic
    ========================================== */
 window.toggleArticleLike = async function() {
   if (!currentViewingPost) return;
@@ -415,7 +415,7 @@ window.toggleArticleLike = async function() {
   } else {
     // Like
     localStorage.setItem(storageKey, '1');
-    showToast('❤️ スキをしました！ありがとうございます！');
+    showToast('スキをしました！ありがとうございます！');
     triggerHeartConfetti();
     notifyLikeToDiscord(currentViewingPost);
   }
@@ -459,13 +459,13 @@ function triggerHeartConfetti() {
 function notifyLikeToDiscord(post) {
   try {
     const payload = {
-      content: `❤️ ブログ記事「**${post.title}**」にスキが届きました！\n🔗 https://issei-desu.github.io/ichiHP/blog/#post-${post.id}`
+      content: `ブログ記事「**${post.title}**」にスキが届きました！\nhttps://issei-desu.github.io/ichiHP/blog/#post-${post.id}`
     };
     // Send to visitor logs topic or webhook if accessible
     fetch(`https://ntfy.sh/ichihp_logs_8f4e2a9c1b7d`, {
       method: 'POST',
-      body: `❤️ ブログにスキが届きました: ${post.title}`,
-      headers: { 'Title': 'Blog Like ❤️' }
+      body: `ブログにスキが届きました: ${post.title}`,
+      headers: { 'Title': 'Blog Like' }
     }).catch(() => {});
   } catch (e) {}
 }
@@ -485,7 +485,7 @@ window.copyCurrentArticleLink = function() {
   const url = window.location.href;
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(url).then(() => {
-      showToast('🔗 記事URLをコピーしました！');
+      showToast('記事URLをコピーしました！');
     }).catch(() => fallbackCopy(url));
   } else {
     fallbackCopy(url);
@@ -499,7 +499,7 @@ function fallbackCopy(text) {
   ta.select();
   try {
     document.execCommand('copy');
-    showToast('🔗 記事URLをコピーしました！');
+    showToast('記事URLをコピーしました！');
   } catch (e) {
     prompt('URLをコピーしてください:', text);
   }

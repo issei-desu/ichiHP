@@ -19,8 +19,8 @@
         <span class="logo-text">アクセスログ</span>
       </div>
       <div class="nav-links">
-        <a href="admin.html" class="btn-subtle">⚙️ HP設定</a>
-        <button type="button" id="header-logout-btn" class="btn-subtle" style="display: none; border: none; cursor: pointer;">🔒 ログアウト</button>
+        <a href="admin.html" class="btn-subtle">HP設定</a>
+        <button type="button" id="header-logout-btn" class="btn-subtle" style="display: none; border: none; cursor: pointer;">ログアウト</button>
         <a href="index.html" class="btn-subtle">← HPを見る</a>
       </div>
     </div>
@@ -31,7 +31,7 @@
     <section id="auth-lock-screen" class="lock-screen-wrapper">
       <div class="card lock-card">
         <div class="lock-icon-circle">
-          <span>🔒</span>
+          <span></span>
         </div>
         <h2 class="lock-title">管理者認証</h2>
         <p class="lock-desc">
@@ -45,7 +45,7 @@
             <input type="password" id="lock-token-input" class="form-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="current-password" required>
           </div>
           <button type="submit" id="unlock-btn" class="btn btn-primary" style="margin-top: 10px;">
-            <span id="unlock-btn-text">🔓 ロック解除してログイン</span>
+            <span id="unlock-btn-text">ロック解除してログイン</span>
             <span id="unlock-btn-spinner" class="spinner" style="display: none;"></span>
           </button>
         </form>
@@ -58,11 +58,11 @@
       <section class="card admin-card" style="padding: 14px 18px; margin-bottom: 0;">
         <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
           <div>
-            <h1 style="font-size: 1.15rem; font-weight: 700; margin: 0 0 4px 0;">📊 訪問者アクセスログ・足跡</h1>
+            <h1 style="font-size: 1.15rem; font-weight: 700; margin: 0 0 4px 0;">訪問者アクセスログ・足跡</h1>
             <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0;">HPを見に来た人のIPアドレス・地域・回線・端末機種・参照元を確認できます。</p>
           </div>
           <div style="display: flex; gap: 8px;">
-            <button type="button" id="refresh-logs-btn" class="btn btn-primary btn-sm">🔄 最新ログ取得</button>
+            <button type="button" id="refresh-logs-btn" class="btn btn-primary btn-sm">最新ログ取得</button>
           </div>
         </div>
       </section>
@@ -83,40 +83,40 @@
 
         <!-- Filter & Search Bar -->
         <div style="display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap;">
-          <input type="text" id="logs-search-input" class="form-input" placeholder="🔍 IP・地域・端末・参照元を絞り込み検索..." style="font-size: 0.85rem; flex: 1; min-width: 200px;">
+          <input type="text" id="logs-search-input" class="form-input" placeholder="IP・地域・端末・参照元を絞り込み検索..." style="font-size: 0.85rem; flex: 1; min-width: 200px;">
         </div>
 
         <!-- URL Tracking Tag Helper Guide -->
         <details class="box-style-details" style="margin-bottom: 14px;">
-          <summary>🏷️ アクセス元（Twitter/インスタ/Discord等）を確実に判別するURL一覧</summary>
+          <summary>アクセス元（Twitter/インスタ/Discord等）を確実に判別するURL一覧</summary>
           <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px; font-size: 0.82rem; color: var(--text-muted); line-height: 1.6;">
             <p style="margin: 0;">
               アプリ経由のアクセスはブラウザの仕様で「直接アクセス」になりやすいため、各SNSや投稿ごとに以下のタグ付きURLを貼り付けると100%確実にアクセス元が記録・通知されます。
             </p>
             <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px;">
               <div style="background: #ffffff; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-                <span>🐦 <strong>X (Twitter) プロフ用:</strong> <code>https://issei-desu.github.io/ichiHP/?from=x_bio</code></span>
-                <button type="button" class="mini-clear-btn" onclick="navigator.clipboard.writeText('https://issei-desu.github.io/ichiHP/?from=x_bio').then(() => showToast('コピーしました', 'info'))">📋 コピー</button>
+                <span><strong>X (Twitter) プロフ用:</strong> <code>https://issei-desu.github.io/ichiHP/?from=x_bio</code></span>
+                <button type="button" class="mini-clear-btn" onclick="navigator.clipboard.writeText('https://issei-desu.github.io/ichiHP/?from=x_bio').then(() => showToast('コピーしました', 'info'))">コピー</button>
               </div>
               <div style="background: #ffffff; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-                <span>🐦 <strong>X (Twitter) ツイート用:</strong> <code>https://issei-desu.github.io/ichiHP/?from=tweet</code></span>
-                <button type="button" class="mini-clear-btn" onclick="navigator.clipboard.writeText('https://issei-desu.github.io/ichiHP/?from=tweet').then(() => showToast('コピーしました', 'info'))">📋 コピー</button>
+                <span><strong>X (Twitter) ツイート用:</strong> <code>https://issei-desu.github.io/ichiHP/?from=tweet</code></span>
+                <button type="button" class="mini-clear-btn" onclick="navigator.clipboard.writeText('https://issei-desu.github.io/ichiHP/?from=tweet').then(() => showToast('コピーしました', 'info'))">コピー</button>
               </div>
               <div style="background: #ffffff; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-                <span>📸 <strong>Instagram プロフ用:</strong> <code>https://issei-desu.github.io/ichiHP/?from=insta</code></span>
-                <button type="button" class="mini-clear-btn" onclick="navigator.clipboard.writeText('https://issei-desu.github.io/ichiHP/?from=insta').then(() => showToast('コピーしました', 'info'))">📋 コピー</button>
+                <span><strong>Instagram プロフ用:</strong> <code>https://issei-desu.github.io/ichiHP/?from=insta</code></span>
+                <button type="button" class="mini-clear-btn" onclick="navigator.clipboard.writeText('https://issei-desu.github.io/ichiHP/?from=insta').then(() => showToast('コピーしました', 'info'))">コピー</button>
               </div>
               <div style="background: #ffffff; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-                <span>🎮 <strong>Discord 送信用:</strong> <code>https://issei-desu.github.io/ichiHP/?from=discord</code></span>
-                <button type="button" class="mini-clear-btn" onclick="navigator.clipboard.writeText('https://issei-desu.github.io/ichiHP/?from=discord').then(() => showToast('コピーしました', 'info'))">📋 コピー</button>
+                <span><strong>Discord 送信用:</strong> <code>https://issei-desu.github.io/ichiHP/?from=discord</code></span>
+                <button type="button" class="mini-clear-btn" onclick="navigator.clipboard.writeText('https://issei-desu.github.io/ichiHP/?from=discord').then(() => showToast('コピーしました', 'info'))">コピー</button>
               </div>
               <div style="background: #ffffff; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-                <span>💬 <strong>LINE 送信用:</strong> <code>https://issei-desu.github.io/ichiHP/?from=line</code></span>
-                <button type="button" class="mini-clear-btn" onclick="navigator.clipboard.writeText('https://issei-desu.github.io/ichiHP/?from=line').then(() => showToast('コピーしました', 'info'))">📋 コピー</button>
+                <span><strong>LINE 送信用:</strong> <code>https://issei-desu.github.io/ichiHP/?from=line</code></span>
+                <button type="button" class="mini-clear-btn" onclick="navigator.clipboard.writeText('https://issei-desu.github.io/ichiHP/?from=line').then(() => showToast('コピーしました', 'info'))">コピー</button>
               </div>
               <div style="background: #ffffff; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-                <span>📱 <strong>リアルの名刺 / QRコード用:</strong> <code>https://issei-desu.github.io/ichiHP/?from=qr</code></span>
-                <button type="button" class="mini-clear-btn" onclick="navigator.clipboard.writeText('https://issei-desu.github.io/ichiHP/?from=qr').then(() => showToast('コピーしました', 'info'))">📋 コピー</button>
+                <span><strong>リアルの名刺 / QRコード用:</strong> <code>https://issei-desu.github.io/ichiHP/?from=qr</code></span>
+                <button type="button" class="mini-clear-btn" onclick="navigator.clipboard.writeText('https://issei-desu.github.io/ichiHP/?from=qr').then(() => showToast('コピーしました', 'info'))">コピー</button>
               </div>
             </div>
             <span style="font-size: 0.75rem; margin-top: 4px;">※ 末尾の <code>?from=任意の文字</code> を自由に変えて好きなタグをつけることもできます。</span>
@@ -127,11 +127,11 @@
         <div class="logs-toolbar-row">
           <label class="ignore-self-label">
             <input type="checkbox" id="ignore-my-visits-checkbox" checked>
-            <span>🚫 このスマホ（自分）のアクセスは記録しない</span>
+            <span>このスマホ（自分）のアクセスは記録しない</span>
           </label>
           <div class="logs-toolbar-actions">
-            <button type="button" id="copy-logs-btn" class="mini-clear-btn">📋 コピー</button>
-            <button type="button" id="clear-logs-btn" class="mini-clear-btn" style="color: #dc2626; border-color: #fecaca;">🗑️ 履歴クリア</button>
+            <button type="button" id="copy-logs-btn" class="mini-clear-btn">コピー</button>
+            <button type="button" id="clear-logs-btn" class="mini-clear-btn" style="color: #dc2626; border-color: #fecaca;">履歴クリア</button>
           </div>
         </div>
 
@@ -143,7 +143,7 @@
 
       <!-- Back Link Section -->
       <div style="text-align: center; margin-top: 10px; margin-bottom: 24px;">
-        <a href="admin.html" class="btn btn-secondary">⚙️ HP通常管理画面（プロフィール・タブ編集）に戻る</a>
+        <a href="admin.html" class="btn btn-secondary">HP通常管理画面（プロフィール・タブ編集）に戻る</a>
       </div>
     </div>
   </main>

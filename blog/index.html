@@ -20,10 +20,10 @@
       </a>
       <div class="header-actions">
         <button type="button" class="header-btn" id="toggle-search-btn" onclick="toggleSearchBox()" aria-label="検索">
-          🔍 <span class="hide-mobile">検索</span>
+          <span class="hide-mobile">検索</span>
         </button>
         <a href="../admin.html" class="header-btn" title="ブログ管理・記事投稿">
-          ✍️ <span class="hide-mobile">投稿・管理</span>
+          <span class="hide-mobile">投稿・管理</span>
         </a>
         <a href="../" class="header-btn primary">
           ← ホーム
@@ -41,7 +41,7 @@
         <div class="creator-top-row">
           <div class="creator-avatar-wrap">
             <img id="creator-avatar" class="creator-avatar-img" src="" alt="アバター" style="display: none;">
-            <span id="creator-avatar-fallback">✨</span>
+            <span id="creator-avatar-fallback"></span>
           </div>
           <div class="creator-info">
             <h1 class="creator-name">
@@ -64,7 +64,7 @@
               <span>X (Twitter)</span>
             </a>
             <a href="../" class="social-pill">
-              <span>🏠 ホーム</span>
+              <span>ホーム</span>
             </a>
           </div>
         </div>
@@ -73,7 +73,6 @@
       <!-- Filter & Search Controls -->
       <div class="filter-nav-wrap">
         <div class="search-bar-wrap" id="search-box-wrap" style="display: none;">
-          <span class="search-icon">🔍</span>
           <input type="text" id="search-input" class="search-input" placeholder="記事を検索（タイトル・本文・タグ）..." oninput="onSearchInput(this.value)">
           <button type="button" class="search-clear-btn" onclick="clearSearch()" title="クリア">&times;</button>
         </div>
@@ -114,7 +113,7 @@
               <span>シェア</span>
             </button>
             <button type="button" class="social-pill" onclick="copyCurrentArticleLink()" title="URLをコピー">
-              <span>🔗 コピー</span>
+              <span>コピー</span>
             </button>
           </div>
         </div>
@@ -130,7 +129,7 @@
         <!-- Rendered rich text content -->
       </div>
 
-      <!-- Article Bottom Action Bar (Signature note "スキ" ❤️ & Share) -->
+      <!-- Article Bottom Action Bar (Signature note "スキ" & Share) -->
       <div class="detail-action-footer">
         <button type="button" class="note-like-btn" id="detail-like-btn" onclick="toggleArticleLike()">
           <svg class="note-like-heart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -146,7 +145,7 @@
             <span>Xで共有する</span>
           </button>
           <button type="button" class="share-btn copy" onclick="copyCurrentArticleLink()">
-            <span>🔗 リンクをコピー</span>
+            <span>リンクをコピー</span>
           </button>
         </div>
 
@@ -156,7 +155,7 @@
           <div class="article-creator-desc">
             <div class="article-creator-name" id="detail-bottom-name">いち</div>
             <p class="article-creator-bio" id="detail-bottom-bio">
-              気に入っていただけたら「スキ（❤️）」やシェアをいただけると嬉しいです！
+              気に入っていただけたら「スキ」やシェアをいただけると嬉しいです！
             </p>
           </div>
         </div>

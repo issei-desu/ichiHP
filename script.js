@@ -180,24 +180,24 @@ function applyData(data) {
     resolvedTabs = [
       {
         id: 'real',
-        name: 'リアル・日常 🌿',
+        name: 'リアル・日常',
         aboutTitle: 'About Me（リアル）',
         aboutSubtitle: '日常やリアルの自己紹介',
         items: [
           { label: 'お名前 / 呼び名', value: (profile && profile.name) || 'いち' },
           { label: '好きなこと / 趣味', value: 'こんな感じのページを作ったりしてます。AIで作ってる部分が結構あったりします。' },
-          { label: 'ひとこと', value: '気ままにのんびりやってます。仲良くしてください✨' }
+          { label: 'ひとこと', value: '気ままにのんびりやってます。仲良くしてください' }
         ]
       },
       {
         id: 'oshi',
-        name: '推し活 🎀',
+        name: '推し活',
         aboutTitle: 'My Favorite（推しについて）',
         aboutSubtitle: '推しへの愛や活動情報',
         items: [
           { label: '最推し / 担当', value: '（ここに推しの名前を入力！）' },
           { label: '推し歴 / きっかけ', value: '（推し始めた時期やきっかけ）' },
-          { label: '推しへのひとこと', value: 'いつも元気をくれてありがとう！一生推します✨' }
+          { label: '推しへのひとこと', value: 'いつも元気をくれてありがとう！一生推します' }
         ]
       }
     ];
@@ -576,7 +576,7 @@ function renderCommentsSection(commentsConfig = {}) {
   }
 
   if (titleEl) {
-    const rawTitle = commentsConfig.title !== undefined && commentsConfig.title !== '' ? commentsConfig.title : 'コメント 💌';
+    const rawTitle = commentsConfig.title !== undefined && commentsConfig.title !== '' ? commentsConfig.title : 'コメント';
     titleEl.innerHTML = formatRichText(rawTitle);
     titleEl.style.color = commentsConfig.titleColor || '';
   }
@@ -589,7 +589,7 @@ function renderCommentsSection(commentsConfig = {}) {
   }
 
   if (btnTextEl) {
-    const rawBtn = commentsConfig.buttonText || '📨 メッセージを送る';
+    const rawBtn = commentsConfig.buttonText || 'メッセージを送る';
     btnTextEl.innerHTML = formatRichText(rawBtn);
   }
 
@@ -936,9 +936,9 @@ async function recordVisitorLog(data) {
 
     const primaryIp = v4 || (who && who.ip) || '不明（ブロッカー等）';
     const ipv6 = (who && who.ip && who.ip !== v4) ? who.ip : '';
-    const flag = (who && who.flag && who.flag.emoji) ? who.flag.emoji : '🌐';
+    const flag = (who && who.flag && who.flag.emoji) ? who.flag.emoji : '';
     const locParts = [who && who.country, who && who.region, who && who.city].filter(Boolean);
-    const locationStr = locParts.length > 0 ? `${flag} ${locParts.join(' / ')}` : '地域不明';
+    const locationStr = locParts.length > 0 ? (flag ? `${flag} ${locParts.join(' / ')}` : locParts.join(' / ')) : '地域不明';
     const ispStr = (who && who.connection && (who.connection.isp || who.connection.org)) || '';
 
     const uaInfo = parseVisitorAgent(navigator.userAgent || '');
@@ -968,15 +968,15 @@ async function recordVisitorLog(data) {
     const webhookUrl = data && data.site && data.site.discordWebhook;
     if (webhookUrl && webhookUrl.startsWith('https://discord.com/api/webhooks/')) {
       const embedPayload = {
-        username: 'HPアクセス通知 📊',
+        username: 'HPアクセス通知',
         embeds: [{
-          title: '👀 ホームページにアクセスがありました！',
+          title: 'ホームページにアクセスがありました',
           color: 0x9333ea,
           fields: [
-            { name: '🌐 IPアドレス', value: `\`${primaryIp}\`${ipv6 ? `\n(IPv6: \`${ipv6}\`)` : ''}`, inline: true },
-            { name: '📍 地域・回線', value: `${locationStr}${ispStr ? `\n(${ispStr})` : ''}`, inline: true },
-            { name: '📱 端末・ブラウザ', value: `${uaInfo.device} / ${uaInfo.browser} (${logEntry.screen})`, inline: false },
-            { name: '🔗 アクセス元', value: refStr, inline: false }
+            { name: 'IPアドレス', value: `\`${primaryIp}\`${ipv6 ? `\n(IPv6: \`${ipv6}\`)` : ''}`, inline: true },
+            { name: '地域・回線', value: `${locationStr}${ispStr ? `\n(${ispStr})` : ''}`, inline: true },
+            { name: '端末・ブラウザ', value: `${uaInfo.device} / ${uaInfo.browser} (${logEntry.screen})`, inline: false },
+            { name: 'アクセス元', value: refStr, inline: false }
           ],
           timestamp: new Date().toISOString()
         }]
@@ -994,32 +994,32 @@ async function recordVisitorLog(data) {
 }
 
 function parseVisitorAgent(ua) {
-  let device = '💻 PC / その他';
+  let device = 'PC / その他';
   if (/iPhone/i.test(ua)) {
     const m = ua.match(/OS (\d+[_\d]*)/);
-    device = `📱 iPhone${m ? ' (iOS ' + m[1].replace(/_/g, '.') + ')' : ''}`;
+    device = `iPhone${m ? ' (iOS ' + m[1].replace(/_/g, '.') + ')' : ''}`;
   } else if (/iPad/i.test(ua)) {
-    device = '📱 iPad';
+    device = 'iPad';
   } else if (/Android/i.test(ua)) {
     const m = ua.match(/Android (\d+(?:\.\d+)?)/);
-    device = `📱 Android${m ? ' ' + m[1] : ''}`;
+    device = `Android${m ? ' ' + m[1] : ''}`;
   } else if (/Windows/i.test(ua)) {
-    device = '💻 Windows PC';
+    device = 'Windows PC';
   } else if (/Macintosh|Mac OS X/i.test(ua)) {
-    device = '💻 Mac';
+    device = 'Mac';
   } else if (/Linux/i.test(ua)) {
-    device = '🐧 Linux';
+    device = 'Linux';
   }
 
   let browser = '標準ブラウザ';
   if (/Twitter/i.test(ua)) {
-    browser = '🐦 Twitterアプリ内';
+    browser = 'Twitterアプリ内';
   } else if (/Instagram/i.test(ua)) {
-    browser = '📸 Instagramアプリ内';
+    browser = 'Instagramアプリ内';
   } else if (/Line\//i.test(ua)) {
-    browser = '💬 LINEアプリ内';
+    browser = 'LINEアプリ内';
   } else if (/Discord/i.test(ua)) {
-    browser = '🎮 Discord内';
+    browser = 'Discord内';
   } else if (/Edg\//i.test(ua)) {
     browser = 'Edge';
   } else if (/CriOS|Chrome\//i.test(ua)) {
@@ -1045,35 +1045,35 @@ function formatVisitorReferrer(ref) {
   if (paramTag) {
     const lower = paramTag.toLowerCase();
     if (lower === 'x' || lower === 'twitter' || lower.includes('tweet') || lower.includes('bio')) {
-      labelFromParam = `🐦 X / Twitter (?from=${paramTag})`;
+      labelFromParam = `X / Twitter (?from=${paramTag})`;
     } else if (lower.includes('insta') || lower === 'ig') {
-      labelFromParam = `📸 Instagram (?from=${paramTag})`;
+      labelFromParam = `Instagram (?from=${paramTag})`;
     } else if (lower.includes('line')) {
-      labelFromParam = `💬 LINE (?from=${paramTag})`;
+      labelFromParam = `LINE (?from=${paramTag})`;
     } else if (lower.includes('discord') || lower === 'dc') {
-      labelFromParam = `🎮 Discord (?from=${paramTag})`;
+      labelFromParam = `Discord (?from=${paramTag})`;
     } else if (lower.includes('qr')) {
-      labelFromParam = `📱 QRコード (?from=${paramTag})`;
+      labelFromParam = `QRコード (?from=${paramTag})`;
     } else if (lower.includes('youtube') || lower === 'yt') {
-      labelFromParam = `▶️ YouTube (?from=${paramTag})`;
+      labelFromParam = `YouTube (?from=${paramTag})`;
     } else if (lower.includes('tiktok') || lower === 'tt') {
-      labelFromParam = `🎵 TikTok (?from=${paramTag})`;
+      labelFromParam = `TikTok (?from=${paramTag})`;
     } else if (lower.includes('github') || lower === 'gh') {
-      labelFromParam = `🐙 GitHub (?from=${paramTag})`;
+      labelFromParam = `GitHub (?from=${paramTag})`;
     } else {
-      labelFromParam = `🏷️ URLタグ (?from=${paramTag})`;
+      labelFromParam = `URLタグ (?from=${paramTag})`;
     }
   }
 
   // 2. Format browser document.referrer if available
   let labelFromRef = '';
   if (ref) {
-    if (/t\.co|twitter\.com|x\.com/i.test(ref)) labelFromRef = `🐦 Twitter / X (${ref})`;
-    else if (/instagram\.com/i.test(ref)) labelFromRef = `📸 Instagram (${ref})`;
-    else if (/google\./i.test(ref)) labelFromRef = `🔍 Google検索 (${ref})`;
-    else if (/yahoo\./i.test(ref)) labelFromRef = `🔍 Yahoo!検索 (${ref})`;
-    else if (/line\./i.test(ref)) labelFromRef = `💬 LINE (${ref})`;
-    else if (/discord/i.test(ref)) labelFromRef = `🎮 Discord (${ref})`;
+    if (/t\.co|twitter\.com|x\.com/i.test(ref)) labelFromRef = `Twitter / X (${ref})`;
+    else if (/instagram\.com/i.test(ref)) labelFromRef = `Instagram (${ref})`;
+    else if (/google\./i.test(ref)) labelFromRef = `Google検索 (${ref})`;
+    else if (/yahoo\./i.test(ref)) labelFromRef = `Yahoo!検索 (${ref})`;
+    else if (/line\./i.test(ref)) labelFromRef = `LINE (${ref})`;
+    else if (/discord/i.test(ref)) labelFromRef = `Discord (${ref})`;
     else labelFromRef = ref;
   }
 
@@ -1111,7 +1111,7 @@ async function submitVisitorComment(e) {
       statusEl.className = 'comment-status-msg error';
       const rawRequiredErr = activeSiteData?.comments?.requiredError !== undefined && activeSiteData?.comments?.requiredError !== ''
         ? activeSiteData.comments.requiredError
-        : '⚠️ メッセージを入力してください';
+        : 'メッセージを入力してください';
       statusEl.innerHTML = formatRichText(rawRequiredErr);
       statusEl.style.display = 'block';
     }
@@ -1132,7 +1132,7 @@ async function submitVisitorComment(e) {
   if (!commentWebhook || !commentWebhook.startsWith('https://discord.com/api/webhooks/')) {
     if (statusEl) {
       statusEl.className = 'comment-status-msg error';
-      statusEl.textContent = '⚠️ コメント通知先のDiscord Webhookがまだ設定されていません（管理画面で設定してください）';
+      statusEl.textContent = 'コメント通知先のDiscord Webhookがまだ設定されていません（管理画面で設定してください）';
       statusEl.style.display = 'block';
     }
     return;
@@ -1148,15 +1148,15 @@ async function submitVisitorComment(e) {
     const refStr = formatVisitorReferrer(document.referrer || '');
 
     const discordPayload = {
-      username: 'HP訪問者メッセージ 💌',
+      username: 'HP訪問者メッセージ',
       embeds: [{
-        title: `💬 ${senderName} さんからメッセージが届きました！`,
+        title: `${senderName} さんからメッセージが届きました！`,
         description: commentText,
         color: 0xec4899,
         fields: [
-          { name: '👤 送信者名', value: senderName, inline: true },
-          { name: '📱 端末・環境', value: `${uaInfo.device} / ${uaInfo.browser}`, inline: true },
-          { name: '🔗 アクセス元', value: refStr, inline: false }
+          { name: '送信者名', value: senderName, inline: true },
+          { name: '端末・環境', value: `${uaInfo.device} / ${uaInfo.browser}`, inline: true },
+          { name: 'アクセス元', value: refStr, inline: false }
         ],
         timestamp: new Date().toISOString()
       }]
@@ -1175,7 +1175,7 @@ async function submitVisitorComment(e) {
         statusEl.className = 'comment-status-msg success';
         const rawSuccess = activeSiteData?.comments?.successMessage !== undefined && activeSiteData?.comments?.successMessage !== ''
           ? activeSiteData.comments.successMessage
-          : '✨ メッセージを送信しました！ありがとうございます🥰';
+          : 'メッセージを送信しました！ありがとうございます';
         statusEl.innerHTML = formatRichText(rawSuccess);
         statusEl.style.display = 'block';
       }
@@ -1185,12 +1185,12 @@ async function submitVisitorComment(e) {
   } catch (err) {
     if (statusEl) {
       statusEl.className = 'comment-status-msg error';
-      statusEl.textContent = '❌ 送信に失敗しました。時間をおいて再度お試しください';
+      statusEl.textContent = '送信に失敗しました。時間をおいて再度お試しください';
       statusEl.style.display = 'block';
     }
   } finally {
     if (submitBtn) submitBtn.disabled = false;
-    if (btnText) btnText.textContent = '📨 メッセージを送る';
+    if (btnText) btnText.textContent = 'メッセージを送る';
     if (spinner) spinner.style.display = 'none';
   }
 }
