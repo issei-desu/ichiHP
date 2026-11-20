@@ -75,9 +75,8 @@ function renderCreatorHeader() {
   const creatorAvatar = document.getElementById('creator-avatar');
   const creatorAvatarFallback = document.getElementById('creator-avatar-fallback');
   const creatorXLink = document.getElementById('creator-x-link');
-  const footerText = document.getElementById('blog-footer-text');
 
-  if (pageTitle) pageTitle.textContent = `${blogData.title} - note風ブログ`;
+  if (pageTitle) pageTitle.textContent = `${blogData.title}`;
   if (headerBlogTitle) headerBlogTitle.textContent = blogData.title;
 
   if (blogSubtitle) {
@@ -115,10 +114,6 @@ function renderCreatorHeader() {
 
   if (creatorXLink && siteProfile.twitter) {
     creatorXLink.href = `https://x.com/${siteProfile.twitter}`;
-  }
-
-  if (footerText) {
-    footerText.innerHTML = `&copy; 2026 ${escapeHtml(siteProfile.name)}. All rights reserved.`;
   }
 
   updateStatsCounts();
@@ -648,7 +643,7 @@ function showFeedView() {
   const detailView = document.getElementById('view-detail');
   if (detailView) detailView.style.display = 'none';
   if (feedView) feedView.style.display = 'block';
-  document.title = `${blogData.title} - note風ブログ`;
+  document.title = `${blogData.title}`;
   renderPostsFeed();
 }
 
