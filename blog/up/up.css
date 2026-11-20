@@ -27,6 +27,10 @@
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
+html {
+  scroll-padding-top: 80px;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -48,12 +52,9 @@ body {
    Header Navbar
    ========================================== */
 .up-navbar {
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 100;
   background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--up-border);
   height: 60px;
   display: flex;
@@ -411,17 +412,20 @@ body {
   border-radius: var(--radius-lg);
   border: 1px solid var(--up-border);
   box-shadow: var(--shadow-sm);
-  overflow: hidden;
+  overflow: visible;
   display: flex;
   flex-direction: column;
+  scroll-margin-top: 80px;
 }
 
 .up-toolbar {
   position: sticky;
-  top: 60px;
+  top: 0;
   z-index: 50;
   background: #ffffff;
   border-bottom: 1px solid var(--up-border);
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
   padding: 8px 14px;
   display: flex;
   align-items: center;
@@ -508,7 +512,7 @@ body {
   width: 100%;
   height: 100%;
   min-height: 480px;
-  padding: 20px 24px;
+  padding: 26px 24px;
   border: none;
   outline: none;
   resize: vertical;
@@ -517,6 +521,7 @@ body {
   font-family: inherit;
   color: var(--up-text-main);
   background: transparent;
+  scroll-margin-top: 80px;
 }
 
 .up-textarea::placeholder {
@@ -827,8 +832,10 @@ body.zen-mode .up-toolbar {
     padding: 18px;
   }
   .up-toolbar {
-    top: 59px;
+    top: 0;
     padding: 6px 10px;
+    border-top-left-radius: var(--radius-md);
+    border-top-right-radius: var(--radius-md);
   }
   .hide-split-mobile {
     display: none !important;

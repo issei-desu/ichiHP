@@ -195,6 +195,8 @@ async function loadBlogData() {
 function updateNavCount() {
   const countEl = document.getElementById('nav-posts-count');
   if (countEl) countEl.textContent = allPosts.length;
+  const bottomCountEl = document.getElementById('bottom-posts-count');
+  if (bottomCountEl) bottomCountEl.textContent = allPosts.length;
 }
 
 /* ==========================================
@@ -770,13 +772,10 @@ function updateCoverPreview(src) {
    ========================================== */
 function updateStats() {
   const content = document.getElementById('post-content')?.value || '';
-  const charCount = content.replace(/\s+/g, '').length;
-  const readTime = estimateReadTime(content);
+  const charCount = getPostCharCount(content);
 
   const charEl = document.getElementById('char-count-text');
-  const readEl = document.getElementById('read-time-text');
   if (charEl) charEl.textContent = `${charCount.toLocaleString()} 文字`;
-  if (readEl) readEl.textContent = `読了目安 約 ${readTime}`;
 }
 
 function renderLivePreview() {
@@ -800,8 +799,8 @@ function renderLivePreview() {
   // Meta
   const prevMeta = document.getElementById('prev-publish-meta');
   if (prevMeta) {
-    const readTime = estimateReadTime(content);
-    prevMeta.textContent = `${dateStr || '日付未設定'} · ${readTime}`;
+    const charCount = getPostCharCount(content);
+    prevMeta.textContent = `${dateStr || '日付未設定'} · ${charCount.toLocaleString()}文字`;
   }
 
   // Cover
@@ -1606,10 +1605,28 @@ function resolveAssetUrl(path) {
   return '../../' + path.replace(/^\.?\/?/, '');
 }
 
-function estimateReadTime(content) {
-  const chars = (content || '').replace(/\s+/g, '').length;
-  const minutes = Math.max(1, Math.ceil(chars / 450));
-  return `${minutes}分で読めます`;
+function getPostCharCount(content) {
+  if (!content) return 0;
+  return stripRichTags(content).replace(/\s+/g, '').length;
+}
+
+function stripRichTags(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/```[\s\S]*?```/g, '')
+    .replace(/`([^`\n]+)`/g, '$1')
+    .replace(/\[hide\][\s\S]*?\[\/hide\]/gi, '')
+    .replace(/\[img=[^\]]+\]/gi, '')
+    .replace(/\[url=[^\]]+\]([\s\S]*?)\[\/url\]/gi, '$1')
+    .replace(/\[url\]([\s\S]*?)\[\/url\]/gi, '$1')
+    .replace(/\[\/?[a-zA-Z0-9_-]+(?:=[^\]]+)?\]/gi, '')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/^>\s+/gm, '')
+    .replace(/^[•*-]\s+/gm, '')
+    .replace(/^---+$/gm, '')
+    .replace(/\*{1,3}/g, '')
+    .replace(/<[^>]+>/g, '')
+    .trim();
 }
 
 /* ==========================================

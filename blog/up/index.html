@@ -7,8 +7,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../style.css?v=20261120_1930">
-  <link rel="stylesheet" href="up.css?v=20261120_1930">
+  <link rel="stylesheet" href="../style.css?v=20261120_1935">
+  <link rel="stylesheet" href="up.css?v=20261120_1935">
 </head>
 <body class="mode-edit">
 
@@ -202,7 +202,7 @@
                 <div class="detail-author-left">
                   <div class="detail-author-text">
                     <span class="detail-author-name">いち</span>
-                    <span class="detail-publish-meta" id="prev-publish-meta">2026/11/20 · 1分で読めます</span>
+                    <span class="detail-publish-meta" id="prev-publish-meta">2026/11/20 · 0文字</span>
                   </div>
                 </div>
               </div>
@@ -226,9 +226,10 @@
   <aside class="up-bottom-bar">
     <div class="up-bottom-container">
       <div class="up-bottom-left">
-        <span id="char-count-text">0 文字</span>
-        <span>•</span>
-        <span id="read-time-text">読了目安 約 1分</span>
+        <span id="char-count-text" style="font-weight: 700; color: var(--up-text-main);">0 文字</span>
+        <button type="button" class="up-btn up-btn-outline up-btn-sm" onclick="toggleDrawer()" style="font-size: 0.78rem; padding: 3px 8px; margin-left: 6px;">
+          <span>記事一覧 (<span id="bottom-posts-count">0</span>)</span>
+        </button>
         <span id="save-status-indicator" style="display: none; color: #059669; font-weight: 600;">• 保存完了</span>
       </div>
 
@@ -279,6 +280,6 @@
   <!-- Toast Notification -->
   <div id="up-toast" class="up-toast"></div>
 
-  <script src="up.js?v=20261120_1930"></script>
+  <script src="up.js?v=20261120_1935"></script>
 </body>
 </html>

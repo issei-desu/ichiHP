@@ -310,7 +310,8 @@ function renderPostsFeed() {
     const postId = escapeAttr(post.id);
     const postTitle = formatRichText(post.title || '無題の記事');
     const postDate = escapeHtml(post.date || '');
-    const readTime = estimateReadTime(post.content || '');
+    const charCount = getPostCharCount(post.content || '');
+    const charCountText = `${charCount.toLocaleString()}文字`;
     const rawExcerpt = post.excerpt ? stripRichTags(post.excerpt) : stripRichTags(post.content || '');
     const excerpt = escapeHtml(rawExcerpt.length > 110 ? rawExcerpt.substring(0, 110) + '...' : rawExcerpt);
     const tags = Array.isArray(post.tags) ? post.tags : [];
@@ -332,7 +333,7 @@ function renderPostsFeed() {
           <div class="post-card-meta">
             <span>${postDate}</span>
             <span>·</span>
-            <span>${readTime}</span>
+            <span>${charCountText}</span>
           </div>
           <h2 class="post-card-title">${postTitle}</h2>
           ${excerpt ? `<p class="post-card-excerpt">${excerpt}</p>` : ''}
@@ -445,8 +446,8 @@ function showArticleDetail(post, isAdminPreview = false) {
   if (authorAvatar && avatarSrc) authorAvatar.src = avatarSrc;
   if (authorName) authorName.textContent = siteProfile.name;
   if (publishMeta) {
-    const readTime = estimateReadTime(post.content || '');
-    publishMeta.textContent = `${post.date || ''} · ${readTime}`;
+    const charCount = getPostCharCount(post.content || '');
+    publishMeta.textContent = `${post.date || ''} · ${charCount.toLocaleString()}文字`;
   }
 
   // Cover Box
@@ -999,12 +1000,10 @@ function resolveAssetUrl(path) {
   return `../${path}`;
 }
 
-function estimateReadTime(content) {
-  const plainText = stripRichTags(content || '');
-  const charCount = plainText.length;
-  // Japanese reading speed is typically 500-600 characters per minute
-  const minutes = Math.max(1, Math.ceil(charCount / 500));
-  return `${minutes}分で読めます`;
+function getPostCharCount(content) {
+  if (!content) return 0;
+  const plainText = stripRichTags(content).replace(/\s+/g, '');
+  return plainText.length;
 }
 
 /* ==========================================
