@@ -63,6 +63,18 @@
       </div>
     </div>
 
+    <!-- Local Draft Recovery Banner -->
+    <div id="draft-recovery-banner" class="up-status-banner" style="display: none; background: #fefce8; border-color: #fde047;">
+      <div class="up-status-info">
+        <span class="up-status-tag" style="background: #fef08a; color: #854d0e;">自動保存</span>
+        <span id="draft-recovery-msg" style="color: #713f12; font-size: 0.85rem;">未保存の自動保存下書きがあります</span>
+      </div>
+      <div style="display: flex; gap: 6px;">
+        <button type="button" class="up-btn up-btn-sm up-btn-primary" onclick="restoreDraftBackup()">下書きを復元</button>
+        <button type="button" class="up-btn up-btn-sm up-btn-outline" onclick="discardDraftBackup()">破棄</button>
+      </div>
+    </div>
+
     <!-- Article Meta Settings Card -->
     <section class="up-meta-card">
       <input type="hidden" id="post-id" value="">
@@ -159,7 +171,10 @@
             <input type="file" id="inline-image-file-input" accept="image/*" style="display: none;">
           </label>
           <button type="button" class="tool-btn" onclick="insertTag('[hide]', '[/hide]')" title="伏せ字/ネタバレ">ネタバレ</button>
+          <button type="button" class="tool-btn" onclick="insertTag('```\n', '\n```')" title="コードブロック">コード</button>
           <button type="button" class="tool-btn" onclick="insertTag('\n---\n', '')" title="区切り線">区切り線</button>
+          <span class="tool-separator"></span>
+          <button type="button" class="tool-btn" onclick="toggleZenMode()" id="btn-zen-mode" title="執筆集中モード">全画面</button>
         </div>
 
         <!-- View Mode Switcher -->

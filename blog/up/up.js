@@ -7,6 +7,7 @@
 const GITHUB_OWNER = 'issei-desu';
 const GITHUB_REPO = 'ichiHP';
 const DATA_FILE_PATH = 'data.json';
+const DRAFT_STORAGE_KEY = 'blog_up_draft_backup';
 
 // Global state
 let currentPostId = null;
@@ -14,6 +15,7 @@ let allPosts = [];
 let pendingUploads = {}; // path -> dataUrl
 let currentViewMode = 'edit';
 let isDirty = false;
+let autoSaveTimer = null;
 
 // DOM ready
 document.addEventListener('DOMContentLoaded', () => {
@@ -22,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function initApp() {
   setupEventListeners();
+  setupDragAndDrop();
   setupViewMode();
   setupDateDefault();
   handlePublishTypeChange();
@@ -33,6 +36,8 @@ async function initApp() {
   const targetId = urlParams.get('id');
   if (targetId) {
     loadPostIntoEditor(targetId);
+  } else {
+    checkDraftBackupOnLoad();
   }
 }
 
@@ -307,6 +312,7 @@ function setupEventListeners() {
     titleInput.addEventListener('input', () => {
       isDirty = true;
       renderLivePreview();
+      queueAutoSaveBackup();
     });
   }
 
@@ -315,6 +321,44 @@ function setupEventListeners() {
       isDirty = true;
       updateStats();
       renderLivePreview();
+      queueAutoSaveBackup();
+    });
+
+    // Tab key indentation & shortcuts inside content textarea
+    contentInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const start = contentInput.selectionStart;
+        const end = contentInput.selectionEnd;
+        const val = contentInput.value;
+
+        if (!e.shiftKey) {
+          // Insert 2 spaces
+          contentInput.value = val.substring(0, start) + '  ' + val.substring(end);
+          contentInput.selectionStart = contentInput.selectionEnd = start + 2;
+        } else {
+          // Shift+Tab: remove up to 2 leading spaces before cursor
+          const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+          const linePrefix = val.substring(lineStart, start);
+          if (linePrefix.startsWith('  ')) {
+            contentInput.value = val.substring(0, lineStart) + val.substring(lineStart + 2);
+            contentInput.selectionStart = contentInput.selectionEnd = Math.max(lineStart, start - 2);
+          } else if (linePrefix.startsWith(' ')) {
+            contentInput.value = val.substring(0, lineStart) + val.substring(lineStart + 1);
+            contentInput.selectionStart = contentInput.selectionEnd = Math.max(lineStart, start - 1);
+          }
+        }
+        isDirty = true;
+        updateStats();
+        renderLivePreview();
+        queueAutoSaveBackup();
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+        e.preventDefault();
+        insertTag('**', '**');
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        openInsertLinkModal();
+      }
     });
   }
 
@@ -322,6 +366,7 @@ function setupEventListeners() {
     tagsInput.addEventListener('input', () => {
       isDirty = true;
       renderLivePreview();
+      queueAutoSaveBackup();
     });
   }
 
@@ -329,6 +374,7 @@ function setupEventListeners() {
     dateInput.addEventListener('input', () => {
       isDirty = true;
       renderLivePreview();
+      queueAutoSaveBackup();
     });
   }
 
@@ -372,6 +418,7 @@ function setupEventListeners() {
         updateCoverPreview(dataUrl);
         isDirty = true;
         renderLivePreview();
+        queueAutoSaveBackup();
         showToast('カバー画像をセットしました', 'success');
       } catch (err) {
         console.error('Cover process error:', err);
@@ -388,6 +435,7 @@ function setupEventListeners() {
       updateCoverPreview(val);
       isDirty = true;
       renderLivePreview();
+      queueAutoSaveBackup();
     });
   }
 
@@ -400,6 +448,7 @@ function setupEventListeners() {
       updateCoverPreview('');
       isDirty = true;
       renderLivePreview();
+      queueAutoSaveBackup();
     });
   }
 
@@ -419,6 +468,7 @@ function setupEventListeners() {
         insertTag(tag, '');
         isDirty = true;
         renderLivePreview();
+        queueAutoSaveBackup();
         showToast('本文に画像を挿入しました', 'success');
       } catch (err) {
         console.error('Inline image error:', err);
@@ -436,11 +486,13 @@ function setupEventListeners() {
   const newPostBtn = document.getElementById('btn-new-post');
   if (newPostBtn) newPostBtn.addEventListener('click', resetEditorToNew);
 
-  // Keyboard shortcut: Ctrl+S / Cmd+S to save
+  // Keyboard shortcut: Ctrl+S to save, Esc to exit Zen Mode
   window.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 's') {
       e.preventDefault();
       submitFromPrimaryBtn();
+    } else if (e.key === 'Escape' && document.body.classList.contains('zen-mode')) {
+      toggleZenMode();
     }
   });
 
@@ -473,7 +525,9 @@ function setupViewMode() {
 
 function setViewMode(mode) {
   currentViewMode = mode;
-  document.body.className = `mode-${mode}`;
+  // Preserve zen-mode class if set
+  const wasZen = document.body.classList.contains('zen-mode');
+  document.body.className = `mode-${mode}${wasZen ? ' zen-mode' : ''}`;
 
   document.querySelectorAll('.view-tab-btn').forEach(btn => btn.classList.remove('active'));
   const activeBtn = document.getElementById(`tab-btn-${mode}`);
@@ -482,6 +536,211 @@ function setViewMode(mode) {
   if (mode === 'preview' || mode === 'split') {
     renderLivePreview();
   }
+}
+
+/* ==========================================
+   Zen Mode (Distraction-Free Writing)
+   ========================================== */
+function toggleZenMode() {
+  const isZen = document.body.classList.toggle('zen-mode');
+  const btn = document.getElementById('btn-zen-mode');
+  if (btn) {
+    btn.textContent = isZen ? '通常表示' : '全画面';
+    btn.classList.toggle('active', isZen);
+  }
+  showToast(isZen ? '執筆集中モードに入りました (Escで解除)' : '通常モードに戻りました', 'info');
+}
+
+/* ==========================================
+   Drag & Drop Image Upload
+   ========================================== */
+function setupDragAndDrop() {
+  const contentEl = document.getElementById('post-content');
+  if (contentEl) {
+    contentEl.addEventListener('dragover', (e) => {
+      if (e.dataTransfer && Array.from(e.dataTransfer.types).includes('Files')) {
+        e.preventDefault();
+        contentEl.style.boxShadow = '0 0 0 3px rgba(34, 197, 94, 0.4)';
+      }
+    });
+    contentEl.addEventListener('dragleave', () => {
+      contentEl.style.boxShadow = '';
+    });
+    contentEl.addEventListener('drop', async (e) => {
+      contentEl.style.boxShadow = '';
+      if (!e.dataTransfer || !e.dataTransfer.files || !e.dataTransfer.files.length) return;
+      const file = e.dataTransfer.files[0];
+      if (!file.type.startsWith('image/')) return;
+      e.preventDefault();
+
+      try {
+        showToast('画像を圧縮処理中...', 'info');
+        const dataUrl = await processAndResizeImage(file, 1200);
+        const rand = Math.random().toString(36).substring(2, 7);
+        const path = `images/blog/img_${Date.now()}_${rand}.jpg`;
+        pendingUploads[path] = dataUrl;
+
+        const tag = `\n[img=${path}]\n`;
+        insertTag(tag, '');
+        isDirty = true;
+        renderLivePreview();
+        queueAutoSaveBackup();
+        showToast('本文に画像をドロップ挿入しました', 'success');
+      } catch (err) {
+        console.error('Drop image error:', err);
+        showToast('画像の処理に失敗しました', 'error');
+      }
+    });
+  }
+
+  const coverBox = document.querySelector('.cover-picker-box');
+  if (coverBox) {
+    coverBox.addEventListener('dragover', (e) => {
+      if (e.dataTransfer && Array.from(e.dataTransfer.types).includes('Files')) {
+        e.preventDefault();
+        coverBox.style.borderColor = 'var(--note-green)';
+        coverBox.style.background = '#f0fdf4';
+      }
+    });
+    const resetCoverBox = () => {
+      coverBox.style.borderColor = '';
+      coverBox.style.background = '';
+    };
+    coverBox.addEventListener('dragleave', resetCoverBox);
+    coverBox.addEventListener('drop', async (e) => {
+      resetCoverBox();
+      if (!e.dataTransfer || !e.dataTransfer.files || !e.dataTransfer.files.length) return;
+      const file = e.dataTransfer.files[0];
+      if (!file.type.startsWith('image/')) return;
+      e.preventDefault();
+
+      try {
+        showToast('カバー画像を処理中...', 'info');
+        const dataUrl = await processAndResizeImage(file, 1200);
+        const rand = Math.random().toString(36).substring(2, 7);
+        const path = `images/blog/cover_${Date.now()}_${rand}.jpg`;
+        pendingUploads[path] = dataUrl;
+
+        const coverUrlInput = document.getElementById('cover-url-input');
+        if (coverUrlInput) coverUrlInput.value = path;
+
+        updateCoverPreview(dataUrl);
+        isDirty = true;
+        renderLivePreview();
+        queueAutoSaveBackup();
+        showToast('カバー画像をドロップ設定しました', 'success');
+      } catch (err) {
+        console.error('Cover drop error:', err);
+        showToast('カバー画像の処理に失敗しました', 'error');
+      }
+    });
+  }
+}
+
+/* ==========================================
+   Draft Local Auto-Save & Recovery
+   ========================================== */
+function queueAutoSaveBackup() {
+  if (autoSaveTimer) clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(() => {
+    saveDraftBackup();
+  }, 1200);
+}
+
+function saveDraftBackup() {
+  const title = document.getElementById('post-title')?.value || '';
+  const content = document.getElementById('post-content')?.value || '';
+  const tags = document.getElementById('post-tags')?.value || '';
+  const cover = document.getElementById('cover-url-input')?.value || '';
+  const date = document.getElementById('post-date')?.value || '';
+  const publishType = document.getElementById('post-publish-type')?.value || 'published';
+  const scheduledAt = document.getElementById('post-schedule-datetime')?.value || '';
+
+  if (!title.trim() && !content.trim()) return;
+
+  const draftData = {
+    postId: currentPostId || null,
+    title,
+    content,
+    tags,
+    cover,
+    date,
+    publishType,
+    scheduledAt,
+    savedAt: Date.now()
+  };
+
+  try {
+    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draftData));
+  } catch (e) {
+    console.warn('Draft auto-save failed:', e);
+  }
+}
+
+function checkDraftBackupOnLoad() {
+  try {
+    const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+    if (!raw) return;
+    const draft = JSON.parse(raw);
+    if (!draft || (!draft.title && !draft.content)) return;
+
+    if (currentPostId && draft.postId && draft.postId !== currentPostId) return;
+
+    const banner = document.getElementById('draft-recovery-banner');
+    const msg = document.getElementById('draft-recovery-msg');
+    if (banner && msg) {
+      const d = new Date(draft.savedAt);
+      const timeStr = `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+      msg.textContent = `${timeStr} に自動保存された未保存の下書きがあります（「${draft.title || '無題'}」）`;
+      banner.style.display = 'flex';
+    }
+  } catch (e) {
+    console.warn('Check draft backup error:', e);
+  }
+}
+
+function restoreDraftBackup() {
+  try {
+    const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+    if (!raw) return;
+    const draft = JSON.parse(raw);
+    if (!draft) return;
+
+    if (draft.title !== undefined) document.getElementById('post-title').value = draft.title;
+    if (draft.content !== undefined) document.getElementById('post-content').value = draft.content;
+    if (draft.tags !== undefined) document.getElementById('post-tags').value = draft.tags;
+    if (draft.date !== undefined && draft.date) document.getElementById('post-date').value = draft.date;
+    if (draft.cover !== undefined) {
+      document.getElementById('cover-url-input').value = draft.cover;
+      updateCoverPreview(draft.cover);
+    }
+    if (draft.publishType) {
+      const pubSelect = document.getElementById('post-publish-type');
+      if (pubSelect) pubSelect.value = draft.publishType;
+    }
+    if (draft.scheduledAt) {
+      const schedInput = document.getElementById('post-schedule-datetime');
+      if (schedInput) schedInput.value = draft.scheduledAt;
+    }
+    handlePublishTypeChange();
+    updateStats();
+    renderLivePreview();
+
+    const banner = document.getElementById('draft-recovery-banner');
+    if (banner) banner.style.display = 'none';
+
+    showToast('自動保存された下書きを復元しました', 'success');
+  } catch (e) {
+    console.error('Restore draft backup error:', e);
+    showToast('下書きの復元に失敗しました', 'error');
+  }
+}
+
+function discardDraftBackup() {
+  localStorage.removeItem(DRAFT_STORAGE_KEY);
+  const banner = document.getElementById('draft-recovery-banner');
+  if (banner) banner.style.display = 'none';
+  showToast('保存されていた下書きを破棄しました', 'info');
 }
 
 /* ==========================================
@@ -1099,6 +1358,10 @@ async function submitPost(overrideType) {
 
     allPosts = fullData.blog.posts;
     isDirty = false;
+    localStorage.removeItem(DRAFT_STORAGE_KEY);
+    const recoveryBanner = document.getElementById('draft-recovery-banner');
+    if (recoveryBanner) recoveryBanner.style.display = 'none';
+
     updateNavCount();
     renderDrawerPosts();
     updateEditorModeTag();
@@ -1210,6 +1473,15 @@ function formatRichArticleBody(str) {
   // Quotes & horizontal rule
   html = html.replace(/^>\s*(.+)$/gm, '<blockquote>$1</blockquote>');
   html = html.replace(/^---$/gm, '<hr>');
+
+  // Fenced Code Blocks ```lang \n code \n ```
+  html = html.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (_, lang, code) => {
+    const cleanLang = lang.trim();
+    return `<div class="code-block-wrapper"><div class="code-block-header"><span class="code-lang-label">${cleanLang || 'code'}</span></div><pre class="code-block-pre"><code>${code.trim()}</code></pre></div>`;
+  });
+
+  // Inline Code `code`
+  html = html.replace(/`([^`\n]+)`/g, '<code class="inline-code">$1</code>');
 
   // Lists
   html = html.replace(/^[•*-]\s*(.+)$/gm, '<li>$1</li>');

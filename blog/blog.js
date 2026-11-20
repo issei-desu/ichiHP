@@ -36,6 +36,7 @@ async function initBlog() {
 
   renderCreatorHeader();
   renderTagFilters();
+  setupReadingProgressBar();
   handleHashRouting();
 }
 
@@ -43,7 +44,7 @@ function parseSiteData(data) {
   if (data.profile) {
     siteProfile.name = data.profile.name || 'いち';
     siteProfile.avatar = data.profile.avatar || '';
-    siteProfile.bio = data.profile.bio || siteProfile.bio;
+    siteProfile.bio = data.profile.bio || '';
   }
   if (data.twitter && data.twitter.username) {
     siteProfile.twitter = data.twitter.username.replace(/^@/, '');
@@ -51,35 +52,15 @@ function parseSiteData(data) {
 
   if (data.blog) {
     blogData.title = data.blog.title || 'いちのブログ';
-    blogData.subtitle = data.blog.subtitle || '日常や推し活、作ったものの記録ノート';
-    if (Array.isArray(data.blog.posts) && data.blog.posts.length > 0) {
-      blogData.posts = data.blog.posts;
-    } else {
-      blogData.posts = getDefaultSamplePosts();
-    }
+    blogData.subtitle = data.blog.subtitle || '';
+    blogData.posts = Array.isArray(data.blog.posts) ? data.blog.posts : [];
   } else {
-    blogData.posts = getDefaultSamplePosts();
+    blogData.posts = [];
   }
 }
 
 function useFallbackData() {
-  blogData.posts = getDefaultSamplePosts();
-}
-
-function getDefaultSamplePosts() {
-  return [
-    {
-      id: 'welcome-post',
-      title: 'note風のブログを始めてみました！',
-      date: '2026/11/20',
-      tags: ['日常', 'Webサイト'],
-      cover: '',
-      excerpt: 'ホームページにnote風のブログコーナーを作ってみました。日常のことや推し活の感想、作ったWebページのことなどを気ままに綴っていきます。',
-      content: `どうも、いちです。\n\nホームページに新しく**note風のブログ**を作ってみました！\n\n今までプロフィールやリンクを載せていましたが、「作ったウェブページのことや、参戦したライブの感想、日々のちょっとしたこと」をもっと文章としてじっくり残せる場所が欲しかったので作ってみました。\n\n[h2]これから書いていきたいこと[/h2]\n• 日常のちょっとした話\n• ライブやイベントの参戦レポ・感想\n• 作ったWebサイトや技術の話\n\nnoteみたいに読みやすく、写真やリンクも自由に載せられるようにしてあります。\n記事の最後にはnoteでおなじみの「スキ」ボタンもついているので、気軽に押してもらえると励みになります！\n\nマイペースに更新していくので、たまに覗きに来てくれたら嬉しいです。`,
-      likes: 5,
-      isPublished: true
-    }
-  ];
+  blogData.posts = [];
 }
 
 /* ==========================================
@@ -98,17 +79,38 @@ function renderCreatorHeader() {
 
   if (pageTitle) pageTitle.textContent = `${blogData.title} - note風ブログ`;
   if (headerBlogTitle) headerBlogTitle.textContent = blogData.title;
-  if (blogSubtitle) blogSubtitle.textContent = blogData.subtitle;
-  if (creatorName) creatorName.textContent = siteProfile.name;
-  if (creatorBio) creatorBio.innerHTML = formatRichText(siteProfile.bio);
 
-  if (creatorAvatar && siteProfile.avatar) {
-    const avatarSrc = siteProfile.avatar.startsWith('http') || siteProfile.avatar.startsWith('data:')
-      ? siteProfile.avatar
-      : `../${siteProfile.avatar}`;
-    creatorAvatar.src = avatarSrc;
-    creatorAvatar.style.display = 'block';
-    if (creatorAvatarFallback) creatorAvatarFallback.style.display = 'none';
+  if (blogSubtitle) {
+    if (blogData.subtitle && blogData.subtitle.trim()) {
+      blogSubtitle.textContent = blogData.subtitle;
+      blogSubtitle.style.display = 'block';
+    } else {
+      blogSubtitle.style.display = 'none';
+    }
+  }
+
+  if (creatorName) creatorName.textContent = siteProfile.name;
+  if (creatorBio) {
+    if (siteProfile.bio && siteProfile.bio.trim()) {
+      creatorBio.innerHTML = formatRichText(siteProfile.bio);
+      creatorBio.style.display = 'block';
+    } else {
+      creatorBio.style.display = 'none';
+    }
+  }
+
+  if (creatorAvatar) {
+    if (siteProfile.avatar) {
+      const avatarSrc = siteProfile.avatar.startsWith('http') || siteProfile.avatar.startsWith('data:')
+        ? siteProfile.avatar
+        : `../${siteProfile.avatar}`;
+      creatorAvatar.src = avatarSrc;
+      creatorAvatar.style.display = 'block';
+      if (creatorAvatarFallback) creatorAvatarFallback.style.display = 'none';
+    } else {
+      creatorAvatar.style.display = 'none';
+      if (creatorAvatarFallback) creatorAvatarFallback.style.display = 'none';
+    }
   }
 
   if (creatorXLink && siteProfile.twitter) {
@@ -180,6 +182,12 @@ function renderTagFilters() {
   });
 
   const tags = Array.from(tagsSet);
+  if (tags.length === 0) {
+    container.style.display = 'none';
+    return;
+  }
+  container.style.display = 'flex';
+
   let html = `<button type="button" class="tag-pill ${currentActiveTag === 'ALL' ? 'active' : ''}" onclick="filterByTag('ALL')">すべて</button>`;
 
   tags.forEach(tag => {
@@ -222,6 +230,15 @@ window.clearSearch = function() {
   renderPostsFeed();
 };
 
+window.clearFiltersAndSearch = function() {
+  currentActiveTag = 'ALL';
+  currentSearchQuery = '';
+  const input = document.getElementById('search-input');
+  if (input) input.value = '';
+  renderTagFilters();
+  renderPostsFeed();
+};
+
 /* ==========================================
    Article Feed List (note-style Cards)
    ========================================== */
@@ -229,7 +246,36 @@ function renderPostsFeed() {
   const listEl = document.getElementById('posts-list');
   if (!listEl) return;
 
-  let posts = blogData.posts.filter(isPostVisible);
+  const allVisiblePosts = blogData.posts.filter(isPostVisible);
+
+  if (allVisiblePosts.length === 0) {
+    const hasToken = !!localStorage.getItem('gh_token');
+    listEl.innerHTML = `
+      <div class="empty-feed">
+        <div class="empty-feed-icon">
+          <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+        </div>
+        <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--blog-text-main); margin: 10px 0 6px;">まだ記事がありません</h3>
+        <p style="font-size: 0.9rem; color: var(--blog-text-muted); line-height: 1.6; max-width: 380px; margin: 0 auto;">最初の記事が投稿されるのをお楽しみに！</p>
+        ${hasToken ? `
+          <div style="margin-top: 18px;">
+            <a href="up/" class="header-btn primary" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; font-size: 0.88rem; text-decoration: none;">
+              <span>＋ 最初の記事を書く (blog/up)</span>
+            </a>
+          </div>
+        ` : ''}
+      </div>
+    `;
+    return;
+  }
+
+  let posts = allVisiblePosts;
 
   // Tag filter
   if (currentActiveTag !== 'ALL') {
@@ -250,8 +296,11 @@ function renderPostsFeed() {
   if (posts.length === 0) {
     listEl.innerHTML = `
       <div class="empty-feed">
-        <p style="font-size: 1.1rem; font-weight: 700; margin-bottom: 6px;">記事が見つかりませんでした</p>
-        <p style="font-size: 0.85rem;">条件を変えて検索するか、「すべて」のタブをお試しください。</p>
+        <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--blog-text-main); margin-bottom: 6px;">検索条件に一致する記事がありませんでした</h3>
+        <p style="font-size: 0.88rem; color: var(--blog-text-muted); margin-bottom: 14px;">条件を変えて検索するか、タグの絞り込みを解除してみてください。</p>
+        <button type="button" class="header-btn" onclick="clearFiltersAndSearch()" style="padding: 6px 14px; font-size: 0.85rem;">
+          絞り込みをリセット
+        </button>
       </div>
     `;
     return;
@@ -392,6 +441,7 @@ function showArticleDetail(post, isAdminPreview = false) {
   const bodyEl = document.getElementById('detail-body');
   if (bodyEl) {
     bodyEl.innerHTML = formatRichArticleBody(post.content || '');
+    generateTableOfContents(bodyEl);
   }
 
   // Like Button State
@@ -759,6 +809,15 @@ function formatRichArticleBody(str) {
   if (!str) return '';
   let html = escapeHtml(str);
 
+  // Fenced Code Blocks (```lang ... ```)
+  html = html.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (_, lang, code) => {
+    const l = lang ? lang.toUpperCase() : 'CODE';
+    return `<div class="code-block-wrapper"><div class="code-block-header"><span class="code-block-lang">${escapeHtml(l)}</span><button type="button" class="code-copy-btn" onclick="copyCodeBlock(this)">コピー</button></div><pre class="code-block-pre"><code>${code.trim()}</code></pre></div>`;
+  });
+
+  // Inline Code (`...`)
+  html = html.replace(/`([^`\n]+)`/g, '<code class="inline-code">$1</code>');
+
   // Markdown-like Headings
   html = html.replace(/^###\s*(.+)$/gm, '<h3>$1</h3>');
   html = html.replace(/^##\s*(.+)$/gm, '<h2>$1</h2>');
@@ -968,3 +1027,125 @@ function showToast(message) {
     toast.classList.remove('show');
   }, 3200);
 }
+
+/* ==========================================
+   Table of Contents (目次) Generator
+   ========================================== */
+function generateTableOfContents(bodyEl) {
+  if (!bodyEl) return;
+  const headings = bodyEl.querySelectorAll('h2, h3');
+  if (headings.length < 2) return;
+
+  const tocCard = document.createElement('div');
+  tocCard.className = 'article-toc-box';
+
+  let listHtml = '';
+  headings.forEach((heading, idx) => {
+    const id = `heading-${idx + 1}`;
+    heading.id = id;
+    const isH3 = heading.tagName.toLowerCase() === 'h3';
+    const text = heading.textContent.trim();
+    listHtml += `
+      <li class="toc-item ${isH3 ? 'toc-sub' : 'toc-main'}">
+        <a href="#${id}" onclick="smoothScrollToHeading(event, '${id}')">${escapeHtml(text)}</a>
+      </li>
+    `;
+  });
+
+  tocCard.innerHTML = `
+    <div class="toc-header" onclick="toggleToc(this)">
+      <span class="toc-title">目次</span>
+      <span class="toc-toggle-icon">▼</span>
+    </div>
+    <ol class="toc-list" id="article-toc-list">
+      ${listHtml}
+    </ol>
+  `;
+
+  const firstHeading = headings[0];
+  if (firstHeading && firstHeading.parentNode) {
+    firstHeading.parentNode.insertBefore(tocCard, firstHeading);
+  }
+}
+
+window.smoothScrollToHeading = function(e, id) {
+  e.preventDefault();
+  const el = document.getElementById(id);
+  if (el) {
+    const headerOffset = 70;
+    const elementPosition = el.getBoundingClientRect().top;
+    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+    window.scrollTo({
+      top: offsetPosition,
+      behavior: 'smooth'
+    });
+  }
+};
+
+window.toggleToc = function(headerEl) {
+  const list = headerEl.parentElement.querySelector('.toc-list');
+  const icon = headerEl.querySelector('.toc-toggle-icon');
+  if (list) {
+    const isClosed = list.style.display === 'none';
+    list.style.display = isClosed ? 'block' : 'none';
+    if (icon) icon.style.transform = isClosed ? '' : 'rotate(-90deg)';
+  }
+};
+
+window.copyCodeBlock = function(btn) {
+  const wrapper = btn.closest('.code-block-wrapper');
+  if (!wrapper) return;
+  const codeEl = wrapper.querySelector('code');
+  if (!codeEl) return;
+  const text = codeEl.innerText || codeEl.textContent;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'コピー完了';
+      setTimeout(() => { btn.textContent = 'コピー'; }, 2000);
+    });
+  }
+};
+
+/* ==========================================
+   Reading Progress Bar & Scroll To Top
+   ========================================== */
+function setupReadingProgressBar() {
+  const progressBar = document.getElementById('reading-progress-bar');
+  const scrollTopBtn = document.getElementById('scroll-top-btn');
+
+  window.addEventListener('scroll', () => {
+    const detailView = document.getElementById('view-detail');
+    const scrollY = window.scrollY;
+
+    // Scroll top button
+    if (scrollTopBtn) {
+      if (scrollY > 300) {
+        scrollTopBtn.classList.add('show');
+      } else {
+        scrollTopBtn.classList.remove('show');
+      }
+    }
+
+    // Reading progress bar
+    if (progressBar) {
+      if (!detailView || detailView.style.display === 'none') {
+        progressBar.style.width = '0%';
+        return;
+      }
+
+      const totalHeight = detailView.offsetHeight - window.innerHeight;
+      if (totalHeight <= 0) {
+        progressBar.style.width = '100%';
+        return;
+      }
+
+      const currentScroll = scrollY - detailView.offsetTop;
+      const percent = Math.min(100, Math.max(0, (currentScroll / totalHeight) * 100));
+      progressBar.style.width = `${percent}%`;
+    }
+  }, { passive: true });
+}
+
+window.scrollToTop = function() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};

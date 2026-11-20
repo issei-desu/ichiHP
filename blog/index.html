@@ -28,6 +28,7 @@
       </div>
     </div>
   </header>
+  <div id="reading-progress-bar" class="reading-progress-bar"></div>
 
   <!-- Main Container -->
   <main class="blog-main">
@@ -58,10 +59,7 @@
           <div class="creator-links">
             <a href="https://x.com/jk_na_ri_ta_i" target="_blank" rel="noopener noreferrer" class="social-pill" id="creator-x-link">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="#1DA1F2"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg>
-              <span>X (Twitter)</span>
-            </a>
-            <a href="../" class="social-pill">
-              <span>ホーム</span>
+              <span>Twitter (X)</span>
             </a>
           </div>
         </div>
@@ -168,6 +166,13 @@
     <img id="lightbox-img" class="lightbox-img" src="" alt="拡大表示">
     <button type="button" class="lightbox-close-btn" aria-label="閉じる">&times;</button>
   </div>
+
+  <!-- Scroll to Top Button -->
+  <button type="button" id="scroll-top-btn" class="scroll-top-btn" onclick="scrollToTop()" title="ページ上部へ戻る" aria-label="上へ戻る">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="18 15 12 9 6 15"></polyline>
+    </svg>
+  </button>
 
   <!-- Toast Notification -->
   <div id="blog-toast" class="blog-toast"></div>
