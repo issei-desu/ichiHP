@@ -11,6 +11,13 @@ let tabsState = [];
 let linksState = [];
 let currentAdminTabId = null;
 
+// Blog State
+let blogState = {
+  title: 'いちのブログ',
+  subtitle: '日常や推し活、作ったものの記録ノート',
+  posts: []
+};
+
 const THEME_PRESETS = [
   { id: 'pink', name: '🌸 ピンク（初期）', primary: '#f43f5e', secondary: '#8b5cf6', bg: '#fff5f7' },
   { id: 'purple', name: '💜 パープル（紫）', primary: '#9333ea', secondary: '#ec4899', bg: '#faf5ff' },
@@ -765,6 +772,66 @@ function setupEventListeners() {
       previewModal.classList.remove('show');
     }
   });
+
+  // Blog Management Listeners
+  const addBlogBtn = document.getElementById('add-blog-post-btn');
+  if (addBlogBtn) {
+    addBlogBtn.addEventListener('click', () => openBlogEditorModal());
+  }
+
+  const closeBlogModalBtn = document.getElementById('close-blog-modal-btn');
+  const blogCancelBtn = document.getElementById('blog-form-cancel-btn');
+  if (closeBlogModalBtn) closeBlogModalBtn.addEventListener('click', closeBlogEditorModal);
+  if (blogCancelBtn) blogCancelBtn.addEventListener('click', closeBlogEditorModal);
+
+  const blogModal = document.getElementById('blog-editor-modal');
+  if (blogModal) {
+    blogModal.addEventListener('click', (e) => {
+      if (e.target === blogModal) closeBlogEditorModal();
+    });
+  }
+
+  const blogSaveBtn = document.getElementById('blog-form-save-btn');
+  if (blogSaveBtn) {
+    blogSaveBtn.addEventListener('click', saveBlogPostFromModal);
+  }
+
+  // Cover image file picker
+  const coverFileInput = document.getElementById('blog-form-cover-file');
+  if (coverFileInput) {
+    coverFileInput.addEventListener('change', async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      try {
+        const dataUrl = await processAndResizeImage(file, 1200);
+        const urlInput = document.getElementById('blog-form-cover-url');
+        if (urlInput) urlInput.value = dataUrl;
+        updateBlogCoverPreview(dataUrl);
+        showToast('📷 カバー画像をセットしました', 'success');
+      } catch (err) {
+        console.error('Blog cover process error:', err);
+        showToast('画像の処理に失敗しました', 'error');
+      }
+    });
+  }
+
+  // Cover image URL manual input
+  const coverUrlInput = document.getElementById('blog-form-cover-url');
+  if (coverUrlInput) {
+    coverUrlInput.addEventListener('input', (e) => {
+      updateBlogCoverPreview(e.target.value.trim());
+    });
+  }
+
+  // Cover clear button
+  const coverClearBtn = document.getElementById('blog-cover-clear-btn');
+  if (coverClearBtn) {
+    coverClearBtn.addEventListener('click', () => {
+      if (coverUrlInput) coverUrlInput.value = '';
+      if (coverFileInput) coverFileInput.value = '';
+      updateBlogCoverPreview('');
+    });
+  }
 }
 
 function renderThemePresets() {
@@ -1570,6 +1637,26 @@ function populateForm(data) {
     linksState = [];
   }
   renderAdminLinks();
+
+  // Blog State
+  if (data.blog && typeof data.blog === 'object') {
+    blogState = {
+      title: data.blog.title || 'いちのブログ',
+      subtitle: data.blog.subtitle || '',
+      posts: Array.isArray(data.blog.posts) ? JSON.parse(JSON.stringify(data.blog.posts)) : []
+    };
+  } else {
+    blogState = {
+      title: 'いちのブログ',
+      subtitle: '日常や推し活、作ったものの記録ノート',
+      posts: []
+    };
+  }
+  const blogTitleInput = document.getElementById('blog-site-title-input');
+  if (blogTitleInput) blogTitleInput.value = blogState.title;
+  const blogSubtitleInput = document.getElementById('blog-site-subtitle-input');
+  if (blogSubtitleInput) blogSubtitleInput.value = blogState.subtitle;
+  renderAdminBlogPosts();
 }
 
 function renderAdminItemsEditorList(items, tabIndex, blockIndex) {
@@ -2255,6 +2342,11 @@ function buildDataJson(avatarUrl) {
       successMessage: document.getElementById('comments-success-msg-input')?.value.trim() || '✨ メッセージを送信しました！ありがとうございます🥰',
       font: commentsFont,
       titleColor: /^#[0-9a-f]{6}$/i.test(commentsTitleColor) ? commentsTitleColor : ''
+    },
+    blog: {
+      title: document.getElementById('blog-site-title-input')?.value.trim() || blogState.title || 'いちのブログ',
+      subtitle: document.getElementById('blog-site-subtitle-input')?.value.trim() || '',
+      posts: blogState.posts || []
     }
   };
 }
@@ -2451,4 +2543,318 @@ function showToast(message, type = 'success') {
     toast.className = 'toast';
   }, 4500);
 }
+
+// ============================================
+// Note-style Blog Admin Functions
+// ============================================
+
+function updateBlogCoverPreview(url) {
+  const img = document.getElementById('blog-cover-preview-img');
+  const placeholder = document.getElementById('blog-cover-placeholder');
+  const clearBtn = document.getElementById('blog-cover-clear-btn');
+  if (!img || !placeholder) return;
+
+  if (url) {
+    img.src = url;
+    img.style.display = 'block';
+    placeholder.style.display = 'none';
+    if (clearBtn) clearBtn.style.display = 'inline-block';
+  } else {
+    img.src = '';
+    img.style.display = 'none';
+    placeholder.style.display = 'block';
+    if (clearBtn) clearBtn.style.display = 'none';
+  }
+}
+
+function renderAdminBlogPosts() {
+  const listEl = document.getElementById('blog-posts-admin-list');
+  const countEl = document.getElementById('blog-posts-count');
+  if (!listEl) return;
+
+  const posts = Array.isArray(blogState.posts) ? blogState.posts : [];
+  if (countEl) countEl.textContent = posts.length;
+
+  if (posts.length === 0) {
+    listEl.innerHTML = `
+      <div style="text-align: center; padding: 24px 10px; color: var(--text-muted); background: #f8fafc; border-radius: 10px; border: 1px dashed #cbd5e1;">
+        まだ記事がありません。「＋ 新しい記事を書く」ボタンから最初の記事を投稿してみましょう！
+      </div>
+    `;
+    return;
+  }
+
+  listEl.innerHTML = posts.map((post, idx) => {
+    const isPub = post.isPublished !== false;
+    const dateStr = post.date || '';
+    const tags = Array.isArray(post.tags) ? post.tags : (post.tags ? String(post.tags).split(',').map(t => t.trim()).filter(Boolean) : []);
+    const thumbHtml = post.cover
+      ? `<img src="${escapeAttr(post.cover)}" alt="cover">`
+      : `<span>📝</span>`;
+
+    return `
+      <div class="blog-post-admin-card" data-post-id="${escapeAttr(post.id)}">
+        <div class="blog-post-admin-thumb">
+          ${thumbHtml}
+        </div>
+        <div class="blog-post-admin-info">
+          <div class="blog-post-admin-meta">
+            <span>📅 ${escapeHtml(dateStr || '日付未設定')}</span>
+            <span class="blog-post-admin-status ${isPub ? 'published' : 'draft'}">
+              ${isPub ? '公開中' : '下書き'}
+            </span>
+            <span>❤️ ${post.likes || 0}</span>
+          </div>
+          <div class="blog-post-admin-title">
+            ${escapeHtml(post.title || '無題の記事')}
+          </div>
+          ${tags.length > 0 ? `
+            <div style="display:flex; gap:4px; flex-wrap:wrap; margin-top:2px;">
+              ${tags.map(t => `<span style="font-size:0.68rem; background:#e2e8f0; color:#475569; padding:1px 6px; border-radius:4px;">#${escapeHtml(t)}</span>`).join('')}
+            </div>
+          ` : ''}
+        </div>
+        <div class="blog-post-admin-actions">
+          <button type="button" class="blog-icon-btn" title="上へ移動" ${idx === 0 ? 'disabled style="opacity:0.3; cursor:not-allowed;"' : ''} onclick="moveBlogPost(${idx}, -1)">▲</button>
+          <button type="button" class="blog-icon-btn" title="下へ移動" ${idx === posts.length - 1 ? 'disabled style="opacity:0.3; cursor:not-allowed;"' : ''} onclick="moveBlogPost(${idx}, 1)">▼</button>
+          <button type="button" class="blog-icon-btn" title="記事を編集" onclick="openBlogEditorModal('${escapeAttr(post.id)}')">✏️</button>
+          <button type="button" class="blog-icon-btn danger" title="記事を削除" onclick="deleteBlogPost('${escapeAttr(post.id)}')">🗑️</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function openBlogEditorModal(postId = null) {
+  const modal = document.getElementById('blog-editor-modal');
+  const titleHeader = document.getElementById('blog-modal-title');
+  const idInput = document.getElementById('blog-form-post-id');
+  const titleInput = document.getElementById('blog-form-title');
+  const dateInput = document.getElementById('blog-form-date');
+  const tagsInput = document.getElementById('blog-form-tags');
+  const coverUrlInput = document.getElementById('blog-form-cover-url');
+  const coverFileInput = document.getElementById('blog-form-cover-file');
+  const excerptInput = document.getElementById('blog-form-excerpt');
+  const contentInput = document.getElementById('blog-form-content');
+  const publishedCheckbox = document.getElementById('blog-form-published');
+
+  if (coverFileInput) coverFileInput.value = '';
+
+  if (postId) {
+    const post = (blogState.posts || []).find(p => p.id === postId);
+    if (!post) {
+      showToast('記事が見つかりません', 'error');
+      return;
+    }
+    if (titleHeader) titleHeader.textContent = '✍️ 記事の編集';
+    idInput.value = post.id;
+    titleInput.value = post.title || '';
+    dateInput.value = post.date || '';
+    tagsInput.value = Array.isArray(post.tags) ? post.tags.join(', ') : (post.tags || '');
+    coverUrlInput.value = post.cover || '';
+    excerptInput.value = post.excerpt || '';
+    contentInput.value = post.content || '';
+    publishedCheckbox.checked = post.isPublished !== false;
+    updateBlogCoverPreview(post.cover || '');
+  } else {
+    // New Post
+    if (titleHeader) titleHeader.textContent = '✍️ 新しい記事を書く';
+    idInput.value = '';
+    titleInput.value = '';
+
+    // Default today's date YYYY/MM/DD
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    dateInput.value = `${y}/${m}/${d}`;
+
+    tagsInput.value = '';
+    coverUrlInput.value = '';
+    excerptInput.value = '';
+    contentInput.value = '';
+    publishedCheckbox.checked = true;
+    updateBlogCoverPreview('');
+  }
+
+  if (modal) modal.classList.add('show');
+}
+
+function closeBlogEditorModal() {
+  const modal = document.getElementById('blog-editor-modal');
+  if (modal) modal.classList.remove('show');
+}
+
+function saveBlogPostFromModal() {
+  const idInput = document.getElementById('blog-form-post-id');
+  const titleInput = document.getElementById('blog-form-title');
+  const dateInput = document.getElementById('blog-form-date');
+  const tagsInput = document.getElementById('blog-form-tags');
+  const coverUrlInput = document.getElementById('blog-form-cover-url');
+  const excerptInput = document.getElementById('blog-form-excerpt');
+  const contentInput = document.getElementById('blog-form-content');
+  const publishedCheckbox = document.getElementById('blog-form-published');
+
+  const title = (titleInput?.value || '').trim();
+  const content = (contentInput?.value || '').trim();
+
+  if (!title) {
+    alert('記事のタイトルを入力してください。');
+    if (titleInput) titleInput.focus();
+    return;
+  }
+  if (!content) {
+    alert('記事の本文を入力してください。');
+    if (contentInput) contentInput.focus();
+    return;
+  }
+
+  const postId = idInput?.value || '';
+  const date = (dateInput?.value || '').trim() || new Date().toISOString().slice(0, 10).replace(/-/g, '/');
+  const tags = (tagsInput?.value || '')
+    .split(',')
+    .map(t => t.trim())
+    .filter(Boolean);
+  const cover = (coverUrlInput?.value || '').trim();
+  const excerpt = (excerptInput?.value || '').trim();
+  const isPublished = publishedCheckbox ? publishedCheckbox.checked : true;
+
+  if (!Array.isArray(blogState.posts)) {
+    blogState.posts = [];
+  }
+
+  if (postId) {
+    // Update existing
+    const idx = blogState.posts.findIndex(p => p.id === postId);
+    if (idx !== -1) {
+      blogState.posts[idx] = {
+        ...blogState.posts[idx],
+        title,
+        date,
+        tags,
+        cover,
+        excerpt,
+        content,
+        isPublished
+      };
+      showToast('記事を更新しました！', 'success');
+    }
+  } else {
+    // Create new
+    const newId = 'post-' + Date.now();
+    const newPost = {
+      id: newId,
+      title,
+      date,
+      tags,
+      cover,
+      excerpt,
+      content,
+      likes: 0,
+      isPublished
+    };
+    blogState.posts.unshift(newPost); // Add to beginning
+    showToast('新しい記事を追加しました！', 'success');
+  }
+
+  renderAdminBlogPosts();
+  closeBlogEditorModal();
+}
+
+function deleteBlogPost(postId) {
+  const post = (blogState.posts || []).find(p => p.id === postId);
+  const title = post ? post.title : 'この記事';
+  if (!confirm(`「${title}」を削除してもよろしいですか？\n※「🚀 保存してHPに反映」を押すと完全に削除されます。`)) {
+    return;
+  }
+
+  blogState.posts = (blogState.posts || []).filter(p => p.id !== postId);
+  renderAdminBlogPosts();
+  showToast('記事を削除しました', 'success');
+}
+
+function moveBlogPost(index, direction) {
+  const posts = blogState.posts;
+  if (!posts) return;
+  const targetIndex = index + direction;
+  if (targetIndex < 0 || targetIndex >= posts.length) return;
+
+  const temp = posts[index];
+  posts[index] = posts[targetIndex];
+  posts[targetIndex] = temp;
+
+  renderAdminBlogPosts();
+}
+
+function insertBlogTag(openTag, closeTag) {
+  const textarea = document.getElementById('blog-form-content');
+  if (!textarea) return;
+
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const text = textarea.value;
+  const selected = text.substring(start, end);
+
+  const replacement = openTag + selected + closeTag;
+  textarea.value = text.substring(0, start) + replacement + text.substring(end);
+
+  const newCursorPos = start + openTag.length + selected.length + closeTag.length;
+  textarea.focus();
+  textarea.setSelectionRange(newCursorPos, newCursorPos);
+}
+
+function insertBlogLink() {
+  const url = prompt('リンク先URLを入力してください (https://...):');
+  if (!url) return;
+
+  const textarea = document.getElementById('blog-form-content');
+  if (!textarea) return;
+
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const text = textarea.value;
+  const selected = text.substring(start, end);
+
+  let linkMarkdown = '';
+  if (selected) {
+    linkMarkdown = `[${selected}](${url.trim()})`;
+  } else {
+    linkMarkdown = url.trim();
+  }
+
+  textarea.value = text.substring(0, start) + linkMarkdown + text.substring(end);
+  const newPos = start + linkMarkdown.length;
+  textarea.focus();
+  textarea.setSelectionRange(newPos, newPos);
+}
+
+async function handleBlogInlineImageUpload(inputEl) {
+  const file = inputEl.files && inputEl.files[0];
+  if (!file) return;
+
+  try {
+    showToast('画像を圧縮中...', 'info');
+    const dataUrl = await processAndResizeImage(file, 1000);
+    const textarea = document.getElementById('blog-form-content');
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+    const tag = `\n[img]${dataUrl}[/img]\n`;
+
+    textarea.value = text.substring(0, start) + tag + text.substring(end);
+    const newPos = start + tag.length;
+    textarea.focus();
+    textarea.setSelectionRange(newPos, newPos);
+
+    showToast('📷 画像を本文に挿入しました！', 'success');
+  } catch (err) {
+    console.error('Blog inline image error:', err);
+    showToast('画像の挿入に失敗しました', 'error');
+  } finally {
+    inputEl.value = '';
+  }
+}
+
 

@@ -386,6 +386,46 @@
           </div>
         </section>
 
+        <!-- ✍️ Note-style Blog Management Section -->
+        <section class="card admin-card" id="blog-manager-section">
+          <div class="card-header-row blog-manager-header">
+            <div>
+              <h2 class="card-title">✍️ note風ブログ記事管理</h2>
+              <p class="card-desc" style="margin-top: 4px;">https://issei-desu.github.io/ichiHP/blog で公開されるnote風ブログの記事を作成・編集できます。</p>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <a href="blog/" target="_blank" rel="noopener" class="blog-view-link-btn">📖 ブログを開く ↗</a>
+              <button type="button" id="add-blog-post-btn" class="btn btn-primary btn-sm">＋ 新しい記事を書く</button>
+            </div>
+          </div>
+
+          <!-- Blog Meta (Title & Subtitle) -->
+          <details class="box-style-details" style="margin-top: 6px;">
+            <summary>⚙️ ブログ名・サブタイトル設定</summary>
+            <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 10px;">
+              <div class="form-group">
+                <label for="blog-site-title-input" class="form-label" style="font-size: 0.82rem;">ブログの表示名</label>
+                <input type="text" id="blog-site-title-input" class="form-input" placeholder="いちのブログ">
+              </div>
+              <div class="form-group">
+                <label for="blog-site-subtitle-input" class="form-label" style="font-size: 0.82rem;">ブログの紹介文（サブタイトル）</label>
+                <input type="text" id="blog-site-subtitle-input" class="form-input" placeholder="日常や推し活、作ったものの記録ノート">
+              </div>
+            </div>
+          </details>
+
+          <!-- Blog Posts List -->
+          <div style="margin-top: 6px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-size: 0.88rem; font-weight: 700; color: var(--text-main);">記事一覧 (<span id="blog-posts-count">0</span>件)</span>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">ドラッグや矢印で並び替えできます</span>
+            </div>
+            <div id="blog-posts-admin-list" class="blog-posts-admin-list">
+              <!-- Dynamically populated blog post cards -->
+            </div>
+          </div>
+        </section>
+
         <!-- Color Theme Section -->
         <section class="card admin-card">
           <h2 class="card-title">🎨 配色・全体フォント設定</h2>
@@ -568,6 +608,89 @@
     </div>
   </div>
 
-  <script src="admin.js?v=20261022_2"></script>
+  <!-- Blog Post Editor Modal -->
+  <div id="blog-editor-modal" class="modal">
+    <div class="modal-content blog-modal-content">
+      <div class="modal-header">
+        <h3 id="blog-modal-title">✍️ ブログ記事の作成・編集</h3>
+        <button type="button" id="close-blog-modal-btn" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-body blog-modal-body">
+        <input type="hidden" id="blog-form-post-id" value="">
+
+        <!-- Title -->
+        <div class="form-group">
+          <label for="blog-form-title" class="form-label">記事タイトル <span style="color:#ef4444;">*</span></label>
+          <input type="text" id="blog-form-title" class="form-input" placeholder="例: note風ブログを始めてみました！" required>
+        </div>
+
+        <!-- Date & Tags -->
+        <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 12px;">
+          <div class="form-group">
+            <label for="blog-form-date" class="form-label">投稿日 (YYYY/MM/DD)</label>
+            <input type="text" id="blog-form-date" class="form-input" placeholder="2026/11/20">
+          </div>
+          <div class="form-group">
+            <label for="blog-form-tags" class="form-label">タグ (カンマ区切り)</label>
+            <input type="text" id="blog-form-tags" class="form-input" placeholder="日常, 推し活, Web制作">
+          </div>
+        </div>
+
+        <!-- Cover Image -->
+        <div class="form-group">
+          <label class="form-label">見出し画像（カバー写真）</label>
+          <div class="blog-cover-preview-box" id="blog-cover-preview-box">
+            <span class="blog-cover-preview-placeholder" id="blog-cover-placeholder">📷 画像が設定されていません</span>
+            <img id="blog-cover-preview-img" src="" alt="カバープレビュー" style="display: none;">
+          </div>
+          <div style="display: flex; gap: 8px; margin-top: 8px; align-items: center; flex-wrap: wrap;">
+            <label class="btn btn-secondary btn-sm" style="cursor: pointer;">
+              📁 画像を選択
+              <input type="file" id="blog-form-cover-file" accept="image/*" style="display: none;">
+            </label>
+            <input type="url" id="blog-form-cover-url" class="form-input" placeholder="または画像URL (https://... または images/...)" style="flex: 1; min-width: 160px; font-size: 0.82rem;">
+            <button type="button" id="blog-cover-clear-btn" class="btn btn-subtle btn-sm" style="display: none;">削除</button>
+          </div>
+        </div>
+
+        <!-- Excerpt -->
+        <div class="form-group">
+          <label for="blog-form-excerpt" class="form-label">記事の要約・抜粋（一覧カードに表示）</label>
+          <textarea id="blog-form-excerpt" class="form-textarea" rows="2" placeholder="記事の内容を1〜2行で簡単に紹介..."></textarea>
+        </div>
+
+        <!-- Content Body with Toolbar -->
+        <div class="form-group">
+          <label for="blog-form-content" class="form-label">本文 <span style="color:#ef4444;">*</span></label>
+          <div class="blog-toolbar">
+            <button type="button" class="blog-tool-btn" onclick="insertBlogTag('[h2]', '[/h2]')">大見出し</button>
+            <button type="button" class="blog-tool-btn" onclick="insertBlogTag('[h3]', '[/h3]')">中見出し</button>
+            <button type="button" class="blog-tool-btn" onclick="insertBlogTag('**', '**')">太字</button>
+            <button type="button" class="blog-tool-btn" onclick="insertBlogTag('==', '==')">マーカー</button>
+            <button type="button" class="blog-tool-btn" onclick="insertBlogTag('> ', '')">引用</button>
+            <button type="button" class="blog-tool-btn" onclick="insertBlogTag('[spoiler]', '[/spoiler]')">伏せ字/ネタバレ</button>
+            <button type="button" class="blog-tool-btn" onclick="insertBlogLink()">🔗 リンク</button>
+            <label class="blog-tool-btn" style="cursor: pointer; margin: 0;">
+              🖼️ 本文に画像挿入
+              <input type="file" id="blog-inline-img-file" accept="image/*" style="display: none;" onchange="handleBlogInlineImageUpload(this)">
+            </label>
+          </div>
+          <textarea id="blog-form-content" class="form-textarea" rows="12" placeholder="ここに本文を入力してください... noteと同じように見出しや画像、リンクを自由に配置できます。" style="font-family: inherit; line-height: 1.7; margin-top: 8px;"></textarea>
+        </div>
+
+        <!-- Published switch -->
+        <div style="display: flex; align-items: center; gap: 8px; padding: 6px 0;">
+          <input type="checkbox" id="blog-form-published" checked style="width: 18px; height: 18px; cursor: pointer;">
+          <label for="blog-form-published" style="font-size: 0.88rem; font-weight: 700; cursor: pointer;">すぐに公開する（チェックを外すと下書き保存）</label>
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; padding: 12px 20px; border-top: 1px solid #e2e8f0; background: #ffffff;">
+        <button type="button" id="blog-form-cancel-btn" class="btn btn-secondary">キャンセル</button>
+        <button type="button" id="blog-form-save-btn" class="btn btn-primary">💾 記事を保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="admin.js?v=20261120_1"></script>
 </body>
 </html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title id="page-title">いちのブログ - note風ブログ</title>
+  <meta name="description" content="いちの個人ブログ。日常のことや推し活の感想、作ったWebページなどを綴っています。">
+  <link rel="stylesheet" href="style.css?v=20261120_1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Hachi+Maru+Pop&family=M+PLUS+Rounded+1c:wght@400;500;700;800&family=Mochiy+Pop+One&family=Noto+Sans+JP:wght@400;500;700;800&family=Outfit:wght@400;600;700&family=Shippori+Mincho:wght@500;700&family=Yomogi&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header -->
+  <header class="blog-header">
+    <div class="header-inner">
+      <a href="./" class="blog-logo" onclick="goToFeed(event)">
+        <span class="blog-logo-badge">BLOG</span>
+        <span id="header-blog-title">いちのブログ</span>
+      </a>
+      <div class="header-actions">
+        <button type="button" class="header-btn" id="toggle-search-btn" onclick="toggleSearchBox()" aria-label="検索">
+          🔍 <span class="hide-mobile">検索</span>
+        </button>
+        <a href="../admin.html" class="header-btn" title="ブログ管理・記事投稿">
+          ✍️ <span class="hide-mobile">投稿・管理</span>
+        </a>
+        <a href="../" class="header-btn primary">
+          ← ホーム
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="blog-main">
+    <!-- View 1: Feed View (Creator Card + Filters + Articles Feed) -->
+    <section id="view-feed" class="view-feed-section">
+      <!-- Creator Profile Card (note-style Creator Banner) -->
+      <div class="creator-card">
+        <div class="creator-top-row">
+          <div class="creator-avatar-wrap">
+            <img id="creator-avatar" class="creator-avatar-img" src="" alt="アバター" style="display: none;">
+            <span id="creator-avatar-fallback">✨</span>
+          </div>
+          <div class="creator-info">
+            <h1 class="creator-name">
+              <span id="creator-name">いち</span>
+            </h1>
+            <p class="creator-title-sub" id="blog-subtitle">日常や推し活、作ったものの記録ノート</p>
+          </div>
+        </div>
+        <p class="creator-bio" id="creator-bio">
+          どうも、いちです。日常や推し活、自作Webサイトのことなどを気ままに綴っています。
+        </p>
+        <div class="creator-stats-row">
+          <div class="creator-counts">
+            <span>記事 <strong class="count-strong" id="stat-posts-count">0</strong></span>
+            <span>スキ <strong class="count-strong" id="stat-likes-count">0</strong></span>
+          </div>
+          <div class="creator-links">
+            <a href="https://x.com/jk_na_ri_ta_i" target="_blank" rel="noopener noreferrer" class="social-pill" id="creator-x-link">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="#1DA1F2"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg>
+              <span>X (Twitter)</span>
+            </a>
+            <a href="../" class="social-pill">
+              <span>🏠 ホーム</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter & Search Controls -->
+      <div class="filter-nav-wrap">
+        <div class="search-bar-wrap" id="search-box-wrap" style="display: none;">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="search-input" class="search-input" placeholder="記事を検索（タイトル・本文・タグ）..." oninput="onSearchInput(this.value)">
+          <button type="button" class="search-clear-btn" onclick="clearSearch()" title="クリア">&times;</button>
+        </div>
+
+        <div class="tag-pills-row" id="tags-filter-row">
+          <button type="button" class="tag-pill active" onclick="filterByTag('ALL')">すべて</button>
+        </div>
+      </div>
+
+      <!-- Articles Feed -->
+      <div class="posts-feed" id="posts-list">
+        <!-- Dynamically loaded note-style article cards -->
+      </div>
+    </section>
+
+    <!-- View 2: Article Detail View (note-style Single Post Reader) -->
+    <article id="view-detail" class="post-detail-view" style="display: none;">
+      <div class="detail-back-bar">
+        <button type="button" class="btn-back" onclick="goToFeed(event)">
+          ← 記事一覧に戻る
+        </button>
+      </div>
+
+      <header class="detail-header">
+        <div class="detail-tags-row" id="detail-tags-row"></div>
+        <h1 class="detail-title" id="detail-title"></h1>
+        <div class="detail-author-bar">
+          <div class="detail-author-left">
+            <img id="detail-author-avatar" class="detail-author-avatar" src="" alt="著者">
+            <div class="detail-author-text">
+              <span class="detail-author-name" id="detail-author-name">いち</span>
+              <span class="detail-publish-meta" id="detail-publish-meta">2026/11/20 · 3分で読めます</span>
+            </div>
+          </div>
+          <div class="creator-links">
+            <button type="button" class="social-pill" onclick="shareCurrentArticleOnX()" title="Xで共有">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg>
+              <span>シェア</span>
+            </button>
+            <button type="button" class="social-pill" onclick="copyCurrentArticleLink()" title="URLをコピー">
+              <span>🔗 コピー</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Optional Cover Image -->
+      <div class="detail-cover-box" id="detail-cover-box" style="display: none;">
+        <img id="detail-cover-img" class="detail-cover-img" src="" alt="記事カバー">
+      </div>
+
+      <!-- Article Body -->
+      <div class="detail-body" id="detail-body">
+        <!-- Rendered rich text content -->
+      </div>
+
+      <!-- Article Bottom Action Bar (Signature note "スキ" ❤️ & Share) -->
+      <div class="detail-action-footer">
+        <button type="button" class="note-like-btn" id="detail-like-btn" onclick="toggleArticleLike()">
+          <svg class="note-like-heart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+          </svg>
+          <span>スキ</span>
+          <span id="detail-like-count">0</span>
+        </button>
+
+        <div class="share-bar">
+          <button type="button" class="share-btn" onclick="shareCurrentArticleOnX()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg>
+            <span>Xで共有する</span>
+          </button>
+          <button type="button" class="share-btn copy" onclick="copyCurrentArticleLink()">
+            <span>🔗 リンクをコピー</span>
+          </button>
+        </div>
+
+        <!-- Creator Support Card -->
+        <div class="article-creator-card">
+          <img id="detail-bottom-avatar" class="article-creator-avatar" src="" alt="著者">
+          <div class="article-creator-desc">
+            <div class="article-creator-name" id="detail-bottom-name">いち</div>
+            <p class="article-creator-bio" id="detail-bottom-bio">
+              気に入っていただけたら「スキ（❤️）」やシェアをいただけると嬉しいです！
+            </p>
+          </div>
+        </div>
+
+        <!-- Prev / Next Navigation -->
+        <div class="post-prev-next-nav" id="prev-next-nav"></div>
+      </div>
+    </article>
+  </main>
+
+  <!-- Image Lightbox Modal -->
+  <div id="image-lightbox-modal" class="lightbox-modal" onclick="closeImageLightbox()">
+    <img id="lightbox-img" class="lightbox-img" src="" alt="拡大表示">
+    <button type="button" class="lightbox-close-btn" aria-label="閉じる">&times;</button>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="blog-toast" class="blog-toast"></div>
+
+  <!-- Footer -->
+  <footer class="blog-footer">
+    <div class="footer-links">
+      <a href="../">ホームページ</a>
+      <a href="https://x.com/jk_na_ri_ta_i" target="_blank" rel="noopener noreferrer">Twitter (X)</a>
+      <a href="../admin.html">管理画面</a>
+    </div>
+    <p id="blog-footer-text">&copy; 2026 いち. All rights reserved.</p>
+  </footer>
+
+  <script src="blog.js?v=20261120_1"></script>
+</body>
+</html>
