@@ -520,7 +520,12 @@ function setupDateDefault() {
    View Mode Switching (Edit / Split / Preview)
    ========================================== */
 function setupViewMode() {
-  setViewMode('edit');
+  // On desktop / wide screens, default to 'split' mode so live preview is visible side-by-side immediately
+  if (window.innerWidth >= 860) {
+    setViewMode('split');
+  } else {
+    setViewMode('edit');
+  }
 }
 
 function setViewMode(mode) {
@@ -832,18 +837,48 @@ function insertTag(openTag, closeTag) {
   const start = textarea.selectionStart;
   const end = textarea.selectionEnd;
   const text = textarea.value;
-  const selected = text.substring(start, end);
+  let selected = text.substring(start, end);
+
+  // If heading tag ([h2] or [h3]) and no text is selected, but current line has text:
+  // wrap the entire current line into the heading!
+  if ((openTag === '[h2]' || openTag === '[h3]') && !selected) {
+    const lineStart = text.lastIndexOf('\n', start - 1) + 1;
+    let lineEnd = text.indexOf('\n', start);
+    if (lineEnd === -1) lineEnd = text.length;
+    const currentLine = text.substring(lineStart, lineEnd);
+    if (currentLine.trim() && !currentLine.includes('[h2]') && !currentLine.includes('[h3]')) {
+      const newLine = `${openTag}${currentLine}${closeTag}`;
+      textarea.value = text.substring(0, lineStart) + newLine + text.substring(lineEnd);
+      const newPos = lineStart + newLine.length;
+      textarea.focus();
+      textarea.setSelectionRange(newPos, newPos);
+      isDirty = true;
+      updateStats();
+      renderLivePreview();
+      queueAutoSaveBackup();
+      return;
+    }
+  }
 
   const replacement = openTag + selected + closeTag;
   textarea.value = text.substring(0, start) + replacement + text.substring(end);
 
-  const newCursorPos = start + openTag.length + selected.length + closeTag.length;
+  // If text was selected, place cursor after replacement;
+  // if no text was selected, place cursor INSIDE the tags so user can immediately type!
+  let newCursorPos;
+  if (selected.length > 0) {
+    newCursorPos = start + replacement.length;
+  } else {
+    newCursorPos = start + openTag.length;
+  }
+
   textarea.focus();
   textarea.setSelectionRange(newCursorPos, newCursorPos);
 
   isDirty = true;
   updateStats();
   renderLivePreview();
+  queueAutoSaveBackup();
 }
 
 function openInsertLinkModal() {
@@ -1490,6 +1525,8 @@ function formatRichArticleBody(str) {
   for (let i = 0; i < 8; i++) {
     const prev = html;
     html = html
+      .replace(/\[h2\]\s*\[\/h2\]\s*([^\n<]+)/gi, '<h2>$1</h2>')
+      .replace(/\[h3\]\s*\[\/h3\]\s*([^\n<]+)/gi, '<h3>$1</h3>')
       .replace(/\[h2\]([\s\S]*?)\[\/h2\]/gi, '<h2>$1</h2>')
       .replace(/\[h3\]([\s\S]*?)\[\/h3\]/gi, '<h3>$1</h3>')
       .replace(/\[quote\]([\s\S]*?)\[\/quote\]/gi, '<blockquote>$1</blockquote>')

@@ -362,7 +362,7 @@ function renderPostsFeed() {
    Article Detail View (Single Post Reader)
    ========================================== */
 window.openArticle = function(postId) {
-  window.location.hash = `post-${postId}`;
+  window.location.hash = postId.startsWith('post-') ? postId : `post-${postId}`;
 };
 
 function showArticleDetail(post, isAdminPreview = false) {
@@ -399,6 +399,29 @@ function showArticleDetail(post, isAdminPreview = false) {
     banner.style.display = 'flex';
   } else if (banner) {
     banner.style.display = 'none';
+  }
+
+  // Edit Link for Authenticated Author on Published Posts
+  let editBar = document.getElementById('detail-admin-edit-bar');
+  const hasToken = !!localStorage.getItem('gh_token');
+  if (hasToken && !isAdminPreview) {
+    if (!editBar) {
+      editBar = document.createElement('div');
+      editBar.id = 'detail-admin-edit-bar';
+      editBar.style.cssText = 'display: flex; justify-content: flex-end; margin-bottom: 14px;';
+      const backBar = detailView.querySelector('.detail-back-bar');
+      if (backBar) backBar.after(editBar);
+      else detailView.prepend(editBar);
+    }
+    editBar.innerHTML = `
+      <a href="up/?id=${escapeAttr(post.id)}" style="display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; font-size: 0.82rem; font-weight: 700; color: #1d4ed8; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; text-decoration: none;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+        <span>記事を編集 ↗</span>
+      </a>
+    `;
+    editBar.style.display = 'flex';
+  } else if (editBar) {
+    editBar.style.display = 'none';
   }
 
   // Tags
@@ -629,9 +652,14 @@ function showFeedView() {
 
 function handleHashRouting() {
   const hash = window.location.hash.replace(/^#/, '');
-  if (hash.startsWith('post-')) {
-    const postId = hash.replace(/^post-/, '');
-    const post = blogData.posts.find(p => p.id === postId);
+  if (hash) {
+    // Robust post lookup: match direct ID, with/without 'post-' prefix
+    const post = blogData.posts.find(p =>
+      p.id === hash ||
+      p.id === hash.replace(/^post-/, '') ||
+      p.id === `post-${hash}` ||
+      (hash.startsWith('post-post-') && p.id === hash.replace(/^post-/, ''))
+    );
     if (post) {
       if (isPostVisible(post)) {
         showArticleDetail(post);
@@ -834,6 +862,8 @@ function formatRichArticleBody(str) {
   for (let i = 0; i < 8; i++) {
     const prev = html;
     html = html
+      .replace(/\[h2\]\s*\[\/h2\]\s*([^\n<]+)/gi, '<h2>$1</h2>')
+      .replace(/\[h3\]\s*\[\/h3\]\s*([^\n<]+)/gi, '<h3>$1</h3>')
       .replace(/\[h2\]([\s\S]*?)\[\/h2\]/gi, '<h2>$1</h2>')
       .replace(/\[h3\]([\s\S]*?)\[\/h3\]/gi, '<h3>$1</h3>')
       .replace(/\[quote\]([\s\S]*?)\[\/quote\]/gi, '<blockquote>$1</blockquote>')
