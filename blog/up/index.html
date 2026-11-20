@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ブログ記事投稿 - blog/up</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="up.css?v=20261120_1">
+</head>
+<body class="mode-edit">
+
+  <!-- Header Navbar -->
+  <header class="up-navbar">
+    <div class="up-nav-container">
+      <div class="up-nav-left">
+        <a href="../" class="up-btn up-btn-outline up-btn-sm" title="ブログに戻る">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          <span>ブログへ</span>
+        </a>
+        <div class="up-brand-title">
+          <span>ブログ投稿</span>
+          <span class="up-brand-badge">blog/up</span>
+        </div>
+      </div>
+
+      <div class="up-nav-right">
+        <button type="button" class="up-btn up-btn-outline up-btn-sm" id="btn-toggle-drawer">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+          <span>記事一覧 (<span id="nav-posts-count">0</span>)</span>
+        </button>
+
+        <button type="button" class="up-btn up-btn-outline up-btn-sm" id="btn-new-post" title="新しい記事を作成">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <span>新規作成</span>
+        </button>
+
+        <div id="auth-status-container">
+          <span class="auth-badge" id="auth-status-badge" onclick="openAuthModal()" title="クリックして認証設定">
+            <span class="auth-dot"></span>
+            <span id="auth-status-text">確認中...</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="up-main">
+
+    <!-- Status Banner (Editing vs New) -->
+    <div class="up-status-banner">
+      <div class="up-status-info">
+        <span class="up-status-tag tag-new" id="post-mode-tag">新規記事</span>
+        <span id="post-mode-desc">新しい記事を作成しています</span>
+      </div>
+      <div>
+        <a href="../../admin.html" class="up-btn up-btn-sm up-btn-outline" style="font-size: 0.75rem;">
+          全体管理画面 ↗
+        </a>
+      </div>
+    </div>
+
+    <!-- Article Meta Settings Card -->
+    <section class="up-meta-card">
+      <input type="hidden" id="post-id" value="">
+
+      <!-- Title Input (Big note style) -->
+      <div>
+        <input type="text" id="post-title" class="up-title-input" placeholder="記事タイトルを入力してください..." required autocomplete="off">
+      </div>
+
+      <!-- Meta Grid (Date, Published status, Tags) -->
+      <div class="up-meta-grid">
+        <div class="up-meta-item">
+          <label class="up-meta-label" for="post-published">公開ステータス</label>
+          <select id="post-published" class="up-select">
+            <option value="true">公開する（全員に表示）</option>
+            <option value="false">下書き（非公開）</option>
+          </select>
+        </div>
+
+        <div class="up-meta-item">
+          <label class="up-meta-label" for="post-date">投稿日</label>
+          <input type="text" id="post-date" class="up-input" placeholder="2026/11/20">
+        </div>
+
+        <div class="up-meta-item" style="grid-column: 1 / -1;">
+          <label class="up-meta-label" for="post-tags">タグ (カンマ区切り)</label>
+          <input type="text" id="post-tags" class="up-input" placeholder="日常, 推し活, Web制作">
+        </div>
+      </div>
+
+      <!-- Cover Image Picker (Collapsible or directly accessible) -->
+      <div class="cover-picker-box">
+        <div class="up-meta-label">
+          <span>カバー画像（アイキャッチ）</span>
+          <span style="font-size: 0.75rem; font-weight: normal; color: var(--up-text-light);">一覧や記事の最上部に表示されます</span>
+        </div>
+
+        <div class="cover-preview-wrapper" id="cover-preview-wrapper">
+          <img id="cover-preview-img" class="cover-preview-img" src="" alt="カバー画像">
+          <button type="button" class="cover-remove-btn" id="btn-remove-cover">削除</button>
+        </div>
+
+        <div class="cover-inputs-row">
+          <label class="up-btn up-btn-outline up-btn-sm" style="cursor: pointer;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+            <span>画像ファイルを選択</span>
+            <input type="file" id="cover-file-input" accept="image/*" style="display: none;">
+          </label>
+          <input type="text" id="cover-url-input" class="up-input" placeholder="または画像URL (https://... または images/...)" style="flex: 1; min-width: 200px;">
+        </div>
+      </div>
+
+      <!-- Excerpt (Optional) -->
+      <details class="up-details">
+        <summary>記事の概要・抜粋（一覧カードの要約文）を設定する</summary>
+        <div style="margin-top: 10px;">
+          <textarea id="post-excerpt" class="up-input" rows="2" placeholder="未入力の場合は本文の冒頭110文字が自動で抜粋されます。"></textarea>
+        </div>
+      </details>
+    </section>
+
+    <!-- Editor & Preview Section -->
+    <section class="up-editor-card">
+      <!-- Rich Toolbar -->
+      <div class="up-toolbar">
+        <div class="up-tools-group">
+          <button type="button" class="tool-btn" onclick="insertTag('[h2]', '[/h2]')" title="大見出し">大見出し</button>
+          <button type="button" class="tool-btn" onclick="insertTag('[h3]', '[/h3]')" title="中見出し">中見出し</button>
+          <span class="tool-separator"></span>
+          <button type="button" class="tool-btn" onclick="insertTag('**', '**')" title="太字"><strong>B</strong></button>
+          <button type="button" class="tool-btn" onclick="insertTag('[bg=#fef08a]', '[/bg]')" title="マーカー">マーカー</button>
+          <button type="button" class="tool-btn" onclick="insertTag('> ', '')" title="引用">引用</button>
+          <button type="button" class="tool-btn" onclick="insertTag('- ', '')" title="箇条書き">リスト</button>
+          <span class="tool-separator"></span>
+          <button type="button" class="tool-btn" onclick="openInsertLinkModal()" title="リンク挿入">リンク</button>
+          <label class="tool-btn" style="cursor: pointer;" title="本文に画像を挿入">
+            <span>画像挿入</span>
+            <input type="file" id="inline-image-file-input" accept="image/*" style="display: none;">
+          </label>
+          <button type="button" class="tool-btn" onclick="insertTag('[hide]', '[/hide]')" title="伏せ字/ネタバレ">ネタバレ</button>
+          <button type="button" class="tool-btn" onclick="insertTag('\n---\n', '')" title="区切り線">区切り線</button>
+        </div>
+
+        <!-- View Mode Switcher -->
+        <div class="view-tabs">
+          <button type="button" class="view-tab-btn active" id="tab-btn-edit" onclick="setViewMode('edit')">編集</button>
+          <button type="button" class="view-tab-btn hide-split-mobile" id="tab-btn-split" onclick="setViewMode('split')">分割</button>
+          <button type="button" class="view-tab-btn" id="tab-btn-preview" onclick="setViewMode('preview')">プレビュー</button>
+        </div>
+      </div>
+
+      <!-- Editor Panes -->
+      <div class="editor-views-wrapper">
+        <!-- Textarea Pane -->
+        <div class="editor-pane">
+          <textarea id="post-content" class="up-textarea" placeholder="ここに本文を入力してください... noteのように見出しや画像、リンクを自由に配置できます。" required></textarea>
+        </div>
+
+        <!-- Live Preview Pane -->
+        <div class="preview-pane" id="preview-pane">
+          <div class="post-detail-view" style="padding: 0; max-width: 100%;">
+            <header class="detail-header">
+              <div class="detail-tags-row" id="prev-tags-row"></div>
+              <h1 class="detail-title" id="prev-title">無題の記事</h1>
+              <div class="detail-author-bar">
+                <div class="detail-author-left">
+                  <div class="detail-author-text">
+                    <span class="detail-author-name">いち</span>
+                    <span class="detail-publish-meta" id="prev-publish-meta">2026/11/20 · 1分で読めます</span>
+                  </div>
+                </div>
+              </div>
+            </header>
+
+            <div class="detail-cover-box" id="prev-cover-box" style="display: none;">
+              <img id="prev-cover-img" class="detail-cover-img" src="" alt="プレビューカバー">
+            </div>
+
+            <div class="detail-body" id="prev-body">
+              <p style="color: var(--up-text-muted);">本文を入力するとリアルタイムにプレビューが表示されます。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Floating Bottom Action Bar -->
+  <aside class="up-bottom-bar">
+    <div class="up-bottom-container">
+      <div class="up-bottom-left">
+        <span id="char-count-text">0 文字</span>
+        <span>•</span>
+        <span id="read-time-text">読了目安 約 1分</span>
+        <span id="save-status-indicator" style="display: none; color: #059669; font-weight: 600;">• 保存完了</span>
+      </div>
+
+      <div class="up-bottom-right">
+        <button type="button" class="up-btn up-btn-outline" id="btn-save-draft" onclick="submitPost(false)">
+          下書きとして保存
+        </button>
+        <button type="button" class="up-btn up-btn-primary" id="btn-save-publish" onclick="submitPost(true)">
+          <span id="btn-save-text">保存して公開する</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Post List Drawer -->
+  <div class="drawer-backdrop" id="drawer-backdrop" onclick="closeDrawer()"></div>
+  <aside class="drawer-panel" id="drawer-panel">
+    <div class="drawer-header">
+      <h3 class="drawer-title">過去の記事一覧</h3>
+      <button type="button" class="drawer-close-btn" onclick="closeDrawer()">&times;</button>
+    </div>
+    <div class="drawer-content" id="drawer-posts-list">
+      <!-- Dynamically filled with post items -->
+    </div>
+  </aside>
+
+  <!-- GitHub Token Auth Modal -->
+  <div class="up-modal-backdrop" id="auth-modal">
+    <div class="up-modal-card">
+      <h3 class="up-modal-title">GitHub認証設定</h3>
+      <p class="up-modal-desc">
+        ブログ記事の公開や画像の保存を行うため、GitHub Personal Access Token（repo権限付き）を入力してください。<br>
+        一度入力するとブラウザに保存され、次からは自動でログインされます。
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <label for="auth-token-input" class="up-meta-label">認証トークン</label>
+        <input type="password" id="auth-token-input" class="up-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="current-password">
+      </div>
+
+      <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
+        <button type="button" class="up-btn up-btn-outline" onclick="closeAuthModal()">閉じる</button>
+        <button type="button" class="up-btn up-btn-primary" id="btn-auth-submit" onclick="verifyAndSaveToken()">認証して保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="up-toast" class="up-toast"></div>
+
+  <script src="up.js?v=20261120_1"></script>
+</body>
+</html>
