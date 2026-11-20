@@ -1009,31 +1009,6 @@ a {
   opacity: 1;
 }
 
-/* ==========================================
-   Footer
-   ========================================== */
-.blog-footer {
-  margin-top: auto;
-  border-top: 1px solid var(--blog-border);
-  background: #ffffff;
-  padding: 28px 16px;
-  text-align: center;
-  font-size: 0.82rem;
-  color: var(--blog-text-muted);
-}
-
-.footer-links {
-  display: flex;
-  justify-content: center;
-  gap: 16px;
-  margin-bottom: 10px;
-  font-weight: 600;
-}
-
-.footer-links a:hover {
-  color: var(--note-green);
-}
-
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
