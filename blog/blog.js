@@ -177,6 +177,7 @@ function renderTagFilters() {
   });
 
   const tags = Array.from(tagsSet);
+  renderSideMenuTags(tags);
   if (tags.length === 0) {
     container.style.display = 'none';
     return;
@@ -1194,3 +1195,92 @@ function setupReadingProgressBar() {
 window.scrollToTop = function() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
+
+/* ==========================================
+   Side Menu (Hamburger Drawer)
+   ========================================== */
+function renderSideMenuTags(tags) {
+  const section = document.getElementById('side-menu-tags-section');
+  const container = document.getElementById('side-menu-tags');
+  if (!section || !container) return;
+  if (!tags || tags.length === 0) {
+    section.style.display = 'none';
+    container.innerHTML = '';
+    return;
+  }
+  section.style.display = 'block';
+  container.innerHTML = tags.map(tag =>
+    `<button type="button" class="tag-pill ${currentActiveTag === tag ? 'active' : ''}" onclick="sideMenuFilterByTag('${escapeAttr(tag)}')">#${escapeHtml(tag)}</button>`
+  ).join('');
+}
+
+window.openSideMenu = function() {
+  const menu = document.getElementById('side-menu');
+  const overlay = document.getElementById('side-menu-overlay');
+  const btn = document.getElementById('menu-toggle-btn');
+  if (!menu) return;
+  menu.classList.add('open');
+  menu.setAttribute('aria-hidden', 'false');
+  if (overlay) overlay.classList.add('open');
+  if (btn) {
+    btn.classList.add('open');
+    btn.setAttribute('aria-expanded', 'true');
+    btn.setAttribute('aria-label', 'メニューを閉じる');
+  }
+  document.body.classList.add('side-menu-open');
+};
+
+window.closeSideMenu = function() {
+  const menu = document.getElementById('side-menu');
+  const overlay = document.getElementById('side-menu-overlay');
+  const btn = document.getElementById('menu-toggle-btn');
+  if (!menu) return;
+  menu.classList.remove('open');
+  menu.setAttribute('aria-hidden', 'true');
+  if (overlay) overlay.classList.remove('open');
+  if (btn) {
+    btn.classList.remove('open');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.setAttribute('aria-label', 'メニューを開く');
+  }
+  document.body.classList.remove('side-menu-open');
+};
+
+window.toggleSideMenu = function() {
+  const menu = document.getElementById('side-menu');
+  if (menu && menu.classList.contains('open')) {
+    closeSideMenu();
+  } else {
+    openSideMenu();
+  }
+};
+
+window.sideMenuGoToFeed = function() {
+  closeSideMenu();
+  goToFeed();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+window.sideMenuOpenSearch = function() {
+  closeSideMenu();
+  goToFeed();
+  const box = document.getElementById('search-box-wrap');
+  if (box && box.style.display === 'none') {
+    toggleSearchBox();
+  } else {
+    const input = document.getElementById('search-input');
+    if (input) input.focus();
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+window.sideMenuFilterByTag = function(tag) {
+  closeSideMenu();
+  goToFeed();
+  filterByTag(tag);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeSideMenu();
+});

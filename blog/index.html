@@ -8,7 +8,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <link rel="stylesheet" href="style.css?v=20261120_2247">
+  <link rel="stylesheet" href="style.css?v=20261120_2253">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Hachi+Maru+Pop&family=M+PLUS+Rounded+1c:wght@400;500;700;800&family=Mochiy+Pop+One&family=Noto+Sans+JP:wght@400;500;700;800&family=Outfit:wght@400;600;700&family=Shippori+Mincho:wght@500;700&family=Yomogi&display=swap" rel="stylesheet">
@@ -17,10 +17,17 @@
   <!-- Header -->
   <header class="blog-header">
     <div class="header-inner">
-      <a href="./" class="blog-logo" onclick="goToFeed(event)">
-        <span class="blog-logo-badge">BLOG</span>
-        <span id="header-blog-title">いちのブログ</span>
-      </a>
+      <div class="header-left">
+        <button type="button" class="menu-toggle-btn" id="menu-toggle-btn" onclick="toggleSideMenu()" aria-label="メニューを開く" aria-expanded="false" aria-controls="side-menu">
+          <span class="menu-bar"></span>
+          <span class="menu-bar"></span>
+          <span class="menu-bar"></span>
+        </button>
+        <a href="./" class="blog-logo" onclick="goToFeed(event)">
+          <span class="blog-logo-badge">BLOG</span>
+          <span id="header-blog-title">いちのブログ</span>
+        </a>
+      </div>
       <div class="header-actions">
         <button type="button" class="header-btn" id="toggle-search-btn" onclick="toggleSearchBox()" aria-label="検索">
           <span class="hide-mobile">検索</span>
@@ -28,6 +35,23 @@
       </div>
     </div>
   </header>
+  <!-- Side Menu (Hamburger Drawer) -->
+  <div id="side-menu-overlay" class="side-menu-overlay" onclick="closeSideMenu()"></div>
+  <nav id="side-menu" class="side-menu" aria-label="メニュー" aria-hidden="true">
+    <div class="side-menu-header">
+      <span class="side-menu-title">メニュー</span>
+      <button type="button" class="side-menu-close" onclick="closeSideMenu()" aria-label="メニューを閉じる">&times;</button>
+    </div>
+    <div class="side-menu-section">
+      <button type="button" class="side-menu-item" onclick="sideMenuGoToFeed()">記事一覧</button>
+      <button type="button" class="side-menu-item" onclick="sideMenuOpenSearch()">記事を検索</button>
+    </div>
+    <div class="side-menu-section" id="side-menu-tags-section" style="display: none;">
+      <div class="side-menu-label">タグ</div>
+      <div id="side-menu-tags" class="side-menu-tags"></div>
+    </div>
+  </nav>
+
   <div id="reading-progress-bar" class="reading-progress-bar"></div>
 
   <!-- Main Container -->
@@ -177,6 +201,6 @@
   <!-- Toast Notification -->
   <div id="blog-toast" class="blog-toast"></div>
 
-  <script src="blog.js?v=20261120_2243"></script>
+  <script src="blog.js?v=20261120_2253"></script>
 </body>
 </html>
