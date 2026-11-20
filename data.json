@@ -425,6 +425,19 @@
   "blog": {
     "title": "いちのブログ。",
     "subtitle": "",
-    "posts": []
+    "posts": [
+      {
+        "id": "post-1795168548392",
+        "title": "お試しブログ投稿",
+        "date": "2026/11/22",
+        "tags": [],
+        "cover": "",
+        "excerpt": "",
+        "content": "[h2][/h2]ああああああ",
+        "likes": 0,
+        "isPublished": true,
+        "scheduledAt": null
+      }
+    ]
   }
 }
