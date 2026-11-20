@@ -909,6 +909,8 @@ function formatRichArticleBody(str) {
 function formatRichText(str) {
   if (!str) return '';
   let html = escapeHtml(str);
+  // Remove block tags if present in inline fields like title
+  html = html.replace(/\[\/?(?:h2|h3|quote)\]/gi, '');
   for (let i = 0; i < 6; i++) {
     const prev = html;
     html = html
