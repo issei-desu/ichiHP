@@ -230,9 +230,7 @@ function stripRichTagsAdmin(str) {
     .replace(/\[img=[^\]]+\]/gi, '')
     .replace(/\[url=[^\]]+\]([\s\S]*?)\[\/url\]/gi, '$1')
     .replace(/\[url\]([\s\S]*?)\[\/url\]/gi, '$1')
-    .replace(/\[(?:color|bg|font|size)=[^\]]+\]/gi, '')
-    .replace(/\[\/(?:color|bg|font|size|b|hide|url)\]/gi, '')
-    .replace(/\[(?:b|hide|url)\]/gi, '');
+    .replace(/\[\/?[a-zA-Z0-9_-]+(?:=[^\]]+)?\]/gi, '');
 }
 
 function autolinkRawUrls(html) {

@@ -798,9 +798,9 @@ function stripRichTags(str) {
     .replace(/\[img=[^\]]+\]/gi, '[画像]')
     .replace(/\[url=[^\]]+\]([\s\S]*?)\[\/url\]/gi, '$1')
     .replace(/\[url\]([\s\S]*?)\[\/url\]/gi, '$1')
-    .replace(/\[(?:color|bg|font|size)=[^\]]+\]/gi, '')
-    .replace(/\[\/(?:color|bg|font|size|b|hide|url)\]/gi, '')
-    .replace(/\[(?:b|hide|url)\]/gi, '');
+    .replace(/\[\/?[a-zA-Z0-9_-]+(?:=[^\]]+)?\]/gi, '')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/\*{1,3}/g, '');
 }
 
 function autolinkRawUrls(html) {

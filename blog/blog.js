@@ -311,7 +311,8 @@ function renderPostsFeed() {
     const postTitle = formatRichText(post.title || '無題の記事');
     const postDate = escapeHtml(post.date || '');
     const readTime = estimateReadTime(post.content || '');
-    const excerpt = escapeHtml(post.excerpt || stripRichTags(post.content || '').substring(0, 110) + '...');
+    const rawExcerpt = post.excerpt ? stripRichTags(post.excerpt) : stripRichTags(post.content || '');
+    const excerpt = escapeHtml(rawExcerpt.length > 110 ? rawExcerpt.substring(0, 110) + '...' : rawExcerpt);
     const tags = Array.isArray(post.tags) ? post.tags : [];
     const isLiked = localStorage.getItem(`note_liked_${post.id}`) === '1';
     const likesCount = (Number(post.likes) || 0) + (isLiked ? 1 : 0);
@@ -334,7 +335,7 @@ function renderPostsFeed() {
             <span>${readTime}</span>
           </div>
           <h2 class="post-card-title">${postTitle}</h2>
-          <p class="post-card-excerpt">${excerpt}</p>
+          ${excerpt ? `<p class="post-card-excerpt">${excerpt}</p>` : ''}
           ${tags.length > 0 ? `
             <div class="post-card-tags">
               ${tags.map(t => `<span class="post-tag">#${escapeHtml(t)}</span>`).join('')}
@@ -923,15 +924,33 @@ function formatRichText(str) {
 function stripRichTags(str) {
   if (!str) return '';
   return String(str)
-    .replace(/\[hide\][\s\S]*?\[\/hide\]/gi, '[非表示]')
-    .replace(/\[img=[^\]]+\]/gi, '[画像]')
+    // Code blocks & inline code
+    .replace(/```[\s\S]*?```/g, '')
+    .replace(/`([^`\n]+)`/g, '$1')
+    // Spoilers & hidden text
+    .replace(/\[hide\][\s\S]*?\[\/hide\]/gi, '')
+    // Inline images
+    .replace(/\[img=[^\]]+\]/gi, '')
+    // BBCode URLs -> inner text
     .replace(/\[url=[^\]]+\]([\s\S]*?)\[\/url\]/gi, '$1')
     .replace(/\[url\]([\s\S]*?)\[\/url\]/gi, '$1')
-    .replace(/\[(?:color|bg|font|size|h2|h3|quote)=[^\]]+\]/gi, '')
-    .replace(/\[\/(?:color|bg|font|size|b|hide|url|h2|h3|quote)\]/gi, '')
-    .replace(/\[(?:b|hide|url)\]/gi, '')
-    .replace(/^[#>-]+\s*/gm, '')
-    .replace(/\*\*/g, '');
+    // Any remaining BBCode tags (e.g. [h2], [/h2], [h3], [color=...], [bg=...], [b], [quote], etc.)
+    .replace(/\[\/?[a-zA-Z0-9_-]+(?:=[^\]]+)?\]/gi, '')
+    // Markdown headings
+    .replace(/^#{1,6}\s+/gm, '')
+    // Markdown quotes
+    .replace(/^>\s+/gm, '')
+    // Markdown lists
+    .replace(/^[•*-]\s+/gm, '')
+    // Markdown dividers
+    .replace(/^---+$/gm, '')
+    // Bold / italic asterisks
+    .replace(/\*{1,3}/g, '')
+    // HTML tags
+    .replace(/<[^>]+>/g, '')
+    // Normalize extra whitespace
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function autolinkRawUrls(html) {
