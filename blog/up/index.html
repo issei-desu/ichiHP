@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../style.css?v=20261120_1935">
-  <link rel="stylesheet" href="up.css?v=20261120_1935">
+  <link rel="stylesheet" href="up.css?v=20261122_2010">
 </head>
 <body class="mode-edit">
 
@@ -18,7 +18,7 @@
       <div class="up-nav-left">
         <a href="../" class="up-btn up-btn-outline up-btn-sm" title="ブログに戻る">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-          <span>ブログへ</span>
+          <span class="nav-label-desktop">ブログへ</span>
         </a>
         <div class="up-brand-title">
           <span>ブログ投稿</span>
@@ -34,7 +34,7 @@
 
         <button type="button" class="up-btn up-btn-outline up-btn-sm" id="btn-new-post" title="新しい記事を作成">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          <span>新規作成</span>
+          <span class="nav-label-desktop">新規作成</span>
         </button>
 
         <div id="auth-status-container">
@@ -63,15 +63,15 @@
       </div>
     </div>
 
-    <!-- Local Draft Recovery Banner -->
+    <!-- Draft Notice Banner (cloud drafts / local backup) -->
     <div id="draft-recovery-banner" class="up-status-banner" style="display: none; background: #fefce8; border-color: #fde047;">
       <div class="up-status-info">
-        <span class="up-status-tag" style="background: #fef08a; color: #854d0e;">自動保存</span>
+        <span class="up-status-tag" style="background: #fef08a; color: #854d0e;">下書き</span>
         <span id="draft-recovery-msg" style="color: #713f12; font-size: 0.85rem;">未保存の自動保存下書きがあります</span>
       </div>
       <div style="display: flex; gap: 6px;">
-        <button type="button" class="up-btn up-btn-sm up-btn-primary" onclick="restoreDraftBackup()">下書きを復元</button>
-        <button type="button" class="up-btn up-btn-sm up-btn-outline" onclick="discardDraftBackup()">破棄</button>
+        <button type="button" class="up-btn up-btn-sm up-btn-primary" id="draft-recovery-restore-btn" onclick="restoreDraftBackup()">下書きを開く</button>
+        <button type="button" class="up-btn up-btn-sm up-btn-outline" id="draft-recovery-discard-btn" onclick="discardDraftBackup()">閉じる</button>
       </div>
     </div>
 
@@ -248,7 +248,7 @@
   <div class="drawer-backdrop" id="drawer-backdrop" onclick="closeDrawer()"></div>
   <aside class="drawer-panel" id="drawer-panel">
     <div class="drawer-header">
-      <h3 class="drawer-title">過去の記事一覧</h3>
+      <h3 class="drawer-title">記事・下書き一覧</h3>
       <button type="button" class="drawer-close-btn" onclick="closeDrawer()">&times;</button>
     </div>
     <div class="drawer-content" id="drawer-posts-list">
@@ -280,6 +280,6 @@
   <!-- Toast Notification -->
   <div id="up-toast" class="up-toast"></div>
 
-  <script src="up.js?v=20261120_1935"></script>
+  <script src="up.js?v=20261122_2010"></script>
 </body>
 </html>

@@ -825,6 +825,31 @@ body.zen-mode .up-toolbar {
 
 /* Mobile adjustments */
 @media (max-width: 768px) {
+  .up-navbar {
+    padding: 0 10px;
+  }
+  .up-brand-title {
+    display: none;
+  }
+  .up-nav-left {
+    gap: 6px;
+  }
+  .up-nav-right {
+    gap: 6px;
+  }
+  .up-btn.up-btn-sm {
+    padding: 6px 8px;
+    font-size: 0.78rem;
+    gap: 4px;
+  }
+  .up-btn.up-btn-sm .nav-label-desktop {
+    display: none;
+  }
+  .auth-badge {
+    padding: 4px 8px;
+    font-size: 0.72rem;
+    white-space: nowrap;
+  }
   .up-title-input {
     font-size: 1.4rem;
   }
@@ -840,4 +865,33 @@ body.zen-mode .up-toolbar {
   .hide-split-mobile {
     display: none !important;
   }
+}
+
+/* Drawer sections (drafts / published) */
+.drawer-section-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 14px 2px 8px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--up-text-main);
+}
+
+.drawer-section-title:first-child {
+  margin-top: 2px;
+}
+
+.drawer-section-sub {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--up-text-muted);
+}
+
+.drawer-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
 }

@@ -28,8 +28,9 @@ async function initApp() {
   setupViewMode();
   setupDateDefault();
   handlePublishTypeChange();
-  await checkAuthStatus();
+  const authed = await checkAuthStatus();
   await loadBlogData();
+  if (authed) await loadCloudDrafts();
 
   // Check URL params for editing a specific post (e.g. ?id=post-123)
   const urlParams = new URLSearchParams(window.location.search);
@@ -139,6 +140,8 @@ async function verifyAndSaveToken() {
     closeAuthModal();
     await checkAuthStatus();
     await loadBlogData();
+    await loadCloudDrafts();
+    checkDraftBackupOnLoad();
   } catch (err) {
     alert(`エラーが発生しました: ${err.message}`);
   } finally {
@@ -193,10 +196,11 @@ async function loadBlogData() {
 }
 
 function updateNavCount() {
+  const total = allPosts.length + (typeof cloudDrafts !== 'undefined' ? cloudDrafts.length : 0);
   const countEl = document.getElementById('nav-posts-count');
-  if (countEl) countEl.textContent = allPosts.length;
+  if (countEl) countEl.textContent = total;
   const bottomCountEl = document.getElementById('bottom-posts-count');
-  if (bottomCountEl) bottomCountEl.textContent = allPosts.length;
+  if (bottomCountEl) bottomCountEl.textContent = total;
 }
 
 /* ==========================================
@@ -645,36 +649,292 @@ function setupDragAndDrop() {
 }
 
 /* ==========================================
-   Draft Local Auto-Save & Recovery
+   Drafts: Private Cloud Sync (GitHub private repo) + Local Backup
+   - 下書きは非公開リポジトリ (DRAFTS_REPO) の drafts.json に保存
+   - 下書き内の画像は同リポジトリの同じパスに保存し、公開時に公開リポジトリへアップロード
+   - localStorage は「通信できなかった時の保険」として引き続き保存
    ========================================== */
+const DRAFTS_REPO = 'ichiHP-drafts';
+const DRAFTS_FILE_PATH = 'drafts.json';
+const CLOUD_SYNC_DELAY_MS = 4000;
+
+let currentDraftId = null;
+let cloudDrafts = [];
+let cloudDraftsReady = false;
+let cloudSyncTimer = null;
+let cloudSyncChain = Promise.resolve();
+let draftsRepoChecked = false;
+let uploadedDraftImages = new Set(); // 非公開リポジトリに保存済みの画像パス
+let draftBannerMode = 'none'; // 'cloud' | 'local' | 'none'
+
+function ghHeaders(token, extra = {}) {
+  return {
+    'Authorization': getAuthHeader(token),
+    'Accept': 'application/vnd.github.v3+json',
+    ...extra
+  };
+}
+
+function draftsContentsUrl(path) {
+  return `https://api.github.com/repos/${GITHUB_OWNER}/${DRAFTS_REPO}/contents/${path}`;
+}
+
+async function ensureDraftsRepo(token) {
+  if (draftsRepoChecked) return;
+  const res = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${DRAFTS_REPO}`, {
+    headers: ghHeaders(token),
+    cache: 'no-store'
+  });
+
+  if (res.ok) {
+    const info = await res.json();
+    if (info && info.private === false) {
+      throw new Error(`下書き保存用のリポジトリ「${DRAFTS_REPO}」が公開設定になっています。GitHubで非公開(Private)に変更してください。`);
+    }
+    draftsRepoChecked = true;
+    return;
+  }
+
+  if (res.status !== 404) {
+    throw new Error(`下書き保存先の確認に失敗しました (${res.status})`);
+  }
+
+  // 初回のみ: 非公開リポジトリを自動作成
+  const createRes = await fetch('https://api.github.com/user/repos', {
+    method: 'POST',
+    headers: ghHeaders(token, { 'Content-Type': 'application/json' }),
+    body: JSON.stringify({
+      name: DRAFTS_REPO,
+      private: true,
+      auto_init: true,
+      description: 'ichiHP ブログの下書き保存用（非公開）'
+    })
+  });
+
+  if (!createRes.ok && createRes.status !== 422) {
+    throw new Error(
+      `下書き保存用の非公開リポジトリ「${DRAFTS_REPO}」を自動作成できませんでした (${createRes.status})。\n` +
+      `GitHubで「${DRAFTS_REPO}」という名前の Private リポジトリを作成してから、もう一度お試しください。`
+    );
+  }
+  draftsRepoChecked = true;
+}
+
+async function readDraftsFile(token) {
+  const res = await fetch(`${draftsContentsUrl(DRAFTS_FILE_PATH)}?t=${Date.now()}`, {
+    headers: ghHeaders(token),
+    cache: 'no-store'
+  });
+
+  if (res.status === 404) {
+    return { sha: null, data: { version: 1, drafts: [] } };
+  }
+  if (!res.ok) throw new Error(`下書きの取得に失敗しました (${res.status})`);
+
+  const fileData = await res.json();
+  let base64 = (fileData.content || '').replace(/\s/g, '');
+
+  // 1MBを超えるとcontentが空になるため、blob APIで取得
+  if (!base64 && fileData.sha) {
+    const blobRes = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${DRAFTS_REPO}/git/blobs/${fileData.sha}`, {
+      headers: ghHeaders(token),
+      cache: 'no-store'
+    });
+    if (!blobRes.ok) throw new Error(`下書きの取得に失敗しました (${blobRes.status})`);
+    const blob = await blobRes.json();
+    base64 = (blob.content || '').replace(/\s/g, '');
+  }
+
+  let data = { version: 1, drafts: [] };
+  if (base64) {
+    try {
+      data = JSON.parse(base64ToUtf8(base64));
+    } catch (e) {
+      console.warn('drafts.json parse error:', e);
+    }
+  }
+  if (!Array.isArray(data.drafts)) data.drafts = [];
+  return { sha: fileData.sha, data };
+}
+
+async function writeDraftsFile(token, data, sha, message) {
+  const payload = {
+    message,
+    content: utf8ToBase64(JSON.stringify(data, null, 2))
+  };
+  if (sha) payload.sha = sha;
+
+  const res = await fetch(draftsContentsUrl(DRAFTS_FILE_PATH), {
+    method: 'PUT',
+    headers: ghHeaders(token, { 'Content-Type': 'application/json' }),
+    body: JSON.stringify(payload)
+  });
+  return res;
+}
+
+// 最新の drafts.json を読み込み → mutator で変更 → 書き込み（競合時は再試行）
+async function mutateCloudDrafts(token, mutator, message) {
+  await ensureDraftsRepo(token);
+  let lastStatus = 0;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const { sha, data } = await readDraftsFile(token);
+    const result = mutator(data.drafts.slice());
+    data.drafts = Array.isArray(result) ? result : data.drafts;
+    data.version = 1;
+    const res = await writeDraftsFile(token, data, sha, message);
+    if (res.ok) {
+      cloudDrafts = data.drafts;
+      cloudDraftsReady = true;
+      return data.drafts;
+    }
+    lastStatus = res.status;
+    if (res.status !== 409 && res.status !== 422) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || `下書きの保存に失敗しました (${res.status})`);
+    }
+    await new Promise(r => setTimeout(r, 400 + attempt * 400));
+  }
+  throw new Error(`下書きの保存が競合しました (${lastStatus})。もう一度お試しください。`);
+}
+
+function getReferencedPendingPaths(content, cover) {
+  return Object.keys(pendingUploads).filter(p => content.includes(p) || cover.includes(p));
+}
+
+async function uploadDraftImages(token, content, cover) {
+  const paths = getReferencedPendingPaths(content, cover);
+  for (const path of paths) {
+    if (uploadedDraftImages.has(path)) continue;
+    const dataUrl = pendingUploads[path];
+    if (!dataUrl || !dataUrl.includes(',')) continue;
+
+    let sha = null;
+    const getRes = await fetch(draftsContentsUrl(path), { headers: ghHeaders(token), cache: 'no-store' });
+    if (getRes.ok) {
+      const info = await getRes.json();
+      sha = info.sha;
+    }
+    const payload = { message: `Save draft image ${path}`, content: dataUrl.split(',')[1] };
+    if (sha) payload.sha = sha;
+
+    const putRes = await fetch(draftsContentsUrl(path), {
+      method: 'PUT',
+      headers: ghHeaders(token, { 'Content-Type': 'application/json' }),
+      body: JSON.stringify(payload)
+    });
+    if (!putRes.ok) {
+      const err = await putRes.json().catch(() => ({}));
+      throw new Error(`下書き画像「${path}」の保存に失敗: ${err.message || putRes.status}`);
+    }
+    uploadedDraftImages.add(path);
+  }
+  return paths;
+}
+
+function guessImageMime(path) {
+  const ext = (path.split('.').pop() || '').toLowerCase();
+  if (ext === 'png') return 'image/png';
+  if (ext === 'gif') return 'image/gif';
+  if (ext === 'webp') return 'image/webp';
+  if (ext === 'svg') return 'image/svg+xml';
+  return 'image/jpeg';
+}
+
+async function loadDraftImages(token, paths) {
+  if (!Array.isArray(paths)) return;
+  for (const path of paths) {
+    if (pendingUploads[path]) continue;
+    try {
+      const res = await fetch(`${draftsContentsUrl(path)}?t=${Date.now()}`, { headers: ghHeaders(token), cache: 'no-store' });
+      if (!res.ok) continue;
+      const info = await res.json();
+      let base64 = (info.content || '').replace(/\s/g, '');
+      if (!base64 && info.sha) {
+        const blobRes = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${DRAFTS_REPO}/git/blobs/${info.sha}`, {
+          headers: ghHeaders(token),
+          cache: 'no-store'
+        });
+        if (blobRes.ok) {
+          const blob = await blobRes.json();
+          base64 = (blob.content || '').replace(/\s/g, '');
+        }
+      }
+      if (base64) {
+        pendingUploads[path] = `data:${guessImageMime(path)};base64,${base64}`;
+        uploadedDraftImages.add(path);
+      }
+    } catch (e) {
+      console.warn('Draft image load failed:', path, e);
+    }
+  }
+}
+
+function collectEditorState() {
+  return {
+    title: document.getElementById('post-title')?.value || '',
+    content: document.getElementById('post-content')?.value || '',
+    tags: document.getElementById('post-tags')?.value || '',
+    cover: document.getElementById('cover-url-input')?.value || '',
+    excerpt: document.getElementById('post-excerpt')?.value || '',
+    date: document.getElementById('post-date')?.value || '',
+    publishType: document.getElementById('post-publish-type')?.value || 'published',
+    scheduledAt: document.getElementById('post-schedule-datetime')?.value || ''
+  };
+}
+
+function formatShortDateTime(ms) {
+  const d = new Date(ms);
+  if (isNaN(d.getTime())) return '';
+  return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
+function setDraftSyncStatus(state, text) {
+  const el = document.getElementById('save-status-indicator');
+  if (!el) return;
+  const colors = { saving: '#64748b', saved: '#059669', error: '#dc2626', done: '#059669' };
+  el.style.display = 'inline';
+  el.style.color = colors[state] || '#059669';
+  el.textContent = text;
+}
+
+/* ---------- 自動保存のキュー ---------- */
 function queueAutoSaveBackup() {
   if (autoSaveTimer) clearTimeout(autoSaveTimer);
   autoSaveTimer = setTimeout(() => {
     saveDraftBackup();
   }, 1200);
+
+  if (localStorage.getItem('gh_token') && cloudDraftsReady) {
+    if (cloudSyncTimer) clearTimeout(cloudSyncTimer);
+    cloudSyncTimer = setTimeout(() => {
+      cloudSyncTimer = null;
+      syncDraftToCloud({ manual: false });
+    }, CLOUD_SYNC_DELAY_MS);
+  }
 }
 
-function saveDraftBackup() {
-  const title = document.getElementById('post-title')?.value || '';
-  const content = document.getElementById('post-content')?.value || '';
-  const tags = document.getElementById('post-tags')?.value || '';
-  const cover = document.getElementById('cover-url-input')?.value || '';
-  const date = document.getElementById('post-date')?.value || '';
-  const publishType = document.getElementById('post-publish-type')?.value || 'published';
-  const scheduledAt = document.getElementById('post-schedule-datetime')?.value || '';
+function cancelPendingCloudSync() {
+  if (cloudSyncTimer) {
+    clearTimeout(cloudSyncTimer);
+    cloudSyncTimer = null;
+  }
+}
 
-  if (!title.trim() && !content.trim()) return;
+/* ---------- ローカル保険（この端末のみ） ---------- */
+function saveDraftBackup(extra = {}) {
+  const state = collectEditorState();
+  if (!state.title.trim() && !state.content.trim()) return;
+
+  let prev = {};
+  try { prev = JSON.parse(localStorage.getItem(DRAFT_STORAGE_KEY) || '{}') || {}; } catch (e) { prev = {}; }
 
   const draftData = {
     postId: currentPostId || null,
-    title,
-    content,
-    tags,
-    cover,
-    date,
-    publishType,
-    scheduledAt,
-    savedAt: Date.now()
+    draftId: currentDraftId || null,
+    ...state,
+    savedAt: Date.now(),
+    cloudSyncedAt: (prev.draftId && prev.draftId === currentDraftId) ? (prev.cloudSyncedAt || null) : null,
+    ...extra
   };
 
   try {
@@ -684,58 +944,268 @@ function saveDraftBackup() {
   }
 }
 
+function markLocalBackupSynced(syncedAt) {
+  try {
+    const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+    if (!raw) return;
+    const backup = JSON.parse(raw);
+    if (!backup) return;
+    backup.draftId = currentDraftId;
+    backup.cloudSyncedAt = syncedAt;
+    if (!backup.savedAt || backup.savedAt < syncedAt) backup.savedAt = syncedAt;
+    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(backup));
+  } catch (e) { /* ignore */ }
+}
+
+/* ---------- クラウドへ保存 ---------- */
+function syncDraftToCloud(options = {}) {
+  // 保存処理は1件ずつ順番に実行（同時書き込みによる競合を防ぐ）
+  const run = cloudSyncChain.then(() => doSyncDraftToCloud(options));
+  cloudSyncChain = run.catch(() => {});
+  return run;
+}
+
+async function doSyncDraftToCloud({ manual = false } = {}) {
+  const token = localStorage.getItem('gh_token');
+  if (!token) {
+    if (manual) openAuthModal();
+    return false;
+  }
+
+  const state = collectEditorState();
+  if (!state.title.trim() && !state.content.trim()) {
+    if (manual) alert('タイトルか本文を入力してから保存してください。');
+    return false;
+  }
+
+  setDraftSyncStatus('saving', '• 下書きを保存中…');
+  try {
+    const images = await uploadDraftImages(token, state.content, state.cover);
+    if (!currentDraftId) currentDraftId = 'draft-' + Date.now();
+    const draftId = currentDraftId;
+    const now = Date.now();
+
+    await mutateCloudDrafts(token, drafts => {
+      const idx = drafts.findIndex(d => d.id === draftId);
+      const base = idx !== -1 ? drafts[idx] : { id: draftId, createdAt: now };
+      const record = {
+        ...base,
+        postId: currentPostId || null,
+        ...state,
+        images,
+        updatedAt: now
+      };
+      if (idx !== -1) drafts[idx] = record; else drafts.unshift(record);
+      return drafts;
+    }, `${manual ? 'Save' : 'Autosave'} draft "${state.title || '無題'}"`);
+
+    markLocalBackupSynced(now);
+    setDraftSyncStatus('saved', `• 下書き保存済み ${formatShortDateTime(now)}`);
+    updateNavCount();
+    renderDrawerPosts();
+    return true;
+  } catch (err) {
+    console.error('Cloud draft sync error:', err);
+    setDraftSyncStatus('error', '• 下書きの保存に失敗（この端末には保存済み）');
+    if (manual) {
+      alert(`【下書き保存エラー】\n${err.message}`);
+    }
+    return false;
+  }
+}
+
+/* ---------- 読み込み & 移行 ---------- */
+async function loadCloudDrafts() {
+  const token = localStorage.getItem('gh_token');
+  cloudDraftsReady = false;
+  if (!token) return;
+
+  try {
+    await ensureDraftsRepo(token);
+    const { data } = await readDraftsFile(token);
+    cloudDrafts = data.drafts;
+    cloudDraftsReady = true;
+    await migrateExistingDrafts(token);
+  } catch (err) {
+    console.error('Load cloud drafts error:', err);
+    showToast(`下書きの読み込みに失敗: ${err.message}`, 'error');
+  }
+
+  updateNavCount();
+  renderDrawerPosts();
+}
+
+async function migrateExistingDrafts(token) {
+  const moved = [];
+
+  // ① 公開用 data.json に残っている下書き（isPublished: false）を非公開リポジトリへ移動
+  const legacyDrafts = allPosts.filter(p => p && p.isPublished === false);
+  if (legacyDrafts.length > 0) {
+    try {
+      const now = Date.now();
+      await mutateCloudDrafts(token, drafts => {
+        legacyDrafts.forEach((post, i) => {
+          const id = `draft-from-${post.id}`;
+          if (drafts.some(d => d.id === id)) return;
+          drafts.unshift({
+            id,
+            postId: null,
+            preferredPostId: post.id,
+            title: post.title || '',
+            content: post.content || '',
+            tags: Array.isArray(post.tags) ? post.tags.join(', ') : (post.tags || ''),
+            cover: post.cover || '',
+            excerpt: post.excerpt || '',
+            date: post.date || '',
+            publishType: 'draft',
+            scheduledAt: '',
+            images: [],
+            createdAt: now - i,
+            updatedAt: now - i
+          });
+        });
+        return drafts;
+      }, `Move ${legacyDrafts.length} draft(s) from public data.json`);
+
+      const ids = new Set(legacyDrafts.map(p => p.id));
+      await updatePublicPosts(token, posts => posts.filter(p => !(ids.has(p.id) && p.isPublished === false)),
+        `Move ${legacyDrafts.length} draft(s) to private storage via blog/up`);
+      moved.push(`公開データ内の下書き ${legacyDrafts.length} 件`);
+    } catch (err) {
+      console.error('Legacy draft migration error:', err);
+      showToast(`既存の下書きの移動に失敗: ${err.message}`, 'error');
+    }
+  }
+
+  // ② この端末にだけ自動保存されていた下書きをクラウドへ移動
+  try {
+    const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+    const backup = raw ? JSON.parse(raw) : null;
+    const hasText = backup && ((backup.title || '').trim() || (backup.content || '').trim());
+    const needsSync = hasText && (!backup.cloudSyncedAt || (backup.savedAt || 0) > backup.cloudSyncedAt);
+    if (needsSync) {
+      const id = backup.draftId || `draft-${backup.savedAt || Date.now()}`;
+      const existing = cloudDrafts.find(d => d.id === id);
+      if (!existing || (existing.updatedAt || 0) < (backup.savedAt || 0)) {
+        const savedAt = backup.savedAt || Date.now();
+        await mutateCloudDrafts(token, drafts => {
+          const idx = drafts.findIndex(d => d.id === id);
+          const record = {
+            ...(idx !== -1 ? drafts[idx] : { id, createdAt: savedAt, images: [] }),
+            postId: backup.postId || null,
+            title: backup.title || '',
+            content: backup.content || '',
+            tags: backup.tags || '',
+            cover: backup.cover || '',
+            excerpt: backup.excerpt || '',
+            date: backup.date || '',
+            publishType: backup.publishType || 'published',
+            scheduledAt: backup.scheduledAt || '',
+            updatedAt: savedAt
+          };
+          if (idx !== -1) drafts[idx] = record; else drafts.unshift(record);
+          return drafts;
+        }, `Move local autosaved draft "${backup.title || '無題'}"`);
+        moved.push('この端末の自動保存下書き');
+      }
+      backup.draftId = id;
+      backup.cloudSyncedAt = backup.savedAt || Date.now();
+      localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(backup));
+    }
+  } catch (err) {
+    console.error('Local draft migration error:', err);
+  }
+
+  if (moved.length > 0) {
+    showToast(`${moved.join('・')}を非公開の保存先へ移しました`, 'success');
+  }
+}
+
+// 公開用 data.json の posts を更新するヘルパー
+async function updatePublicPosts(token, mutator, message) {
+  const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${DATA_FILE_PATH}`;
+  const getRes = await fetch(`${url}?t=${Date.now()}`, { headers: ghHeaders(token), cache: 'no-store' });
+  if (!getRes.ok) throw new Error(`データ取得エラー (${getRes.status})`);
+  const fileData = await getRes.json();
+  const fullData = JSON.parse(base64ToUtf8(fileData.content.replace(/\s/g, '')));
+  if (!fullData.blog) fullData.blog = { title: 'いちのブログ。', subtitle: '', posts: [] };
+  if (!Array.isArray(fullData.blog.posts)) fullData.blog.posts = [];
+  fullData.blog.posts = mutator(fullData.blog.posts.slice());
+
+  const putRes = await fetch(url, {
+    method: 'PUT',
+    headers: ghHeaders(token, { 'Content-Type': 'application/json' }),
+    body: JSON.stringify({
+      message,
+      content: utf8ToBase64(JSON.stringify(fullData, null, 2)),
+      sha: fileData.sha
+    })
+  });
+  if (!putRes.ok) {
+    const err = await putRes.json().catch(() => ({}));
+    throw new Error(err.message || `GitHub保存失敗 (${putRes.status})`);
+  }
+  allPosts = fullData.blog.posts;
+  return allPosts;
+}
+
+/* ---------- 起動時のお知らせバナー ---------- */
 function checkDraftBackupOnLoad() {
+  const banner = document.getElementById('draft-recovery-banner');
+  const msg = document.getElementById('draft-recovery-msg');
+  const restoreBtn = document.getElementById('draft-recovery-restore-btn');
+  const discardBtn = document.getElementById('draft-recovery-discard-btn');
+  if (!banner || !msg) return;
+
+  if (cloudDraftsReady) {
+    const sorted = getSortedCloudDrafts();
+    if (sorted.length === 0) return;
+    const latest = sorted[0];
+    draftBannerMode = 'cloud';
+    msg.textContent = `下書きが ${sorted.length} 件あります（最新: 「${latest.title || '無題'}」 ${formatShortDateTime(latest.updatedAt)}）`;
+    if (restoreBtn) restoreBtn.textContent = '最新の下書きを開く';
+    if (discardBtn) discardBtn.textContent = '閉じる';
+    banner.style.display = 'flex';
+    return;
+  }
+
+  // 未認証などでクラウドが使えない場合: この端末の自動保存を案内
   try {
     const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
     if (!raw) return;
     const draft = JSON.parse(raw);
     if (!draft || (!draft.title && !draft.content)) return;
-
-    if (currentPostId && draft.postId && draft.postId !== currentPostId) return;
-
-    const banner = document.getElementById('draft-recovery-banner');
-    const msg = document.getElementById('draft-recovery-msg');
-    if (banner && msg) {
-      const d = new Date(draft.savedAt);
-      const timeStr = `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-      msg.textContent = `${timeStr} に自動保存された未保存の下書きがあります（「${draft.title || '無題'}」）`;
-      banner.style.display = 'flex';
-    }
+    draftBannerMode = 'local';
+    msg.textContent = `${formatShortDateTime(draft.savedAt)} にこの端末へ自動保存された下書きがあります（「${draft.title || '無題'}」）`;
+    if (restoreBtn) restoreBtn.textContent = '下書きを復元';
+    if (discardBtn) discardBtn.textContent = '破棄';
+    banner.style.display = 'flex';
   } catch (e) {
     console.warn('Check draft backup error:', e);
   }
 }
 
+function hideDraftBanner() {
+  const banner = document.getElementById('draft-recovery-banner');
+  if (banner) banner.style.display = 'none';
+}
+
 function restoreDraftBackup() {
+  if (draftBannerMode === 'cloud') {
+    const latest = getSortedCloudDrafts()[0];
+    if (latest) loadDraftIntoEditor(latest.id);
+    hideDraftBanner();
+    return;
+  }
+
   try {
     const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
     if (!raw) return;
     const draft = JSON.parse(raw);
     if (!draft) return;
-
-    if (draft.title !== undefined) document.getElementById('post-title').value = draft.title;
-    if (draft.content !== undefined) document.getElementById('post-content').value = draft.content;
-    if (draft.tags !== undefined) document.getElementById('post-tags').value = draft.tags;
-    if (draft.date !== undefined && draft.date) document.getElementById('post-date').value = draft.date;
-    if (draft.cover !== undefined) {
-      document.getElementById('cover-url-input').value = draft.cover;
-      updateCoverPreview(draft.cover);
-    }
-    if (draft.publishType) {
-      const pubSelect = document.getElementById('post-publish-type');
-      if (pubSelect) pubSelect.value = draft.publishType;
-    }
-    if (draft.scheduledAt) {
-      const schedInput = document.getElementById('post-schedule-datetime');
-      if (schedInput) schedInput.value = draft.scheduledAt;
-    }
-    handlePublishTypeChange();
-    updateStats();
-    renderLivePreview();
-
-    const banner = document.getElementById('draft-recovery-banner');
-    if (banner) banner.style.display = 'none';
-
+    applyDraftToEditor(draft);
+    currentDraftId = draft.draftId || null;
+    hideDraftBanner();
     showToast('自動保存された下書きを復元しました', 'success');
   } catch (e) {
     console.error('Restore draft backup error:', e);
@@ -744,10 +1214,159 @@ function restoreDraftBackup() {
 }
 
 function discardDraftBackup() {
+  if (draftBannerMode === 'cloud') {
+    hideDraftBanner();
+    return;
+  }
   localStorage.removeItem(DRAFT_STORAGE_KEY);
-  const banner = document.getElementById('draft-recovery-banner');
-  if (banner) banner.style.display = 'none';
+  hideDraftBanner();
   showToast('保存されていた下書きを破棄しました', 'info');
+}
+
+/* ---------- 下書きをエディタに読み込む ---------- */
+function getSortedCloudDrafts() {
+  return cloudDrafts.slice().sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+}
+
+function applyDraftToEditor(draft) {
+  document.getElementById('post-id').value = draft.postId || '';
+  document.getElementById('post-title').value = draft.title || '';
+  document.getElementById('post-content').value = draft.content || '';
+  document.getElementById('post-tags').value = draft.tags || '';
+  document.getElementById('post-excerpt').value = draft.excerpt || '';
+  if (draft.date) document.getElementById('post-date').value = draft.date;
+  document.getElementById('cover-url-input').value = draft.cover || '';
+  updateCoverPreview(draft.cover || '');
+
+  const pubSelect = document.getElementById('post-publish-type');
+  if (pubSelect) pubSelect.value = draft.publishType || 'published';
+  const schedInput = document.getElementById('post-schedule-datetime');
+  if (schedInput) schedInput.value = draft.scheduledAt || '';
+
+  currentPostId = draft.postId || null;
+  updateEditorModeTag();
+  updateStats();
+  renderLivePreview();
+}
+
+async function loadDraftIntoEditor(id) {
+  if (isDirty && !confirm('未保存の変更があります。この下書きを開きますか？')) {
+    return;
+  }
+  const draft = cloudDrafts.find(d => d.id === id);
+  if (!draft) {
+    showToast('指定された下書きが見つかりませんでした', 'error');
+    return;
+  }
+
+  cancelPendingCloudSync();
+  pendingUploads = {};
+  uploadedDraftImages = new Set();
+  currentDraftId = draft.id;
+  isDirty = false;
+
+  closeDrawer();
+  hideDraftBanner();
+
+  const token = localStorage.getItem('gh_token');
+  if (token && Array.isArray(draft.images) && draft.images.length > 0) {
+    showToast('下書きの画像を読み込み中...', 'info');
+    await loadDraftImages(token, draft.images);
+  }
+
+  applyDraftToEditor(draft);
+  setDraftSyncStatus('saved', `• 下書き保存済み ${formatShortDateTime(draft.updatedAt)}`);
+  showToast(`下書き「${draft.title || '無題'}」を開きました`, 'success');
+}
+
+async function deleteCloudDraft(id) {
+  const token = localStorage.getItem('gh_token');
+  if (!token) {
+    openAuthModal();
+    return;
+  }
+  const draft = cloudDrafts.find(d => d.id === id);
+  const title = draft ? (draft.title || '無題') : 'この下書き';
+  if (!confirm(`下書き「${title}」を削除してもよろしいですか？\n※他の端末からも見られなくなります。`)) {
+    return;
+  }
+
+  try {
+    if (currentDraftId === id) cancelPendingCloudSync();
+    await mutateCloudDrafts(token, drafts => drafts.filter(d => d.id !== id), `Delete draft "${title}"`);
+    if (currentDraftId === id) {
+      currentDraftId = null;
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
+    }
+    updateNavCount();
+    renderDrawerPosts();
+    showToast('下書きを削除しました', 'success');
+  } catch (err) {
+    console.error('Delete draft error:', err);
+    alert(`下書きの削除に失敗しました: ${err.message}`);
+  }
+}
+
+async function removeCloudDraftAfterPublish(token, draftId) {
+  if (!draftId) return;
+  try {
+    await mutateCloudDrafts(token, drafts => drafts.filter(d => d.id !== draftId), 'Remove draft after publishing');
+  } catch (err) {
+    console.warn('Could not remove published draft from cloud:', err);
+  }
+}
+
+/* ---------- 「下書きとして保存」ボタン ---------- */
+async function saveAsDraft() {
+  const token = localStorage.getItem('gh_token');
+  if (!token) {
+    openAuthModal();
+    return;
+  }
+
+  const state = collectEditorState();
+  if (!state.title.trim() && !state.content.trim()) {
+    alert('タイトルか本文を入力してから保存してください。');
+    return;
+  }
+
+  // 公開中・予約中の記事を下書きに戻す場合は、公開データから外す
+  const publicPost = currentPostId ? allPosts.find(p => p.id === currentPostId) : null;
+  const isLive = publicPost && publicPost.isPublished !== false;
+  if (isLive && !confirm('この記事は現在ブログに公開中（または予約中）です。\n下書きに戻すとブログから非公開になります。よろしいですか？')) {
+    return;
+  }
+
+  const saveBtn = document.getElementById('btn-save-publish');
+  const draftBtn = document.getElementById('btn-save-draft');
+  if (saveBtn) saveBtn.disabled = true;
+  if (draftBtn) draftBtn.disabled = true;
+
+  try {
+    cancelPendingCloudSync();
+    if (!cloudDraftsReady) await loadCloudDrafts();
+    const ok = await syncDraftToCloud({ manual: true });
+    if (!ok) return;
+
+    if (publicPost) {
+      const removeId = publicPost.id;
+      await updatePublicPosts(token, posts => posts.filter(p => p.id !== removeId),
+        `Unpublish blog post "${publicPost.title || ''}" (moved to drafts) via blog/up`);
+      updateNavCount();
+      renderDrawerPosts();
+    }
+
+    isDirty = false;
+    hideDraftBanner();
+    showToast(isLive ? '記事を非公開にして下書きへ移しました' : '下書きを保存しました（他の端末でも開けます）', 'success');
+  } catch (err) {
+    console.error('Save as draft error:', err);
+    alert(`【下書き保存エラー】\n${err.message}`);
+  } finally {
+    if (saveBtn) saveBtn.disabled = false;
+    if (draftBtn) draftBtn.disabled = false;
+    updateEditorModeTag();
+  }
 }
 
 /* ==========================================
@@ -937,7 +1556,9 @@ function renderDrawerPosts() {
   const container = document.getElementById('drawer-posts-list');
   if (!container) return;
 
-  if (allPosts.length === 0) {
+  const drafts = (typeof getSortedCloudDrafts === 'function') ? getSortedCloudDrafts() : [];
+
+  if (allPosts.length === 0 && drafts.length === 0) {
     container.innerHTML = `
       <div style="text-align: center; padding: 40px 10px; color: var(--up-text-muted);">
         <p style="font-weight: 700; margin-bottom: 6px;">記事がまだありません</p>
@@ -947,22 +1568,60 @@ function renderDrawerPosts() {
     return;
   }
 
-  container.innerHTML = allPosts.map(post => {
-    const isCurrent = currentPostId === post.id;
-    const status = getPostStatus(post);
-    const date = escapeHtml(post.date || '日付未設定');
-    const title = escapeHtml(post.title || '無題の記事');
+  const sectionTitle = (text, sub) => `
+    <div class="drawer-section-title">
+      <span>${text}</span>
+      ${sub ? `<span class="drawer-section-sub">${sub}</span>` : ''}
+    </div>`;
 
-    let badgeHtml = '';
-    if (status.type === 'scheduled') {
-      badgeHtml = `<span style="font-size: 0.72rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;">予約: ${escapeHtml(status.timeStr)}</span>`;
-    } else if (status.type === 'draft') {
-      badgeHtml = `<span style="font-size: 0.72rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: #f1f5f9; color: #64748b;">下書き</span>`;
-    } else {
-      badgeHtml = `<span style="font-size: 0.72rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: #ecfdf5; color: #059669;">公開中</span>`;
-    }
+  let html = '';
 
-    return `
+  if (drafts.length > 0) {
+    html += sectionTitle(`下書き (${drafts.length})`, '非公開・他の端末でも開けます');
+    html += drafts.map(d => {
+      const isCurrent = currentDraftId === d.id;
+      const title = escapeHtml(d.title || '無題の下書き');
+      const linked = d.postId && allPosts.some(p => p.id === d.postId);
+      const badge = linked
+        ? `<span class="drawer-badge" style="background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa;">公開記事の編集中</span>`
+        : `<span class="drawer-badge" style="background: #f1f5f9; color: #64748b;">下書き</span>`;
+      return `
+      <div class="drawer-post-item ${isCurrent ? 'active' : ''}">
+        <div class="drawer-post-header">
+          <span class="drawer-post-date">最終保存 ${escapeHtml(formatShortDateTime(d.updatedAt))}</span>
+          ${badge}
+        </div>
+        <div class="drawer-post-title">${title}</div>
+        <div class="drawer-post-actions">
+          <button type="button" class="up-btn up-btn-outline up-btn-sm" onclick="loadDraftIntoEditor('${escapeAttr(d.id)}')">
+            開く
+          </button>
+          <button type="button" class="up-btn up-btn-danger up-btn-sm" onclick="deleteCloudDraft('${escapeAttr(d.id)}')">
+            削除
+          </button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  if (allPosts.length > 0) {
+    html += sectionTitle(`公開・予約中の記事 (${allPosts.length})`, '');
+    html += allPosts.map(post => {
+      const isCurrent = currentPostId === post.id && !currentDraftId;
+      const status = getPostStatus(post);
+      const date = escapeHtml(post.date || '日付未設定');
+      const title = escapeHtml(post.title || '無題の記事');
+
+      let badgeHtml = '';
+      if (status.type === 'scheduled') {
+        badgeHtml = `<span class="drawer-badge" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;">予約: ${escapeHtml(status.timeStr)}</span>`;
+      } else if (status.type === 'draft') {
+        badgeHtml = `<span class="drawer-badge" style="background: #f1f5f9; color: #64748b;">下書き</span>`;
+      } else {
+        badgeHtml = `<span class="drawer-badge" style="background: #ecfdf5; color: #059669;">公開中</span>`;
+      }
+
+      return `
       <div class="drawer-post-item ${isCurrent ? 'active' : ''}">
         <div class="drawer-post-header">
           <span class="drawer-post-date">${date}</span>
@@ -977,9 +1636,11 @@ function renderDrawerPosts() {
             削除
           </button>
         </div>
-      </div>
-    `;
-  }).join('');
+      </div>`;
+    }).join('');
+  }
+
+  container.innerHTML = html;
 }
 
 function resetEditorToNew() {
@@ -987,8 +1648,11 @@ function resetEditorToNew() {
     return;
   }
 
+  cancelPendingCloudSync();
   currentPostId = null;
+  currentDraftId = null;
   pendingUploads = {};
+  uploadedDraftImages = new Set();
   isDirty = false;
 
   document.getElementById('post-id').value = '';
@@ -1028,8 +1692,21 @@ function loadPostIntoEditor(id) {
     return;
   }
 
+  // この公開記事に編集途中の下書きがあれば、そちらを開くか確認
+  const linkedDraft = getSortedCloudDrafts().find(d => d.postId === post.id);
+  if (linkedDraft) {
+    if (confirm(`この記事には ${formatShortDateTime(linkedDraft.updatedAt)} に保存された編集途中の下書きがあります。\n下書きの方を開きますか？\n（キャンセルすると公開中の内容を開きます）`)) {
+      isDirty = false;
+      loadDraftIntoEditor(linkedDraft.id);
+      return;
+    }
+  }
+
+  cancelPendingCloudSync();
   currentPostId = post.id;
+  currentDraftId = null;
   pendingUploads = {};
+  uploadedDraftImages = new Set();
   isDirty = false;
 
   document.getElementById('post-id').value = post.id;
@@ -1180,6 +1857,12 @@ async function submitPost(overrideType) {
     return;
   }
 
+  // 下書きは公開用 data.json ではなく、非公開の保存先へ
+  const requestedType = overrideType || document.getElementById('post-publish-type')?.value || 'published';
+  if (requestedType === 'draft') {
+    return saveAsDraft();
+  }
+
   const titleInput = document.getElementById('post-title');
   const contentInput = document.getElementById('post-content');
   const dateInput = document.getElementById('post-date');
@@ -1264,6 +1947,10 @@ async function submitPost(overrideType) {
   if (draftBtn) draftBtn.disabled = true;
   if (saveBtnText) saveBtnText.textContent = '保存中...';
 
+  // 公開処理中に自動保存が走らないよう停止し、実行中の保存の完了を待つ
+  cancelPendingCloudSync();
+  await cloudSyncChain;
+
   try {
     // 1. Upload any pending images referenced in content or cover
     const pendingKeys = Object.keys(pendingUploads);
@@ -1336,8 +2023,10 @@ async function submitPost(overrideType) {
         });
       }
     } else {
-      // New post
-      targetId = 'post-' + Date.now();
+      // New post（以前 data.json にあった下書きなら元のIDを引き継ぐ）
+      const srcDraft = currentDraftId ? cloudDrafts.find(d => d.id === currentDraftId) : null;
+      const preferred = srcDraft && srcDraft.preferredPostId;
+      targetId = (preferred && !fullData.blog.posts.some(p => p.id === preferred)) ? preferred : 'post-' + Date.now();
       currentPostId = targetId;
       document.getElementById('post-id').value = targetId;
 
@@ -1393,6 +2082,12 @@ async function submitPost(overrideType) {
     allPosts = fullData.blog.posts;
     isDirty = false;
     localStorage.removeItem(DRAFT_STORAGE_KEY);
+
+    // 公開した下書きは非公開の保存先から削除
+    const publishedDraftId = currentDraftId;
+    currentDraftId = null;
+    cancelPendingCloudSync();
+    await removeCloudDraftAfterPublish(token, publishedDraftId);
     const recoveryBanner = document.getElementById('draft-recovery-banner');
     if (recoveryBanner) recoveryBanner.style.display = 'none';
 
@@ -1400,8 +2095,7 @@ async function submitPost(overrideType) {
     renderDrawerPosts();
     updateEditorModeTag();
 
-    const saveStatus = document.getElementById('save-status-indicator');
-    if (saveStatus) saveStatus.style.display = 'inline';
+    setDraftSyncStatus('done', '• 保存完了');
 
     if (scheduledAt) {
       showToast(`「${formatScheduleDisplay(scheduledAt)}」に予約投稿を設定しました！`, 'success');
