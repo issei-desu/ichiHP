@@ -90,8 +90,14 @@ function renderCreatorHeader() {
 
   if (creatorName) creatorName.textContent = siteProfile.name;
   if (creatorBio) {
-    if (siteProfile.bio && siteProfile.bio.trim()) {
-      creatorBio.innerHTML = formatRichText(siteProfile.bio);
+    // ブログでは「主な生息地」の行（ホームページのリンク案内）を表示しない
+    const blogBio = String(siteProfile.bio || '')
+      .split(/\r?\n/)
+      .filter(line => !line.includes('生息地'))
+      .join('\n')
+      .replace(/\s+$/, '');
+    if (blogBio.trim()) {
+      creatorBio.innerHTML = formatRichText(blogBio);
       creatorBio.style.display = 'block';
     } else {
       creatorBio.style.display = 'none';
